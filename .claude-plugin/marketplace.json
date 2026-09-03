@@ -1,0 +1,11 @@
+{
+  "name": "evopdf",
+  "owner": { "name": "EVO PDF Software", "url": "https://www.evopdf.com" },
+  "plugins": [
+    {
+      "name": "evopdf-next",
+      "source": "./",
+      "description": "EvoPdf Next skills: HTML/Word/Excel to PDF, headers and footers, PDF/UA and PDF/A, PDF processing, deployment, Classic to Next migration."
+    }
+  ]
+}

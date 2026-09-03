@@ -1,0 +1,20 @@
+name: validate
+on: [push, pull_request]
+jobs:
+  skills:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check SKILL.md front matter
+        run: |
+          for f in skills/*/SKILL.md; do
+            head -1 "$f" | grep -q '^---$' || { echo "missing front matter: $f"; exit 1; }
+            grep -q '^name: ' "$f" || { echo "missing name: $f"; exit 1; }
+            grep -q '^description: ' "$f" || { echo "missing description: $f"; exit 1; }
+          done
+      - name: No license keys committed
+        run: "! grep -rnE 'LicenseKey\\s*=\\s*\"[A-Za-z0-9+/=]{16,}\"' --include=*.md ."
+      - uses: DavidAnson/markdownlint-cli2-action@v19
+        with:
+          globs: "**/*.md"
+          config: .markdownlint.json

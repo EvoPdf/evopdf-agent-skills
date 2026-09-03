@@ -1,0 +1,9 @@
+{
+  "name": "evopdf-next",
+  "description": "Skills for writing EvoPdf Next (.NET PDF library) code and migrating EvoPdf Classic applications to EvoPdf Next.",
+  "version": "1.0.0",
+  "author": { "name": "EVO PDF Software", "url": "https://www.evopdf.com" },
+  "homepage": "https://github.com/EvoPdf/evopdf-agent-skills",
+  "license": "MIT",
+  "keywords": ["evopdf", "pdf", "html-to-pdf", "dotnet", "csharp"]
+}
