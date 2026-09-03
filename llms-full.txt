@@ -1,0 +1,1139 @@
+# AGENTS.md — EvoPdf Next
+
+Instructions for AI coding agents (Claude Code, Codex, GitHub Copilot, Cursor, Gemini CLI, Windsurf and others) working in projects that use **EvoPdf Next**, the .NET PDF library from EVO PDF Software.
+
+## When these instructions apply
+Any task that converts HTML, Word, Excel, RTF or Markdown to PDF, creates or edits PDF documents, or extracts text and images from PDF in .NET — and any migration from **EvoPdf Classic** (`EvoPdf` namespace) to **EvoPdf Next**.
+
+## Rules
+1. Use the current API surface listed below and in `skills/*/SKILL.md`. Do not guess member names; if a member is not listed, say so and link the documentation.
+2. Never fabricate license keys, package versions or platform claims. Reference packages without a version unless the user pins one.
+3. Prefer the smallest correct sample: `using EvoPdf.Next;`, one converter, one call, `File.WriteAllBytes`. Add options only when the task asks for them.
+4. Windows-only assumptions are wrong for EvoPdf Next: it runs on Windows, Linux and macOS. Choose the NuGet package for the target platform.
+5. For Classic → Next migrations follow `skills/evopdf-classic-to-next-migration/SKILL.md`: namespace, license key, page sizing model and header/footer model change; the conversion calls do not.
+
+
+## EvoPdf Next — facts every generated answer must respect
+
+- Library: **EvoPdf Next** (namespace `EvoPdf.Next`), .NET Standard 2.0 → .NET 6–10 and .NET Framework 4.6.2+; Windows x64/ARM64, Linux x64/ARM64, macOS ARM64. Chromium-based rendering; no browser installation required.
+- Install one package per target platform. All components: `EvoPdf.Next.Windows`, `EvoPdf.Next.Linux`, `EvoPdf.Next.MacOS` (ARM64 variants `EvoPdf.Next.Windows.Arm64`, `EvoPdf.Next.Linux.Arm64`; `EvoPdf.Next` = Windows x64 + Linux x64). Single components follow the same pattern, e.g. `EvoPdf.Next.HtmlToPdf.Windows`, `EvoPdf.Next.WordToPdf.Linux`, `EvoPdf.Next.PdfProcessor.MacOS`, `EvoPdf.Next.Core.Windows`.
+- License key: one static assignment, before any conversion — `Licensing.LicenseKey = "…";` (field on the static `EvoPdf.Next.Licensing` class). Without it the library runs in demo mode and stamps the output; never invent a key.
+- Every conversion method has an `…Async` twin. Prefer one converter instance per conversion; instances are cheap.
+- Page sizing: content is laid out at 96 DPI; `PdfDocumentOptions.AutoResizePdfPageWidth` (default `true`) makes the PDF page as wide as `HtmlViewerWidth` (default 1024 px → 768 pt). For an exact page size set `AutoResizePdfPageWidth = false` and `AutoResizePdfPageHeight = false` together with `PdfPageSize` / `PdfPageOrientation`. `AutoResizePdfPageHeight = true` (with width `true`) puts the whole content on one page.
+- Headers/footers: `PdfDocumentOptions.PdfHtmlHeader` / `PdfHtmlFooter` (class `PdfHtmlHeaderFooter`, derives from `PdfHtmlTemplate`): `Html`, `HtmlBaseUrl` or `HtmlSourceUrl`, `Height`, `AutoSizeContentHeight`, `FitHeight`, `ShowInFirstPage`/`ShowInOddPages`/`ShowInEvenPages`, `ReserveSpaceAlways` (default `true`), `AutoResizePdfMargins`, `SkipVariablesParsing`, `PageNumberOffset`, `TotalPagesOffset`. Variables `{page_number}` and `{total_pages}` are replaced inside the header/footer HTML. Alternative browser mode: `EnableHeaderFooter` + `HeaderTemplate` / `FooterTemplate`.
+- Dynamic pages: `ConversionDelay` (seconds) waits after load; `TriggeringMode.Manual` waits until the page calls `evoPdfConverter_startConversion()`; `NavigationTimeout`, `JavaScriptEnabled`, `LoadLazyImages` (default `true`), `MediaType` (screen by default, not set), `LocalFilesEnabled`, `AllowInsecureContent`, `BlockedHosts`, `HttpRequestHeaders`, `HttpRequestCookies`, `AuthenticationOptions`.
+- Standards: `PdfDocumentOptions.PdfStandard` = `PdfStandard.None` (default), `PdfUa1`, `PdfA2b`, `PdfUa1PdfA2b`, plus the other PDF/A levels; `AccessibilityOptions` applies when a tagged standard is selected.
+- Documentation: https://www.evopdf.com/help/evopdf-next-dotnet/ — product pages: https://www.evopdf.com/evopdf-next-dotnet
+
+
+## Minimal HTML to PDF sample
+
+```csharp
+using EvoPdf.Next;
+
+Licensing.LicenseKey = "…"; // once per process; omit while evaluating
+
+var converter = new HtmlToPdfConverter();
+byte[] pdf = converter.ConvertUrl("https://www.evopdf.com");
+File.WriteAllBytes("page.pdf", pdf);
+
+// HTML string, with a base URL for relative resources
+pdf = converter.ConvertHtml("<b>Hello World</b>", "https://www.evopdf.com");
+```
+
+
+## Skills in this repository
+| Skill | Use it for |
+|---|---|
+| `skills/evopdf-next-html-to-pdf` | URL/HTML string → PDF, options, dynamic pages, authentication |
+| `skills/evopdf-next-headers-footers` | HTML headers and footers, page numbers, margins |
+| `skills/evopdf-next-pdf-standards` | PDF/UA and PDF/A output, accessibility options |
+| `skills/evopdf-next-document-converters` | Word, Excel, RTF and Markdown to PDF |
+| `skills/evopdf-next-pdf-processing` | Core PDF API, PDF to text, text search, PDF to image, image extraction |
+| `skills/evopdf-next-deployment` | Packages per platform, Azure, licensing in code |
+| `skills/evopdf-next-linux` | Linux setup: system packages, execute permissions, troubleshooting order |
+| `skills/evopdf-next-docker` | Dockerfiles for Linux (x64/ARM64) and Windows containers |
+| `skills/evopdf-classic-to-next-migration` | Moving code from EvoPdf Classic to EvoPdf Next |
+| `skills/evopdf-next-troubleshooting` | Symptom → cause → fix table for HTML to PDF problems |
+| `skills/evopdf-next-azure` | App Service and Functions, Windows and Linux, plan sizing, startup command, ConfigureRuntime |
+| `skills/evopdf-next-pdf-features` | Forms, bookmarks, TOC, links, stamps, merge, PdfEditor, security |
+| `skills/evopdf-licensing` | Deployment vs Company, prices, renewals, refunds — pre-sales answers |
+| `skills/evopdf-next-html-to-image` | HTML/URL to PNG or JPEG screenshots and thumbnails |
+| `skills/evopdf-next-security-signatures` | Passwords, permissions, encryption, digital signatures, metadata |
+
+
+---
+
+---
+name: evopdf-classic-to-next-migration
+description: "Migrate .NET code from EvoPdf Classic (namespace EvoPdf, PdfConverter/HtmlToPdfConverter, PdfHeaderOptions) to EvoPdf Next: package, namespace, license key, page sizing model, headers/footers, option map. Use whenever legacy EvoPdf code must move to EvoPdf Next."
+---
+
+# EvoPdf Classic → EvoPdf Next migration
+
+Read `references/option-map.md` for the full property table before editing option code.
+
+## What stays the same
+`ConvertUrl`, `ConvertHtml(html, baseUrl)`, `…ToFile`; the option groups (`PdfDocumentOptions`, `PdfSecurityOptions`, `PdfViewerPreferences`, `HtmlViewerWidth`, `ConversionDelay`, `NavigationTimeout`, `JavaScriptEnabled`, authentication, headers, cookies); the license covers both.
+
+## What changes
+1. **Package and namespace** — `EvoPdf.HtmlToPdf` → `EvoPdf.Next.HtmlToPdf.<Platform>`; `using EvoPdf;` → `using EvoPdf.Next;`. Classic tools had sub-namespaces (`EvoPdf.PdfMerge`, `EvoPdf.PdfToText`, `EvoWordToPdf`, `EvoExcelToPdf`, `EvoPdfClient`); Next has one namespace.
+2. **License key** — instance property `converter.LicenseKey = "…"` → static `Licensing.LicenseKey = "…"` once per process.
+3. **Page sizing** — Classic `FitWidth` (default true) scaled content to the page; Next sizes the page to the content by default (`AutoResizePdfPageWidth = true`, 96 DPI → 1024 px = 768 pt). For a fixed A4: `AutoResizePdfPageWidth = false; AutoResizePdfPageHeight = false; PdfPageSize = PdfPageSize.A4`. `SinglePage` → `AutoResizePdfPageHeight = true` (with width `true`). `AutoSizePdfPage` → default behaviour. `ClipHtmlView` / `StretchToFit` → no equivalent needed.
+4. **Headers and footers** — Classic composed `PdfHeaderOptions` from `HtmlToPdfElement`, `TextElement` (`&p;`, `&P;`), `LineElement`, `HeaderHeight`, `HeaderBackColor`; Next describes each header/footer as **one HTML template**: `PdfDocumentOptions.PdfHtmlHeader.Html`/`HtmlSourceUrl`, `Height` or `AutoSizeContentHeight`, `{page_number}`/`{total_pages}`, `ShowInFirstPage`/`OddPages`/`EvenPages`, `ReserveSpaceAlways`, `AutoResizePdfMargins`; `PageNumberingStartIndex` → `PageNumberOffset`/`TotalPagesOffset`; `PrepareRenderPdfPageEvent` (per-page header on/off) → `ShowIn…` flags.
+5. **Engine behaviour** — Chromium renders modern CSS/JS exactly as Chrome: flexbox/grid/custom properties, ES2015+, `@page` and `break-*` rules are honoured; fonts and line breaks follow Chrome, so pagination can shift by a line; lazy images load by default; `LocalFilesEnabled`/`AllowInsecureContent` govern local and mixed content; HTTP/2 and TLS 1.3 sites load directly.
+
+## Before / after
+```csharp
+// Classic
+using EvoPdf;
+var c = new HtmlToPdfConverter();
+c.LicenseKey = "…";
+c.PdfDocumentOptions.PdfPageSize = PdfPageSize.A4;
+c.PdfDocumentOptions.FitWidth = true;
+c.PdfFooterOptions.AddElement(new TextElement(0, 5, "Page &p; of &P;", font));
+byte[] pdf = c.ConvertUrl(url);
+
+// Next
+using EvoPdf.Next;
+Licensing.LicenseKey = "…";
+var c = new HtmlToPdfConverter();
+c.PdfDocumentOptions.PdfPageSize = PdfPageSize.A4;
+c.PdfDocumentOptions.AutoResizePdfPageWidth = false;
+c.PdfDocumentOptions.AutoResizePdfPageHeight = false;
+c.PdfDocumentOptions.PdfHtmlFooter.Html = "<div style='font:9px Arial'>Page {page_number} of {total_pages}</div>";
+c.PdfDocumentOptions.PdfHtmlFooter.Height = 30;
+byte[] pdf = c.ConvertUrl(url);
+```
+
+## Procedure
+1. Swap package and `using`; move the license key to `Licensing.LicenseKey` at startup.
+2. Build; fix the members flagged in `option-map.md`.
+3. Convert two or three representative documents; settle page sizing first, then port headers/footers.
+4. Only then touch CSS: drop workarounds written for the old engine.
+
+Reference: https://www.evopdf.com/evopdf-classic-to-next-migration
+
+
+# Option map — EvoPdf Classic → EvoPdf Next
+
+| Classic | Next | Note |
+|---|---|---|
+| `using EvoPdf;` | `using EvoPdf.Next;` | one namespace for every component |
+| `converter.LicenseKey` | `Licensing.LicenseKey` (static) | set once, before the first conversion |
+| `HtmlViewerWidth` | `HtmlViewerWidth` | same meaning; 96 DPI in Next |
+| `ConversionDelay` | `ConversionDelay` | seconds |
+| `NavigationTimeout` | `NavigationTimeout` | |
+| `JavaScriptEnabled` | `JavaScriptEnabled` | |
+| `PdfDocumentOptions.PdfPageSize` / `PdfPageOrientation` | same | |
+| `PdfDocumentOptions.FitWidth` | `PdfDocumentOptions.AutoResizePdfPageWidth` (inverse semantics) | Classic scaled content to page; Next sizes the page to content unless `false` |
+| `PdfDocumentOptions.AutoSizePdfPage` | default behaviour | |
+| `PdfDocumentOptions.SinglePage` | `AutoResizePdfPageHeight = true` (+ width `true`) | |
+| `PdfDocumentOptions.TopSpacing` / `Y` | margins (`TopMargin`, …) or CSS | |
+| `ClipHtmlView`, `StretchToFit` | — | page width follows `HtmlViewerWidth` |
+| `PdfHeaderOptions` / `PdfFooterOptions` (`HeaderHeight`, `HeaderBackColor`, `AddElement`) | `PdfDocumentOptions.PdfHtmlHeader` / `PdfHtmlFooter` (`Html`, `Height`, `AutoSizeContentHeight`, …) | one HTML template each |
+| `TextElement("Page &p; of &P;")` | `{page_number}` / `{total_pages}` in the template HTML | |
+| `LineElement`, `HtmlToPdfElement` in header | HTML/CSS inside the template | |
+| `PdfFooterOptions.PageNumberingStartIndex` | `PdfHtmlFooter.PageNumberOffset` / `TotalPagesOffset` | |
+| `PrepareRenderPdfPageEvent` → `Page.ShowHeader` | `ShowInFirstPage` / `ShowInOddPages` / `ShowInEvenPages` | |
+| `PdfDocumentOptions.ShowHeader` / `ShowFooter` | presence of the template + `ShowIn…` | |
+| `PdfSecurityOptions`, `PdfViewerPreferences`, `PdfDocumentInfo` | same names | |
+| `MediaType` | `MediaType` | both default to screen |
+| `HttpRequestHeaders`, `HttpRequestCookies`, `AuthenticationOptions` | same | |
+
+
+---
+
+---
+name: evopdf-licensing
+description: "Answer licensing and purchasing questions about EvoPdf (Next and Classic): Deployment vs Company License, what counts as one server, load balancing and containers, redistribution, prices, EVO PDF Toolkit vs HTML to PDF Converter license, maintenance renewals, refunds, evaluation, license key delivery. Use for pre-sales and licensing questions; never invent prices or terms."
+---
+
+# EvoPdf licensing and purchasing
+
+Source of truth: https://www.evopdf.com/buy · https://www.evopdf.com/license-renewal · https://www.evopdf.com/license-agreement. Quote these facts; for anything not listed, point to the pages or to sales@evopdf.com.
+
+## Two license types (both perpetual)
+| | Deployment License | Company License |
+|---|---|---|
+| Scope | one application on one server, internal use | unlimited developers, applications and servers |
+| Redistribution | no | **yes** — the library may ship inside applications distributed to your customers |
+| Several instances (load balancing, containers, autoscaling) | not covered | covered |
+| Support | standard, first year | priority, first year |
+| Upgrade | Deployment → Company possible later via sales@evopdf.com | |
+Restriction for both: the software is used as part of your application, not offered as a development tool or standalone conversion service.
+
+## Products and prices (USD)
+| Product | Deployment | Company | Covers |
+|---|---|---|---|
+| EVO HTML to PDF Converter | 450 | 1200 | HTML to PDF, Next **and** Classic editions |
+| EVO PDF Toolkit | 650 | 1400 | every component on evopdf.com: all EvoPdf Next components and the complete Classic suite |
+Word, Excel, RTF, Markdown to PDF and the PDF tools are licensed only through the Toolkit.
+
+## What you get
+Evaluation: the full product, unlimited in time, no registration; output watermarked until a key is set; technical support is free while evaluating. After purchase: a license key string by e-mail (usually within minutes), set in code (`Licensing.LicenseKey` for Next); no activation, no online check. Keys are perpetual for the versions released during the maintenance period.
+
+## Maintenance and renewals
+First year of updates and support included. Renewal (optional; applications keep working without it): Toolkit 300 / 650 USD, HTML to PDF 250 / 550 USD (Deployment / Company), within maintenance or the 15-day grace period. Late renewal up to one year after expiration at 20% off the full license price (520 / 1120 and 360 / 960). After one year: a new license. Published renewal prices assume auto-renewal; one-time payments via sales.
+
+## Refunds and ordering
+Refund requests within 30 days of purchase if the software does not function as described or does not meet reasonable expectations; approved refunds processed within 7 days (license agreement). Orders via FastSpring (purchase online) or PayPro Global (alternate payment) — both issue invoices and accept cards, PayPal and regional methods; quotes and purchase orders via sales@evopdf.com. Vendor: No Limit Software SRL, Bucharest, Romania.
+
+## Typical answers
+- "We run 3 instances behind a load balancer" → Company License.
+- "We embed the converter in software we sell" → Company License (redistribution).
+- "Only HTML to PDF, one internal app, one server" → HTML to PDF Converter, Deployment.
+- "Word and Excel to PDF too" → EVO PDF Toolkit.
+
+
+---
+
+---
+name: evopdf-next-azure
+description: "Deploy EvoPdf Next to Azure App Service and Azure Functions on Windows and Linux: packages, plan sizing, Linux startup command for system packages, Installation.ConfigureRuntime for Azure Functions, read-only file system workarounds. Use for any EvoPdf Next question involving Azure."
+---
+
+# EvoPdf Next on Azure
+
+EvoPdf Next runs in 64-bit Azure App Service and Azure Functions, Windows and Linux. Windows needs nothing extra; Linux needs the HTML to PDF system packages installed at startup.
+
+## Plan sizing (from the documentation)
+- HTML to PDF is CPU/RAM intensive. App Service Windows: **B1** minimum for low volume, **B2** for development, **P1v3** or higher for production; Free/Shared are not suitable. App Service Linux: F1 is the minimum for tests, B2 for development, P1v3+ for production.
+- Azure Functions: choose **App Service plan or Premium** — the **Consumption plan is not suitable**; minimum B2 on Linux. Target runtime: *Portable*.
+
+## App Service — Windows
+Reference `EvoPdf.Next.Windows` (or single components), `using EvoPdf.Next;`, publish. No further configuration.
+
+## App Service — Linux
+Reference `EvoPdf.Next.Linux`. Install the dependencies at every start, because App Service does not persist packages across restarts. Recommended: **Startup Command** (Portal → Configuration → Stack settings), on the same line, before the dotnet command:
+```
+apt update && apt install -y libnss3 libatk-bridge2.0-0 libcairo2 libpango-1.0-0 && dotnet MyApp.dll
+```
+Save, then Restart; the first start takes a few minutes. Alternative in code: `Installation.ConfigureRuntime(true, null, "apt update && apt install -y libnss3 libatk-bridge2.0-0 libcairo2 libpango-1.0-0");` before the first conversion.
+
+## Azure Functions — Windows
+Reference `EvoPdf.Next.Windows`; App Service or Premium plan, Windows OS. Nothing else.
+
+## Azure Functions — Linux
+The file system is read-only outside `/tmp` and runtime files are deployed without execute permission, so use the library's installation API before the first conversion (only the first call configures; later calls are ignored):
+```csharp
+// HTML to PDF: installs the packages and prepares a writable runtime location
+Installation.ConfigureRuntime(true, null, "apt update && apt install -y libnss3 libatk-bridge2.0-0 libcairo2 libpango-1.0-0");
+// PDF Processor (text, search, images): copies the runtime to a writable location with execute permission
+PdfProcessorInstallation.ConfigureRuntime(true, null);
+```
+Manual alternative via the SSH console is documented but does not survive restarts as reliably.
+
+## Rules
+- Never assume the Consumption plan or the Free tier works for conversions.
+- Set `Licensing.LicenseKey` from an App Setting (environment variable), not from source.
+- Keep `NavigationTimeout` realistic; outbound calls from Azure to the converted site must be allowed.
+
+Docs: https://www.evopdf.com/help/evopdf-next-dotnet/html/publish-to-azure-app-service-windows.htm · …-app-service-linux.htm · …-azure-function-windows.htm · …-azure-function-linux.htm
+
+
+---
+
+---
+name: evopdf-next-deployment
+description: "Install and deploy EvoPdf Next on Windows, Linux, macOS, Docker, Azure App Service and Azure Functions: NuGet package per platform, Linux system packages, license key setup, common runtime errors. Use for setup, deployment and environment questions."
+---
+
+# EvoPdf Next — packages, platforms, deployment
+
+## Choose the package
+| Target | All components | HTML to PDF only |
+|---|---|---|
+| Windows x64 | `EvoPdf.Next.Windows` | `EvoPdf.Next.HtmlToPdf.Windows` |
+| Windows ARM64 | `EvoPdf.Next.Windows.Arm64` | `EvoPdf.Next.HtmlToPdf.Windows.Arm64` |
+| Linux x64 | `EvoPdf.Next.Linux` | `EvoPdf.Next.HtmlToPdf.Linux` |
+| Linux ARM64 | `EvoPdf.Next.Linux.Arm64` | `EvoPdf.Next.HtmlToPdf.Linux.Arm64` |
+| macOS (Apple Silicon) | `EvoPdf.Next.MacOS` | `EvoPdf.Next.HtmlToPdf.MacOS` |
+| Windows x64 + Linux x64 | `EvoPdf.Next` | `EvoPdf.Next.HtmlToPdf` |
+Other components follow the same naming (`WordToPdf`, `ExcelToPdf`, `RtfToPdf`, `MarkdownToPdf`, `Core`, `PdfProcessor`). Several platform packages can be referenced in one project.
+
+```
+dotnet add package EvoPdf.Next.Windows
+```
+
+## Runtime notes
+- Windows and macOS: no extra dependencies. Linux: the HTML to PDF Converter needs four system packages and execute permissions on the native runtimes — follow the `evopdf-next-linux` skill. Containers: follow the `evopdf-next-docker` skill (complete Dockerfiles).
+- Azure App Service (Windows and Linux) and Azure Functions are supported; Docker on Linux and Windows containers too.
+- The rendering engine ships inside the package; nothing to install on the server, xcopy deployment works.
+
+## License key
+```csharp
+Licensing.LicenseKey = Environment.GetEnvironmentVariable("EVOPDF_LICENSE_KEY");
+```
+Set once at startup (static). Without a key the output is watermarked (demo mode). Keys are perpetual and offline — no activation call.
+
+## Diagnosing
+- Output watermarked → key not set before the first conversion, or set on a different process.
+- Timeouts on Linux → missing system packages or blocked network from the container; check `NavigationTimeout` and `BlockedHosts`.
+- Fonts missing on Linux → install the fonts the HTML uses (e.g. `fonts-liberation`), or embed web fonts in the HTML.
+
+Docs: https://www.evopdf.com/help/evopdf-next-dotnet/html/getting-started-on-windows.htm · …-linux.htm · …-macos.htm · https://www.evopdf.com/evopdf-next-docker
+
+
+---
+
+---
+name: evopdf-next-docker
+description: "Run EvoPdf Next in Docker containers, Linux (Debian/Ubuntu, x64 and ARM64) and Windows Server Core: complete Dockerfiles, publish and build commands, ports, fonts in Windows containers. Use when containerizing a .NET application that uses EvoPdf Next."
+---
+
+# EvoPdf Next in Docker
+
+Read `references/dockerfiles.md` for the full, copy-ready Dockerfiles (Linux Debian 12 / ASP.NET Core 8, Ubuntu 24.04 / ASP.NET Core 10, Windows Server Core 2022 and 2025).
+
+## Linux container — the pattern
+1. Publish the application for Linux: `dotnet publish -c Release -r linux-x64 -o publish` (or `-r linux-arm64`). The `publish` folder must contain the app DLL and `evopdf_runtimes/` at its root.
+2. Base image: any `mcr.microsoft.com/dotnet/aspnet:<version>` (multi-arch; the host architecture is selected automatically).
+3. Install the four HTML to PDF dependencies, copy `publish/`, `chmod +x` the two native runtimes, expose the port.
+
+```dockerfile
+FROM mcr.microsoft.com/dotnet/aspnet:8.0
+RUN apt-get update && apt-get install -y libnss3 libatk-bridge2.0-0 libcairo2 libpango-1.0-0 && rm -rf /var/lib/apt/lists/*
+WORKDIR /app
+COPY publish/ .
+RUN chmod +x /app/evopdf_runtimes/linux-x64/native/evopdf_loadhtml \
+ && chmod +x /app/evopdf_runtimes/linux-x64/native/evopdf_pdfprocessor
+EXPOSE 8080
+ENV ASPNETCORE_URLS=http://+:8080
+ENTRYPOINT ["dotnet", "MyApp.dll"]
+```
+```bash
+docker build -t myapp .
+docker run -d -p 8080:8080 --name myapp myapp
+# ARM64 image built on an x64 host:
+docker build --platform linux/arm64 -t myapp-arm64 .
+docker run -d --platform linux/arm64 -p 8080:8080 myapp-arm64
+```
+For ARM64 the runtime folder is `evopdf_runtimes/linux-arm64/native/`.
+
+## Windows container — the pattern
+Base image `mcr.microsoft.com/dotnet/aspnet:8.0-windowsservercore-ltsc2022` (or `10.0-windowsservercore-ltsc2025`). No EvoPdf dependencies to install, but **Server Core images ship almost no fonts**: copy the fonts your documents need into `C:\Windows\Fonts` and register them in the registry (see the reference Dockerfile). Nano Server images are not suitable.
+
+## Rules for generated Dockerfiles
+- Never bake a license key into the image; pass it as an environment variable (`Licensing.LicenseKey = Environment.GetEnvironmentVariable("EVOPDF_LICENSE_KEY")`).
+- Keep the four `apt` packages and the two `chmod` lines; they are the two most common causes of "works locally, fails in the container".
+- The application's rendering engine is inside the NuGet package; do not install Chrome or Chromium in the image.
+
+Docs: https://www.evopdf.com/help/evopdf-next-dotnet/html/publish-to-docker-on-linux.htm · …/publish-to-docker-on-windows.htm · https://www.evopdf.com/evopdf-next-docker
+
+
+# Reference Dockerfiles (from the EvoPdf Next documentation)
+
+The demo application is used as the example; replace `EvoPdf_Next_AspNetDemo_Linux.dll` / `…_Windows.dll` and the port with your own.
+
+## Linux Debian 12 — ASP.NET Core Runtime 8.0
+```dockerfile
+FROM mcr.microsoft.com/dotnet/aspnet:8.0
+
+# Install EvoPdf dependencies
+RUN apt-get update && \
+    apt-get install -y \
+        libnss3 \
+        libatk-bridge2.0-0 \
+        libcairo2 \
+        libpango-1.0-0 && \
+    rm -rf /var/lib/apt/lists/*
+
+# Set the working directory
+WORKDIR /app
+
+# Copy the published ASP.NET Core app files from the publish folder into the image
+COPY publish/ .
+
+# Ensure execute permissions for EvoPdf HTML to PDF runtime
+RUN chmod +x /app/evopdf_runtimes/linux-x64/native/evopdf_loadhtml
+
+# Ensure execute permissions for EvoPdf PDF Processor runtime
+RUN chmod +x /app/evopdf_runtimes/linux-x64/native/evopdf_pdfprocessor
+
+# Expose the port used by the app
+EXPOSE 27101
+
+# Set the ASP.NET Core application to listen on port 27101
+ENV ASPNETCORE_URLS=http://+:27101
+
+# Start the application
+ENTRYPOINT ["dotnet", "EvoPdf_Next_AspNetDemo_Linux.dll"]
+```
+
+## Linux Ubuntu 24.04 — ASP.NET Core Runtime 10.0
+```dockerfile
+FROM mcr.microsoft.com/dotnet/aspnet:10.0
+
+# Install EvoPdf dependencies
+RUN apt-get update && \
+    apt-get install -y \
+        libnss3 \
+        libatk-bridge2.0-0 \
+        libcairo2 \
+        libpango-1.0-0 && \
+    rm -rf /var/lib/apt/lists/*
+
+# Set the working directory
+WORKDIR /app
+
+# Copy the published ASP.NET Core app files from the publish folder into the image
+COPY publish/ .
+
+# Ensure execute permissions for EvoPdf HTML to PDF runtime
+RUN chmod +x /app/evopdf_runtimes/linux-x64/native/evopdf_loadhtml
+
+# Ensure execute permissions for EvoPdf PDF Processor runtime
+RUN chmod +x /app/evopdf_runtimes/linux-x64/native/evopdf_pdfprocessor
+
+# Expose the port used by the app
+EXPOSE 27101
+
+# Set the ASP.NET Core application to listen on port 27101
+ENV ASPNETCORE_URLS=http://+:27101
+
+# Start the application
+ENTRYPOINT ["dotnet", "EvoPdf_Next_AspNetDemo_Linux.dll"]
+```
+
+## Linux Ubuntu 22.04 (jammy) — ASP.NET Core Runtime 8.0
+```dockerfile
+FROM mcr.microsoft.com/dotnet/aspnet:8.0-jammy
+
+# Install EvoPdf dependencies
+RUN apt-get update && \
+    apt-get install -y \
+        libnss3 \
+        libatk-bridge2.0-0 \
+        libcairo2 \
+        libpango-1.0-0 && \
+    rm -rf /var/lib/apt/lists/*
+
+# Set the working directory
+WORKDIR /app
+
+# Copy the published ASP.NET Core app files from the publish folder into the image
+COPY publish/ .
+
+# Ensure execute permissions for EvoPdf HTML to PDF runtime
+RUN chmod +x /app/evopdf_runtimes/linux-x64/native/evopdf_loadhtml
+
+# Ensure execute permissions for EvoPdf PDF Processor runtime
+RUN chmod +x /app/evopdf_runtimes/linux-x64/native/evopdf_pdfprocessor
+
+# Expose the port used by the app
+EXPOSE 27101
+
+# Set the ASP.NET Core application to listen on port 27101
+ENV ASPNETCORE_URLS=http://+:27101
+
+# Start the application
+ENTRYPOINT ["dotnet", "EvoPdf_Next_AspNetDemo_Linux.dll"]
+```
+
+## Linux ARM64
+```dockerfile
+FROM mcr.microsoft.com/dotnet/aspnet:8.0
+
+# Install EvoPdf dependencies
+RUN apt-get update && \
+    apt-get install -y \
+        libnss3 \
+        libatk-bridge2.0-0 \
+        libcairo2 \
+        libpango-1.0-0 && \
+    rm -rf /var/lib/apt/lists/*
+
+# Set the working directory
+WORKDIR /app
+
+# Copy the published ASP.NET Core app files from the publish folder into the image
+COPY publish/ .
+
+# Ensure execute permissions for EvoPdf HTML to PDF runtime
+RUN chmod +x /app/evopdf_runtimes/linux-arm64/native/evopdf_loadhtml
+
+# Ensure execute permissions for EvoPdf PDF Processor runtime
+RUN chmod +x /app/evopdf_runtimes/linux-arm64/native/evopdf_pdfprocessor
+
+# Expose the port used by the app
+EXPOSE 27101
+
+# Set the ASP.NET Core application to listen on port 27101
+ENV ASPNETCORE_URLS=http://+:27101
+
+# Start the application
+ENTRYPOINT ["dotnet", "EvoPdf_Next_AspNetDemo_Linux.Arm64.dll"]
+```
+
+## Linux variant 5
+```dockerfile
+FROM mcr.microsoft.com/dotnet/aspnet:10.0
+
+# Install EvoPdf dependencies
+RUN apt-get update && \
+    apt-get install -y \
+        libnss3 \
+        libatk-bridge2.0-0 \
+        libcairo2 \
+        libpango-1.0-0 && \
+    rm -rf /var/lib/apt/lists/*
+
+# Set the working directory
+WORKDIR /app
+
+# Copy the published ASP.NET Core app files from the publish folder into the image
+COPY publish/ .
+
+# Ensure execute permissions for EvoPdf HTML to PDF runtime
+RUN chmod +x /app/evopdf_runtimes/linux-arm64/native/evopdf_loadhtml
+
+# Ensure execute permissions for EvoPdf PDF Processor runtime
+RUN chmod +x /app/evopdf_runtimes/linux-arm64/native/evopdf_pdfprocessor
+
+# Expose the port used by the app
+EXPOSE 27101
+
+# Set the ASP.NET Core application to listen on port 27101
+ENV ASPNETCORE_URLS=http://+:27101
+
+# Start the application
+ENTRYPOINT ["dotnet", "EvoPdf_Next_AspNetDemo_Linux.Arm64.dll"]
+```
+
+## Linux variant 6
+```dockerfile
+FROM mcr.microsoft.com/dotnet/aspnet:8.0-jammy
+
+# Install EvoPdf dependencies
+RUN apt-get update && \
+    apt-get install -y \
+        libnss3 \
+        libatk-bridge2.0-0 \
+        libcairo2 \
+        libpango-1.0-0 && \
+    rm -rf /var/lib/apt/lists/*
+
+# Set the working directory
+WORKDIR /app
+
+# Copy the published ASP.NET Core app files from the publish folder into the image
+COPY publish/ .
+
+# Ensure execute permissions for EvoPdf HTML to PDF runtime
+RUN chmod +x /app/evopdf_runtimes/linux-arm64/native/evopdf_loadhtml
+
+# Ensure execute permissions for EvoPdf PDF Processor runtime
+RUN chmod +x /app/evopdf_runtimes/linux-arm64/native/evopdf_pdfprocessor
+
+# Expose the port used by the app
+EXPOSE 27101
+
+# Set the ASP.NET Core application to listen on port 27101
+ENV ASPNETCORE_URLS=http://+:27101
+
+# Start the application
+ENTRYPOINT ["dotnet", "EvoPdf_Next_AspNetDemo_Linux.Arm64.dll"]
+```
+
+## Windows Server Core LTSC 2022 — ASP.NET Core Runtime 8.0
+```dockerfile
+FROM mcr.microsoft.com/windows/server:ltsc2022
+
+# Use PowerShell as default shell
+SHELL ["powershell", "-Command"]
+
+# Install .NET 8.0 ASP.NET Core Runtime from ZIP
+RUN Invoke-WebRequest -Uri 'https://builds.dotnet.microsoft.com/dotnet/aspnetcore/Runtime/8.0.22/aspnetcore-runtime-8.0.22-win-x64.zip' -OutFile 'C:\\dotnet.zip'; \
+    Expand-Archive -Path 'C:\\dotnet.zip' -DestinationPath 'C:\\dotnet'; \
+    Remove-Item 'C:\\dotnet.zip' -Force
+
+ENV DOTNET_ROOT=C:\dotnet
+
+WORKDIR C:/app
+
+# Copy the published ASP.NET Core app files from the publish folder into the image
+COPY publish/ .
+
+EXPOSE 27102
+ENV ASPNETCORE_URLS=http://+:27102
+
+ENTRYPOINT ["C:\\dotnet\\dotnet.exe", "C:\\app\\EvoPdf_Next_AspNetDemo_Windows.dll"]
+```
+
+## Windows Server Core LTSC 2025 — ASP.NET Core Runtime 10.0
+```dockerfile
+FROM mcr.microsoft.com/windows/server:ltsc2025
+
+# Use PowerShell as default shell
+SHELL ["powershell", "-Command"]
+
+# Install .NET 10.0 ASP.NET Core Runtime from ZIP
+RUN Invoke-WebRequest -Uri 'https://builds.dotnet.microsoft.com/dotnet/aspnetcore/Runtime/10.0.0/aspnetcore-runtime-10.0.0-win-x64.zip' -OutFile 'C:\\dotnet.zip'; \
+    Expand-Archive -Path 'C:\\dotnet.zip' -DestinationPath 'C:\\dotnet'; \
+    Remove-Item 'C:\\dotnet.zip' -Force
+
+ENV DOTNET_ROOT=C:\dotnet
+
+WORKDIR C:/app
+
+# Copy the published ASP.NET Core app files from the publish folder into the image
+COPY publish/ .
+
+EXPOSE 27102
+ENV ASPNETCORE_URLS=http://+:27102
+
+ENTRYPOINT ["C:\\dotnet\\dotnet.exe", "C:\\app\\EvoPdf_Next_AspNetDemo_Windows.dll"]
+```
+
+## Windows variant 3
+```dockerfile
+FROM mcr.microsoft.com/dotnet/aspnet:8.0-windowsservercore-ltsc2022
+
+SHELL ["powershell", "-Command"]
+
+# Copy fonts from build context into the image Fonts folder
+COPY Fonts/ C:/Windows/Fonts/
+
+# Register fonts in container's Windows registry
+RUN $ErrorActionPreference = 'Stop'; \
+    Get-ChildItem 'C:\Windows\Fonts' -Include *.ttf, *.ttc, *.otf -Recurse | ForEach-Object { \
+        $file = $_.Name; \
+        $name = [System.IO.Path]::GetFileNameWithoutExtension($file); \
+        $regName = $name + ' (TrueType)'; \
+        New-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Fonts' -Name $regName -PropertyType String -Value $file -Force | Out-Null \
+    }
+
+# Set working directory for the app
+WORKDIR C:/app
+
+# Copy the published ASP.NET Core app files from the publish folder into the image
+COPY publish/ .
+
+# Expose the application port
+EXPOSE 27102
+
+# Configure ASP.NET Core to listen on all interfaces and port 27102
+ENV ASPNETCORE_URLS=http://+:27102
+
+# Run the application
+ENTRYPOINT ["dotnet", "C:\\app\\EvoPdf_Next_AspNetDemo_Windows.dll"]
+```
+
+## Windows variant 4
+```dockerfile
+FROM mcr.microsoft.com/dotnet/aspnet:10.0-windowsservercore-ltsc2025
+
+SHELL ["powershell", "-Command"]
+
+# Copy fonts from build context into the image Fonts folder
+COPY Fonts/ C:/Windows/Fonts/
+
+# Register fonts in container's Windows registry
+RUN $ErrorActionPreference = 'Stop'; \
+    Get-ChildItem 'C:\Windows\Fonts' -Include *.ttf, *.ttc, *.otf -Recurse | ForEach-Object { \
+        $file = $_.Name; \
+        $name = [System.IO.Path]::GetFileNameWithoutExtension($file); \
+        $regName = $name + ' (TrueType)'; \
+        New-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Fonts' -Name $regName -PropertyType String -Value $file -Force | Out-Null \
+    }
+
+# Set working directory for the app
+WORKDIR C:/app
+
+# Copy the published ASP.NET Core app files from the publish folder into the image
+COPY publish/ .
+
+# Expose the application port
+EXPOSE 27102
+
+# Configure ASP.NET Core to listen on all interfaces and port 27102
+ENV ASPNETCORE_URLS=http://+:27102
+
+# Run the application
+ENTRYPOINT ["powershell", "-Command", "Start-Sleep -Seconds 3; dotnet C:\\app\\EvoPdf_Next_AspNetDemo_Windows.dll"]
+```
+
+## Build and run
+```bash
+docker build -t evopdf-next-demo-image-linux .
+docker run -d -p 27101:27101 --name evopdf-next-demo-app-linux evopdf-next-demo-image-linux
+# Windows containers
+docker build -t evopdf-next-demo-image-windows .
+docker run -d -p 27102:27102 --name evopdf-next-demo-app-windows evopdf-next-demo-image-windows
+```
+
+
+---
+
+---
+name: evopdf-next-document-converters
+description: "Convert Word DOCX, Excel XLSX, RTF and Markdown documents to PDF in .NET with EvoPdf Next (WordToPdfConverter, ExcelToPdfConverter, RtfToPdfConverter, MarkdownToPdfConverter). Use for Office/RTF/Markdown to PDF tasks in C#."
+---
+
+# EvoPdf Next — Word, Excel, RTF and Markdown to PDF
+
+Packages: `EvoPdf.Next.WordToPdf.*`, `EvoPdf.Next.ExcelToPdf.*`, `EvoPdf.Next.RtfToPdf.*`, `EvoPdf.Next.MarkdownToPdf.*` (`.Windows` / `.Linux` / `.MacOS`). Namespace `EvoPdf.Next`. No Microsoft Office required.
+
+```csharp
+using EvoPdf.Next;
+
+var word = new WordToPdfConverter();
+word.PdfDocumentOptions.GenerateTableOfContents = true;
+byte[] pdf = word.ConvertToPdf(docxBytes);          // or ConvertToPdf(string path), ConvertToPdfFile(…)
+
+var excel = new ExcelToPdfConverter();
+excel.ExcelToPdfDocumentOptions.UsePageSettingsFromExcel = true;
+pdf = excel.ConvertToPdf(xlsxBytes);
+
+var rtf = new RtfToPdfConverter();
+pdf = rtf.ConvertStringToPdf(rtfString);            // also ConvertToPdf(bytes), ConvertFileToPdf, ConvertStreamToPdf
+
+var md = new MarkdownToPdfConverter();
+pdf = md.ConvertStringToPdf(markdown, baseUrl);     // baseUrl resolves relative images and links; also ConvertFileToPdf
+```
+- Every converter has `…Async` methods and `…ToPdfFile` variants that write directly to disk.
+- All share the `PdfDocumentOptions` model: page size/orientation/margins, headers and footers (`PdfHtmlHeader` / `PdfHtmlFooter`), table of contents, `PdfStandard`, security and stamps — see the headers-footers and pdf-standards skills.
+- Excel: `UsePageSettingsFromExcel = true` keeps the workbook's page setup; `false` reflows into `PdfPageSize` / orientation / margins you set.
+- Word: keeps the document's page settings by default; set your own on `PdfDocumentOptions` to reflow.
+
+
+---
+
+---
+name: evopdf-next-headers-footers
+description: "Add HTML headers and footers with page numbers to PDFs generated by EvoPdf Next (PdfHtmlHeader/PdfHtmlFooter, {page_number}, {total_pages}, browser header templates). Use when a .NET PDF needs repeated header/footer content."
+---
+
+# EvoPdf Next — headers and footers
+
+Two mechanisms, both on `HtmlToPdfConverter.PdfDocumentOptions` (Word/Excel/RTF/Markdown converters expose the same options object).
+
+## 1. HTML templates (recommended — full control)
+```csharp
+var footer = converter.PdfDocumentOptions.PdfHtmlFooter;   // PdfHtmlHeaderFooter
+footer.Html = "<div style='font:10px Arial;text-align:right'>Page {page_number} of {total_pages}</div>";
+footer.HtmlBaseUrl = "https://www.evopdf.com";  // or footer.HtmlSourceUrl = "https://…/footer.html"
+footer.Height = 40;                              // points; or footer.AutoSizeContentHeight = true
+footer.ShowInFirstPage = true;                   // ShowInOddPages / ShowInEvenPages
+footer.ReserveSpaceAlways = true;                // default
+footer.AutoResizePdfMargins = true;              // grow the page margin to make room
+footer.PageNumberOffset = 0; footer.TotalPagesOffset = 0;
+
+var header = converter.PdfDocumentOptions.PdfHtmlHeader;
+header.Html = "<img src='logo.png' style='height:24px'>";
+header.HtmlBaseUrl = "https://www.example.com/assets/";
+header.Height = 50;
+```
+- Variables `{page_number}` and `{total_pages}` are replaced in the template (disable with `SkipVariablesParsing`).
+- `FitHeight` scales the template to `Height`; `MinContentHeight` / `MaxContentHeight` bound auto-sizing.
+
+## 2. Browser mode (simple, Chromium print header/footer)
+```csharp
+var o = converter.PdfDocumentOptions;
+o.EnableHeaderFooter = true;
+o.HeaderTemplate = "<div style='font-size:8px'><span class='title'></span></div>";
+o.FooterTemplate = "<div style='font-size:8px'><span class='pageNumber'></span>/<span class='totalPages'></span></div>";
+```
+Uses Chromium's classes (`date`, `title`, `url`, `pageNumber`, `totalPages`). Less control than templates; no external resources.
+
+## Migrating from Classic
+Classic `PdfHeaderOptions` / `PdfFooterOptions` with `HtmlToPdfElement`, `TextElement` (`&p;`/`&P;`) and `LineElement` become one HTML template per header/footer — draw lines and text in HTML/CSS. `PageNumberingStartIndex` → `PageNumberOffset`.
+
+
+---
+
+---
+name: evopdf-next-html-to-image
+description: "Convert HTML pages, URLs and HTML strings to PNG or JPEG images (screenshots, thumbnails, full-page captures) in .NET with EvoPdf Next HtmlToImageConverter: image format, viewer size, entire-page capture, element selection. Use for HTML to image, web page screenshot or HTML thumbnail tasks in C#."
+---
+
+# EvoPdf Next — HTML to image
+
+Package: `EvoPdf.Next.HtmlToPdf.*` (the HTML to Image converter ships with the HTML to PDF component) or the all-components package. Namespace `EvoPdf.Next`. Class `HtmlToImageConverter` — same loading options as `HtmlToPdfConverter`.
+
+```csharp
+using EvoPdf.Next;
+
+var converter = new HtmlToImageConverter();
+converter.HtmlViewerWidth = 1280;                // layout width in pixels
+converter.CaptureEntirePage = true;             // whole page height, not just the viewer area
+byte[] png = converter.ConvertUrl("https://www.evopdf.com", ImageType.Png);   // ImageType: Png, Jpeg, Webp
+File.WriteAllBytes("page.png", png);
+
+byte[] jpg = converter.ConvertHtml("<h1>Hello</h1>", "https://www.example.com/", ImageType.Jpeg);
+converter.ConvertUrlToFile("https://www.evopdf.com", ImageType.Png, "page.png");   // …Async variants exist
+```
+
+## Sizing
+- `HtmlViewerWidth` (px) sets the layout width; `HtmlViewerHeight` the captured height when `CaptureEntirePage = false`; `MaxHtmlViewerHeight` caps very long pages; `AutoResizeHtmlViewerHeight` fits the viewer to the content.
+- `CaptureEntirePage` / `CaptureEntirePageMode` decide between "visible area" and "full page" screenshots.
+- Thumbnails: render at the real width, then resize the returned bytes with your imaging library — the converter produces 1:1 pixels.
+
+## Same loading controls as HTML to PDF
+`ConversionDelay`, `TriggeringMode`, `NavigationTimeout`, `JavaScriptEnabled`, `MediaType`, `ScriptToExecuteAfterLoad`, `AuthenticationOptions`, `HttpRequestHeaders`, `HttpRequestCookies`, `HttpPostFields`, `LocalFilesEnabled`, `AllowInsecureContent`, `IgnoreCertificateErrors`, `BlockedHosts`.
+
+## Select what to capture
+`ConvertedElementsSelector` (CSS selector: only these elements are rendered), `ExcludedElementsSelector` / `RemoveExcludedElements` (hide or remove elements such as cookie banners before the capture).
+
+## Pitfalls
+- Formats: `ImageType.Png`, `ImageType.Jpeg`, `ImageType.Webp`. JPEG has no transparency — use PNG or WebP for transparent backgrounds.
+- Fonts and lazy images follow the HTML to PDF rules (see the troubleshooting and Linux skills).
+- License key: `Licensing.LicenseKey` once per process; demo mode stamps the image.
+
+Docs: https://www.evopdf.com/help/evopdf-next-dotnet/
+
+
+---
+
+---
+name: evopdf-next-html-to-pdf
+description: "Convert HTML pages, URLs and HTML strings to PDF in .NET with EvoPdf Next (HtmlToPdfConverter): options, page size, dynamic pages, authentication, forms, links, images. Use for any C#/.NET HTML to PDF task."
+---
+
+# EvoPdf Next — HTML to PDF
+
+Package: `EvoPdf.Next.HtmlToPdf.Windows` / `.Linux` / `.MacOS` (or the all-components `EvoPdf.Next.Windows` / `.Linux` / `.MacOS`). Namespace `EvoPdf.Next`. Class `HtmlToPdfConverter`.
+
+## Minimal
+
+```csharp
+using EvoPdf.Next;
+
+Licensing.LicenseKey = "…"; // once per process; omit while evaluating
+
+var converter = new HtmlToPdfConverter();
+byte[] pdf = converter.ConvertUrl("https://www.evopdf.com");
+File.WriteAllBytes("page.pdf", pdf);
+
+// HTML string, with a base URL for relative resources
+pdf = converter.ConvertHtml("<b>Hello World</b>", "https://www.evopdf.com");
+```
+
+
+## Methods
+- `byte[] ConvertUrl(string url)` · `ConvertUrlToFile(url, path)` · `ConvertHtml(string html, string baseUrl)` · `ConvertHtmlToFile(html, baseUrl, path)` — each with an `…Async` variant.
+- `HtmlElementsInfo` (after `HtmlElementsInfoSelector`) returns the PDF position of HTML elements; `ConvertedElementsSelector` / `ExcludedElementsSelector` convert or skip parts of the page.
+
+## Page size and margins
+```csharp
+var o = converter.PdfDocumentOptions;
+o.PdfPageSize = PdfPageSize.A4;
+o.PdfPageOrientation = PdfPageOrientation.Portrait;
+o.AutoResizePdfPageWidth = false;   // otherwise the page width follows HtmlViewerWidth (1024 px = 768 pt at 96 DPI)
+o.AutoResizePdfPageHeight = false;  // true (with width true) = whole content on one page
+o.LeftMargin = o.RightMargin = o.TopMargin = o.BottomMargin = 36; // points
+o.PrintBackgrounds = true;
+o.PreferCssPageSize = true;         // honour @page in the HTML
+converter.HtmlViewerWidth = 1024;   // layout width in pixels
+```
+
+## Dynamic pages, timing, loading
+```csharp
+converter.ConversionDelay = 2;                  // seconds after load
+converter.TriggeringMode = TriggeringMode.Manual; // page calls evoPdfConverter_startConversion()
+converter.NavigationTimeout = 120;
+converter.JavaScriptEnabled = true;
+converter.LoadLazyImages = true;                // default
+converter.MediaType = "print";                  // default: screen (not set)
+converter.ScriptToExecuteAfterLoad = "document.body.classList.add('pdf')";
+```
+
+## Pages behind a login, headers, cookies
+```csharp
+converter.AuthenticationOptions.Username = "user";
+converter.AuthenticationOptions.Password = "secret";
+converter.HttpRequestHeaders.Add("Authorization", "Bearer …");
+converter.HttpRequestCookies.Add("session", "…");
+converter.LocalFilesEnabled = true;       // file:// resources
+converter.AllowInsecureContent = true;    // mixed content
+converter.IgnoreCertificateErrors = true; // self-signed dev servers
+```
+
+## Output features (all on `PdfDocumentOptions` unless noted)
+- `GenerateDocumentOutline`, `GenerateTableOfContents` / `TableOfContents`, `RepeatTableHeaderFooter`, `GeneratePdfFormFields` / `PdfFormOptions`, `PdfStandard` (see the pdf-standards skill), headers/footers (see the headers-footers skill).
+- `converter.PdfSecurityOptions` (passwords, permissions), `converter.DigitalSignature`, `converter.PdfDocumentInfo` (title, author), `converter.PdfViewerPreferences`.
+
+## Pitfalls
+- Set `Licensing.LicenseKey` once, before the first conversion; the property is static.
+- A page that renders fine in Chrome renders the same way here; if output looks wrong, check `MediaType`, `PrintBackgrounds` and `@page` rules in the CSS.
+- Do not reuse one converter instance across threads; create one per conversion.
+
+Docs: https://www.evopdf.com/help/evopdf-next-dotnet/ · Product page: https://www.evopdf.com/evopdf-next-html-to-pdf-dotnet
+
+
+---
+
+---
+name: evopdf-next-linux
+description: "Install and run EvoPdf Next on Linux (Ubuntu, Debian, RedHat, Amazon Linux, x64 and ARM64): NuGet packages, required system packages, execute permissions on the native runtimes, first-line troubleshooting. Use for any EvoPdf Next problem or setup question on Linux."
+---
+
+# EvoPdf Next on Linux
+
+Applies to 64-bit Linux, x64 and ARM64. Only the **HTML to PDF Converter** needs system packages; the other components (Word/Excel/RTF/Markdown to PDF, Core, PDF Processor) run without extra dependencies.
+
+## 1. Packages
+All components: `EvoPdf.Next.Linux` (x64) or `EvoPdf.Next.Linux.Arm64`. Single components: `EvoPdf.Next.HtmlToPdf.Linux[.Arm64]`, `EvoPdf.Next.WordToPdf.Linux[.Arm64]`, `EvoPdf.Next.ExcelToPdf.Linux[.Arm64]`, `EvoPdf.Next.RtfToPdf.Linux[.Arm64]`, `EvoPdf.Next.MarkdownToPdf.Linux[.Arm64]`, `EvoPdf.Next.PdfProcessor.Linux[.Arm64]`, `EvoPdf.Next.Core.Linux` (covers both architectures). Any combination can be referenced.
+
+## 2. System packages for HTML to PDF
+```bash
+# Ubuntu 20.04 / 22.04 / 24.04 / 25.04, Debian 12
+sudo apt update && sudo apt install -y libnss3 libatk-bridge2.0-0 libcairo2 libpango-1.0-0
+
+# RedHat 9.5, Amazon Linux 2023
+sudo dnf install -y nss at-spi2-atk cairo pango
+```
+Other distributions need the equivalent NSS, AT-SPI2/ATK bridge, Cairo and Pango packages.
+
+## 3. Execute permissions on the native runtimes
+The build copies `evopdf_runtimes/` into the output folder. On Linux the native binaries must be executable; run in the application's output (or publish) folder:
+```bash
+chmod +x evopdf_runtimes/linux-x64/native/evopdf_loadhtml       # HTML to PDF
+chmod +x evopdf_runtimes/linux-x64/native/evopdf_pdfprocessor   # PDF to text / search / image / images extractor
+```
+For ARM64 the folder is `evopdf_runtimes/linux-arm64/native/`. Permissions can be lost by zip/unzip, some CI artifact steps and file copies from Windows — repeat the command after such steps.
+
+## 4. Code
+Identical to any other platform:
+```csharp
+using EvoPdf.Next;
+var converter = new HtmlToPdfConverter();
+byte[] pdf = converter.ConvertHtml("<b>Hello</b>", null);
+File.WriteAllBytes("hello.pdf", pdf);
+```
+
+## Troubleshooting — check in this order
+1. **System packages installed?** Run the `apt`/`dnf` command from step 2 — most "it does not work on Linux" reports end here. Missing libraries surface as load failures or timeouts of the HTML to PDF conversion while the other components work.
+2. **Execute permission** on `evopdf_loadhtml` / `evopdf_pdfprocessor` (step 3), especially after deployment through a zip or from Windows.
+3. **Right package for the architecture** — `uname -m` says `x86_64` → `.Linux`; `aarch64` → `.Linux.Arm64`.
+4. **Fonts** — text renders in fallback fonts when the HTML's fonts are not installed; install them (`fonts-liberation`, `fonts-noto`, …) or embed web fonts in the HTML.
+5. **Network** — a URL conversion that times out inside a container may be a blocked outbound connection; test with an HTML string first, then raise `NavigationTimeout`.
+6. **Watermarked output** — `Licensing.LicenseKey` not set before the first conversion.
+
+Docs: https://www.evopdf.com/help/evopdf-next-dotnet/html/getting-started-on-linux.htm
+
+
+---
+
+---
+name: evopdf-next-pdf-features
+description: "PDF features of EvoPdf Next beyond plain conversion: fillable PDF forms from HTML forms, document outline (bookmarks), table of contents, internal and external links, stamps and watermarks, merging PDFs, editing existing PDFs with PdfEditor, security and digital signatures. Use when a .NET task needs one of these PDF features."
+---
+
+# EvoPdf Next — forms, bookmarks, TOC, links, stamps, merge, edit
+
+`o` = `converter.PdfDocumentOptions` on any converter (HTML, Word, Excel, RTF, Markdown).
+
+## Fillable PDF forms from HTML forms
+```csharp
+o.GeneratePdfFormFields = true;
+o.PdfFormOptions.MapHtmlSubmitButtonsToPdfActions = true;   // submit/reset buttons keep working
+o.PdfFormOptions.FieldNamingMode = …;                        // how field names are derived
+o.PdfFormOptions.ApplyRequiredAsPdfRequiredFlag = true;
+```
+Other options: `SubmitBehavior`, `SubmitFormat`, `IncludeIFrameFields`, `ExcludeDisabledFieldsFromSubmit`, `FormFieldFont`/`…BoldFont`. Inputs, selects, textareas, checkboxes, radios and buttons in the HTML become PDF fields.
+
+## Bookmarks (document outline)
+```csharp
+o.GenerateDocumentOutline = true;   // from the HTML headings hierarchy
+o.UseBrowserOutlineMode = true;     // let Chromium build the outline
+```
+
+## Table of contents
+```csharp
+o.GenerateTableOfContents = true;
+o.TableOfContents.Title = "Contents";
+o.TableOfContents.ShowPageNumbers = true;
+o.TableOfContents.Style = "…css…";        // CSS for the TOC entries
+o.TableOfContents.CreateInline = false;    // true: at the position marked in the HTML
+o.TableOfContents.PageNumbersOffset = 0;   // CountTocPages / CountStartPages control numbering
+```
+
+## Links
+External links (`<a href="https://…">`) and internal anchors (`<a href="#section">`) in the HTML become PDF links automatically. Disable by removing/neutralising the anchors before conversion.
+
+## Stamps, watermarks, text and images on pages
+On a generated or existing PDF, through `PdfEditor`:
+```csharp
+using var editor = new PdfEditor(pdfBytes, password: null);   // or (path, password)
+int pages = editor.GetPageCount();
+editor.AddHtmlTemplate(pageNumber, x, y, "<div style='opacity:.3;font:48px Arial'>DRAFT</div>"); // HTML stamp; overloads take width/height/base URL/alignment
+editor.AddText(pageNumber, new PdfTextElement(…));   // PdfTextElement, PdfImageElement
+editor.AddImage(pageNumber, new PdfImageElement(…));
+byte[] result = editor.Save();                        // or SaveToFile(path)
+```
+`AddPage`, `AddLine`, `AddRectangle`, `AddPath`, `AddLinkAnnotation`, `AddTextAnnotation`, `AddFileAttachment` follow the same pattern. The same methods exist on `PdfDocument` for documents created from scratch.
+
+## Merge PDFs
+`editor.AddPdfTemplate(x, y, width, height, …)` places another PDF's pages as a template; for appending whole documents, add pages to a `PdfDocument`/`PdfEditor` and draw each source page with `AddPdfTemplate`, or convert several HTML documents into one PDF by concatenating the HTML.
+
+## Security and signatures
+`converter.PdfSecurityOptions` (open/permissions passwords, print/copy/edit flags); `converter.DigitalSignature`; `PdfEditor` constructors accept a `PdfDigitalSignature` to sign an existing PDF.
+
+## PDF/UA and PDF/A
+See the `evopdf-next-pdf-standards` skill (`o.PdfStandard`).
+
+Docs: https://www.evopdf.com/help/evopdf-next-dotnet/
+
+
+---
+
+---
+name: evopdf-next-pdf-processing
+description: "Create, edit and process PDF documents in .NET with EvoPdf Next: Core PDF API (PdfDocument, PdfEditor), PDF to text with search (PdfToTextConverter.FindText), PDF to image, embedded image extraction. Use for PDF manipulation tasks in C#."
+---
+
+# EvoPdf Next — PDF processing
+
+Packages: `EvoPdf.Next.Core.*` (create/edit), `EvoPdf.Next.PdfProcessor.*` (text, images) — `.Windows` / `.Linux` / `.MacOS`. Namespace `EvoPdf.Next`.
+
+## Create a PDF
+```csharp
+using EvoPdf.Next;
+
+using var pdf = new PdfDocument(new PdfDocumentCreateSettings {
+    PageSize = PdfPageSize.A4, Margins = new PdfMargins(36, 36, 36, 36) });
+var font = PdfFontManager.CreateStandardFont(PdfStandardFont.Helvetica, 16f, PdfFontStyle.Bold, PdfColor.Black);
+pdf.AddText(new PdfTextElement("Hello", font));
+pdf.AddImage(…); pdf.AddLine(…); pdf.AddRectangle(…); pdf.AddHtmlTemplate(…); pdf.AddFileAttachment(…);
+pdf.SaveToFile("created.pdf");            // or byte[] Save()
+```
+`PdfEditor` opens an existing PDF and exposes the same `Add…` methods plus `GetPageCount()` / `GetPdfPageInfo()` — stamp, merge (`AddPdfTemplate`), annotate, attach, sign, encrypt.
+
+## Text, search, images
+```csharp
+var text = new PdfToTextConverter();
+text.TextLayout = PdfToTextLayout.Original;              // or reading order
+string s = text.ConvertToText(pdfBytes);
+FindTextLocation[] hits = text.FindText(pdfBytes, "invoice", caseSensitive: false, wholeWord: true);
+foreach (var h in hits) Console.WriteLine($"page {h.PageNumber}: {h.X},{h.Y} {h.Width}x{h.Height}");
+
+var toImage = new PdfToImageConverter();                 // one PNG per page
+var pages = toImage.ConvertToImages(pdfBytes);           // or ConvertToImageFiles(…)
+
+var extractor = new PdfImagesExtractor();
+var images = extractor.ExtractImages(pdfBytes);          // PNG, transparency preserved; ExtractImagesToFile(…)
+```
+- All processing methods accept password-protected PDFs and page ranges; each has an `…Async` variant.
+- Positions are in PDF points, origin top-left of the page.
+
+
+---
+
+---
+name: evopdf-next-pdf-standards
+description: "Generate PDF/UA (accessibility) and PDF/A (archival) compliant documents with EvoPdf Next: PdfStandard, AccessibilityOptions, tagged PDF. Use when a .NET PDF must be accessible, archivable or both."
+---
+
+# EvoPdf Next — PDF/UA and PDF/A
+
+```csharp
+var o = converter.PdfDocumentOptions;
+o.PdfStandard = PdfStandard.PdfUa1;          // accessible, tagged (ISO 14289-1)
+// o.PdfStandard = PdfStandard.PdfA2b;       // archival, level B
+// o.PdfStandard = PdfStandard.PdfUa1PdfA2b; // both at once
+o.AccessibilityOptions.Language = "en-US";   // applies when a tagged standard is selected
+converter.PdfDocumentInfo.Title = "Invoice 2026-001";
+```
+- `PdfStandard.None` (default) = plain PDF. Other PDF/A conformance levels (2a/3a/3b/3u/4/4f) are members of the same enum; the documentation lists the exact names.
+- Tagged output needs semantic HTML: headings in order, `alt` on images, tables with `<th>`, a document `<title>` and `lang`. The converter maps HTML structure to PDF tags.
+- Fonts are embedded as subsets automatically (required by both standards). Avoid JavaScript-dependent content in PDF/A.
+- The Core PDF API (`PdfDocument`) can also create PDF/UA and PDF/A documents from text, images, graphics and attachments.
+
+Docs: https://www.evopdf.com/help/evopdf-next-dotnet/
+
+
+---
+
+---
+name: evopdf-next-security-signatures
+description: "Protect PDFs generated or edited with EvoPdf Next: user and owner passwords, encryption algorithm and key size, permissions (print, copy, edit, fill forms), digital signatures with PFX certificates and timestamp servers, document metadata (title, author, keywords, language). Use when a .NET PDF must be encrypted, permission-restricted, signed or tagged with metadata."
+---
+
+# EvoPdf Next — security, digital signatures, metadata
+
+Available on every converter (`converter.PdfSecurityOptions`, `converter.DigitalSignature`, `converter.PdfDocumentInfo`) and on `PdfDocument` / `PdfEditor` for created or existing PDFs.
+
+## Passwords and permissions
+```csharp
+var sec = converter.PdfSecurityOptions;
+sec.UserPassword = "open-me";          // required to open
+sec.OwnerPassword = "owner-secret";    // required to change permissions
+sec.EncryptionAlgorithm = …;           // RC4 or AES; prefer AES
+sec.KeySize = …;                       // e.g. 128 or 256 bits
+sec.CanPrint = true;
+sec.CanCopyContent = false;
+sec.CanEditContent = false;
+sec.CanEditAnnotations = false;
+sec.CanFillFormFields = true;
+sec.CanAssembleDocument = false;
+sec.CanCopyAccessibilityContent = true; // keep screen readers working
+```
+Permissions are only enforced by viewers when an owner password is set. A user password alone encrypts the file; an owner password alone restricts without asking on open.
+
+## Digital signature
+```csharp
+var sig = converter.DigitalSignature;
+sig.PfxCertificateData = File.ReadAllBytes("company.pfx");
+sig.PfxCertificatePassword = Environment.GetEnvironmentVariable("PFX_PASSWORD");
+sig.Reason = "Approved"; sig.Location = "Bucharest"; sig.ContactInfo = "office@example.com";
+sig.TimestampServerUrl = "http://timestamp.digicert.com";   // optional RFC 3161 TSA (+ Username/Password if required)
+sig.AppearanceEnabled = true;                                 // visible signature; configure sig.Appearance
+sig.FieldName = "Signature1";
+```
+To sign an **existing** PDF, open it with `new PdfEditor(pdfBytes, password, digitalSignature)` and save. Keep certificates and passwords out of source code.
+
+## Metadata
+```csharp
+var info = converter.PdfDocumentInfo;
+info.Title = "Invoice 2026-001"; info.AuthorName = "ACME"; info.Subject = "…"; info.Keywords = "invoice, 2026";
+info.Language = "en-US";   // also used by PDF/UA readers
+```
+`Creator`, `Producer`, `CreatedDate`, `ModificationDate` are available too.
+
+## Rules
+- Encryption and PDF/A: PDF/A forbids encryption — do not combine `PdfSecurityOptions` passwords with `PdfStandard.PdfA*`.
+- Signing after any other modification: the signature covers the final bytes; edit first, sign last.
+- Read secrets (PFX password, owner password) from configuration or a key vault, never from literals.
+
+Docs: https://www.evopdf.com/help/evopdf-next-dotnet/
+
+
+---
+
+---
+name: evopdf-next-troubleshooting
+description: "Diagnose and fix EvoPdf Next HTML to PDF problems in .NET: watermark still shown, navigation timeout, CSS or images missing when converting a string, async content not rendered, content truncated or too small, unexpected margins, page breaks, fonts and Unicode, out of memory, HTTPS and authentication. Use when a user reports EvoPdf output or an exception that looks wrong."
+---
+
+# EvoPdf Next — troubleshooting HTML to PDF
+
+Ask for: the call used (`ConvertUrl` / `ConvertHtml`), the platform, whether the page renders correctly in Chrome, and the exception text. Then match the symptom below. All members are on `HtmlToPdfConverter` unless stated; `o` = `converter.PdfDocumentOptions`.
+
+| Symptom | Cause | Fix |
+|---|---|---|
+| Demo watermark although a license was bought | key not set, set after the first conversion, or a demo key left in code | `Licensing.LicenseKey = "…"` once at startup (static); search the code for other assignments |
+| "Navigation timeout" / page never finishes | slow page, blocked resource, infinite script | raise `NavigationTimeout` (seconds); check the URL loads in a browser from the server; block third-party hosts with `BlockedHosts` |
+| Converting an HTML **string**: CSS and images missing | relative URLs have no base | pass the base URL: `ConvertHtml(html, "https://www.example.com/")`; for local files set `LocalFilesEnabled = true` and use `file:///` or the folder as base |
+| AJAX / charts / lazy content missing | conversion started before scripts finished | `ConversionDelay = 2` (seconds), or `TriggeringMode = TriggeringMode.Manual` and call `evoPdfConverter_startConversion()` from the page when ready; keep `JavaScriptEnabled = true`; `LoadLazyImages` is `true` by default |
+| Content smaller than in the browser / page much wider than A4 | page width follows `HtmlViewerWidth` (default 1024 px → 768 pt) | for a fixed size: `o.AutoResizePdfPageWidth = false; o.AutoResizePdfPageHeight = false; o.PdfPageSize = PdfPageSize.A4`; make the HTML responsive or lower `HtmlViewerWidth` |
+| Content truncated at the right | HTML wider than the viewer and page width fixed | raise `HtmlViewerWidth` to the page's natural width, or keep `AutoResizePdfPageWidth = true`, or let the CSS adapt to the viewer width |
+| Extra margin at top/left | page margins plus the HTML body margin | set `o.TopMargin`/`o.LeftMargin` (points) and `body { margin: 0 }` in the HTML |
+| Wrong page breaks; images cut between pages | no break rules in the HTML | use CSS: `break-before/after: page`, `break-inside: avoid` (or `page-break-*`) on the elements to keep together; `o.RepeatTableHeaderFooter = true` repeats `<thead>`/`<tfoot>` |
+| Only screen styles, `@media print` ignored | media type defaults to screen | `MediaType = "print"` |
+| Fonts replaced / Unicode boxes | font not installed on the server (Linux especially) | install the fonts on the server or embed web fonts (`@font-face`, WOFF2) in the HTML; the converter embeds used fonts as subsets automatically |
+| Right-to-left, Arabic, Indic, Thai | — | supported by the Chromium engine; use `dir="rtl"` / correct `lang` and fonts that contain the glyphs |
+| Out of memory / very slow | huge page, many high-resolution images, unbounded height | reduce image sizes, split the document, set `MaxHtmlViewerHeight`, convert in a 64-bit process with enough RAM; one converter per conversion |
+| HTTPS page fails with a certificate error | self-signed or internal CA | `IgnoreCertificateErrors = true` (development) or install the CA on the server |
+| Page behind a login | no credentials | `AuthenticationOptions` (basic/NTLM), or forward the session: `HttpRequestCookies.Add(...)`, `HttpRequestHeaders.Add("Authorization", ...)` — the converter does **not** share the browser's session automatically |
+| Mixed content blocked | HTTPS page loading HTTP resources | `AllowInsecureContent = true` |
+| Links in the PDF undesired | — | remove or neutralise the anchors in CSS/HTML before conversion (links come from the HTML) |
+| Frameset / iframe content missing | frames are separate documents | convert the frame's URL directly, or include the content inline |
+| Landscape / custom size | — | `o.PdfPageOrientation = PdfPageOrientation.Landscape`; custom: `o.PdfPageSize = new PdfPageSize(width, height)` in points, with `AutoResizePdfPageWidth = false` |
+| Append other PDFs to the result | — | open the result in `PdfEditor` and `AddPdfTemplate` the others, or merge with the Core API (see the pdf-features skill) |
+| Linux: works on Windows, fails on Linux | missing system packages or execute permissions | follow the `evopdf-next-linux` skill, in that order |
+
+Always test the page in Chrome first: EvoPdf Next renders what Chrome renders. If Chrome shows the problem too, fix the HTML/CSS.
+
+Docs: https://www.evopdf.com/help/evopdf-next-dotnet/ · Support Q&A: https://www.evopdf.com/support

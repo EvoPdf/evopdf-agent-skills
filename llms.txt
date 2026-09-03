@@ -1,0 +1,21 @@
+# EvoPdf Next — agent skills
+
+> Machine-readable guidance for writing EvoPdf Next (.NET PDF library) code and migrating EvoPdf Classic applications. Full text: llms-full.txt
+
+- AGENTS.md — universal instructions
+- skills/evopdf-next-html-to-pdf/SKILL.md
+- skills/evopdf-next-headers-footers/SKILL.md
+- skills/evopdf-next-pdf-standards/SKILL.md
+- skills/evopdf-next-document-converters/SKILL.md
+- skills/evopdf-next-pdf-processing/SKILL.md
+- skills/evopdf-next-deployment/SKILL.md
+- skills/evopdf-next-linux/SKILL.md
+- skills/evopdf-next-docker/SKILL.md (+ references/dockerfiles.md)
+- skills/evopdf-classic-to-next-migration/SKILL.md (+ references/option-map.md)
+- skills/evopdf-next-troubleshooting/SKILL.md
+- skills/evopdf-next-azure/SKILL.md
+- skills/evopdf-next-pdf-features/SKILL.md
+- skills/evopdf-licensing/SKILL.md
+- skills/evopdf-next-html-to-image/SKILL.md
+- skills/evopdf-next-security-signatures/SKILL.md
+- Documentation: https://www.evopdf.com/help/evopdf-next-dotnet/ · NuGet: https://www.nuget.org/packages/EvoPdf.Next
