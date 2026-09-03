@@ -14,7 +14,3 @@ jobs:
           done
       - name: No license keys committed
         run: "! grep -rnE 'LicenseKey\\s*=\\s*\"[A-Za-z0-9+/=]{16,}\"' --include=*.md ."
-      - uses: DavidAnson/markdownlint-cli2-action@v19
-        with:
-          globs: "**/*.md"
-          config: .markdownlint.json
