@@ -18,7 +18,8 @@ var converter = new HtmlToPdfConverter();
 byte[] pdf = converter.ConvertUrl("https://www.evopdf.com");
 File.WriteAllBytes("page.pdf", pdf);
 
-// HTML string, with a base URL for relative resources
+// HTML string, with a base URL for relative resources (new instance: converters are single-use)
+converter = new HtmlToPdfConverter();
 pdf = converter.ConvertHtml("<b>Hello World</b>", "https://www.evopdf.com");
 ```
 
@@ -69,6 +70,6 @@ converter.IgnoreCertificateErrors = true; // self-signed dev servers
 ## Pitfalls
 - Set `Licensing.LicenseKey` once, before the first conversion; the property is static.
 - A page that renders fine in Chrome renders the same way here; if output looks wrong, check `MediaType`, `PrintBackgrounds` and `@page` rules in the CSS.
-- Do not reuse one converter instance across threads; create one per conversion.
+- **One converter instance per conversion.** A second `Convert…` call on the same `HtmlToPdfConverter` throws "HTML to PDF converter instances are not reusable"; create a new instance every time (they are cheap) and never share one across threads.
 
 Docs: https://www.evopdf.com/help/evopdf-next-dotnet/ · Product page: https://www.evopdf.com/evopdf-next-html-to-pdf-dotnet

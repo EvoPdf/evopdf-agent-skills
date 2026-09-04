@@ -7,7 +7,8 @@
 - skills/evopdf-next-headers-footers/SKILL.md
 - skills/evopdf-next-pdf-standards/SKILL.md
 - skills/evopdf-next-document-converters/SKILL.md
-- skills/evopdf-next-pdf-processing/SKILL.md
+- skills/evopdf-next-core-pdf-api/SKILL.md
+- skills/evopdf-next-pdf-processor/SKILL.md (+ references/api.md)
 - skills/evopdf-next-deployment/SKILL.md
 - skills/evopdf-next-linux/SKILL.md
 - skills/evopdf-next-docker/SKILL.md (+ references/dockerfiles.md)
@@ -19,3 +20,4 @@
 - skills/evopdf-next-html-to-image/SKILL.md
 - skills/evopdf-next-security-signatures/SKILL.md
 - Documentation: https://www.evopdf.com/help/evopdf-next-dotnet/ · NuGet: https://www.nuget.org/packages/EvoPdf.Next
+- Runnable samples: https://github.com/EvoPdf/evopdf-next-samples

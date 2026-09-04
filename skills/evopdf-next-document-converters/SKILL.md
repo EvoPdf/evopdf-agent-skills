@@ -15,7 +15,7 @@ word.PdfDocumentOptions.GenerateTableOfContents = true;
 byte[] pdf = word.ConvertToPdf(docxBytes);          // or ConvertToPdf(string path), ConvertToPdfFile(…)
 
 var excel = new ExcelToPdfConverter();
-excel.ExcelToPdfDocumentOptions.UsePageSettingsFromExcel = true;
+excel.PdfDocumentOptions.UsePageSettingsFromExcel = true;   // ExcelToPdfDocumentOptions: also PageBreakBetweenWorksheets, ConvertOnlyFirstWorksheet, Zoom
 pdf = excel.ConvertToPdf(xlsxBytes);
 
 var rtf = new RtfToPdfConverter();
@@ -25,6 +25,7 @@ var md = new MarkdownToPdfConverter();
 pdf = md.ConvertStringToPdf(markdown, baseUrl);     // baseUrl resolves relative images and links; also ConvertFileToPdf
 ```
 - Every converter has `…Async` methods and `…ToPdfFile` variants that write directly to disk.
+- Converter instances are not reusable: create a new one per document.
 - All share the `PdfDocumentOptions` model: page size/orientation/margins, headers and footers (`PdfHtmlHeader` / `PdfHtmlFooter`), table of contents, `PdfStandard`, security and stamps — see the headers-footers and pdf-standards skills.
 - Excel: `UsePageSettingsFromExcel = true` keeps the workbook's page setup; `false` reflows into `PdfPageSize` / orientation / margins you set.
 - Word: keeps the document's page settings by default; set your own on `PdfDocumentOptions` to reflow.

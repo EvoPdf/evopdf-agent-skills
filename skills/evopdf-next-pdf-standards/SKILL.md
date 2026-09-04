@@ -10,7 +10,9 @@ var o = converter.PdfDocumentOptions;
 o.PdfStandard = PdfStandard.PdfUa1;          // accessible, tagged (ISO 14289-1)
 // o.PdfStandard = PdfStandard.PdfA2b;       // archival, level B
 // o.PdfStandard = PdfStandard.PdfUa1PdfA2b; // both at once
-o.AccessibilityOptions.Language = "en-US";   // applies when a tagged standard is selected
+o.AccessibilityOptions.AddMissingImageAlternateText = true;   // PdfAccessibilityOptions; applies when a tagged standard is selected
+o.AccessibilityOptions.InsertMissingTableHeaders = true;
+converter.PdfDocumentInfo.Language = "en-US";                 // document language lives in PdfDocumentInfo
 converter.PdfDocumentInfo.Title = "Invoice 2026-001";
 ```
 - `PdfStandard.None` (default) = plain PDF. Other PDF/A conformance levels (2a/3a/3b/3u/4/4f) are members of the same enum; the documentation lists the exact names.

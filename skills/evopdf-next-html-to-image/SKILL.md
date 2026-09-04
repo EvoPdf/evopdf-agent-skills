@@ -16,7 +16,11 @@ converter.CaptureEntirePage = true;             // whole page height, not just t
 byte[] png = converter.ConvertUrl("https://www.evopdf.com", ImageType.Png);   // ImageType: Png, Jpeg, Webp
 File.WriteAllBytes("page.png", png);
 
+// converters are single-use: a new instance for every conversion
+converter = new HtmlToImageConverter();
 byte[] jpg = converter.ConvertHtml("<h1>Hello</h1>", "https://www.example.com/", ImageType.Jpeg);
+
+converter = new HtmlToImageConverter();
 converter.ConvertUrlToFile("https://www.evopdf.com", ImageType.Png, "page.png");   // …Async variants exist
 ```
 
@@ -34,6 +38,7 @@ converter.ConvertUrlToFile("https://www.evopdf.com", ImageType.Png, "page.png");
 ## Pitfalls
 - Formats: `ImageType.Png`, `ImageType.Jpeg`, `ImageType.Webp`. JPEG has no transparency — use PNG or WebP for transparent backgrounds.
 - Fonts and lazy images follow the HTML to PDF rules (see the troubleshooting and Linux skills).
+- One `HtmlToImageConverter` per conversion — instances are not reusable.
 - License key: `Licensing.LicenseKey` once per process; demo mode stamps the image.
 
 Docs: https://www.evopdf.com/help/evopdf-next-dotnet/

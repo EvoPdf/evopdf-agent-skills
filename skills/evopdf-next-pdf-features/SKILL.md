@@ -40,8 +40,9 @@ On a generated or existing PDF, through `PdfEditor`:
 ```csharp
 using var editor = new PdfEditor(pdfBytes, password: null);   // or (path, password)
 int pages = editor.GetPageCount();
-editor.AddHtmlTemplate(pageNumber, x, y, "<div style='opacity:.3;font:48px Arial'>DRAFT</div>"); // HTML stamp; overloads take width/height/base URL/alignment
-editor.AddText(pageNumber, new PdfTextElement(…));   // PdfTextElement, PdfImageElement
+PdfHtmlTemplate stamp = editor.AddHtmlTemplate(x, y, width, "<div style='opacity:.3;font:48px Arial'>DRAFT</div>", htmlBaseUrl); // repeated on the pages; overloads: (x, y, width, height, html, baseUrl), (x, y, width, htmlSourceUrl), alignment variants
+stamp.ShowInFirstPage = true;                          // ShowInOddPages / ShowInEvenPages select the pages
+editor.AddText(pageNumber, new PdfTextElement(…));     // page-based: AddText, AddImage, AddLine, AddRectangle, AddPath, annotations
 editor.AddImage(pageNumber, new PdfImageElement(…));
 byte[] result = editor.Save();                        // or SaveToFile(path)
 ```

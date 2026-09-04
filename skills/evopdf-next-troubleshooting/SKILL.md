@@ -28,6 +28,7 @@ Ask for: the call used (`ConvertUrl` / `ConvertHtml`), the platform, whether the
 | Frameset / iframe content missing | frames are separate documents | convert the frame's URL directly, or include the content inline |
 | Landscape / custom size | — | `o.PdfPageOrientation = PdfPageOrientation.Landscape`; custom: `o.PdfPageSize = new PdfPageSize(width, height)` in points, with `AutoResizePdfPageWidth = false` |
 | Append other PDFs to the result | — | open the result in `PdfEditor` and `AddPdfTemplate` the others, or merge with the Core API (see the pdf-features skill) |
+| "converter instances are not reusable" exception | a second conversion on the same converter object | create a new converter for every conversion (also in loops and cached services) |
 | Linux: works on Windows, fails on Linux | missing system packages or execute permissions | follow the `evopdf-next-linux` skill, in that order |
 
 Always test the page in Chrome first: EvoPdf Next renders what Chrome renders. If Chrome shows the problem too, fix the HTML/CSS.

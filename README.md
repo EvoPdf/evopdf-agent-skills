@@ -24,7 +24,7 @@
 |---|---|
 | [`AGENTS.md`](AGENTS.md) | Universal instructions read by Codex, Gemini CLI, Copilot coding agent, Cursor and others |
 | [`CLAUDE.md`](CLAUDE.md) | Entry point for Claude Code (points to `AGENTS.md`) |
-| [`skills/`](skills) | Fifteen **Agent Skills** (`SKILL.md` + `references/`), one per task area |
+| [`skills/`](skills) | Sixteen **Agent Skills** (`SKILL.md` + `references/`), one per task area |
 | [`.claude-plugin/`](.claude-plugin) | Claude Code plugin manifest — install the skills with one command |
 | [`.github/copilot-instructions.md`](.github/copilot-instructions.md) | GitHub Copilot (Chat and coding agent) |
 | [`.cursor/rules/`](.cursor/rules) · [`.windsurf/rules/`](.windsurf/rules) | Cursor and Windsurf rule files |
@@ -38,7 +38,8 @@
 | **evopdf-next-headers-footers** | HTML headers and footers, page numbers, margins, browser templates |
 | **evopdf-next-pdf-standards** | PDF/UA and PDF/A output, accessibility options |
 | **evopdf-next-document-converters** | Word, Excel, RTF and Markdown to PDF |
-| **evopdf-next-pdf-processing** | Core PDF API, PDF to text, text search, PDF to image, image extraction |
+| **evopdf-next-core-pdf-api** | Create and edit PDFs with the Core API: `PdfDocument`, `PdfEditor`, text, images, shapes, templates, attachments |
+| **evopdf-next-pdf-processor** | PDF to text (layout or reading order), text search with positions, pages to PNG, embedded image extraction — with a full overload reference |
 | **evopdf-next-deployment** | Packages per platform, Azure, license key |
 | **evopdf-next-linux** | Linux setup: system packages, execute permissions, troubleshooting in the right order |
 | **evopdf-next-docker** | Complete Dockerfiles for Linux (x64/ARM64) and Windows Server Core containers |
@@ -89,7 +90,7 @@ Ask your assistant: *"Convert this HTML string to an A4 PDF with EvoPdf Next and
 ## Related
 - [EvoPdf Next documentation](https://www.evopdf.com/help/evopdf-next-dotnet/) · [All components](https://www.evopdf.com/evopdf-next-dotnet) · [NuGet packages](https://www.nuget.org/profiles/EvoPdf)
 - [Classic to Next migration guide](https://www.evopdf.com/evopdf-classic-to-next-migration)
-- Samples: `EvoPdf/evopdf-next-samples` (coming)
+- Runnable samples: [evopdf-next-samples](https://github.com/EvoPdf/evopdf-next-samples) — quickstarts, every documentation sample, the full demo application
 
 ## Contributing and support
 Issues and pull requests are welcome for corrections and new scenarios — see [CONTRIBUTING.md](CONTRIBUTING.md). Product support: https://www.evopdf.com/support

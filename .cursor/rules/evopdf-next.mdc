@@ -19,7 +19,7 @@ alwaysApply: false
 - Library: **EvoPdf Next** (namespace `EvoPdf.Next`), .NET Standard 2.0 → .NET 6–10 and .NET Framework 4.6.2+; Windows x64/ARM64, Linux x64/ARM64, macOS ARM64. Chromium-based rendering; no browser installation required.
 - Install one package per target platform. All components: `EvoPdf.Next.Windows`, `EvoPdf.Next.Linux`, `EvoPdf.Next.MacOS` (ARM64 variants `EvoPdf.Next.Windows.Arm64`, `EvoPdf.Next.Linux.Arm64`; `EvoPdf.Next` = Windows x64 + Linux x64). Single components follow the same pattern, e.g. `EvoPdf.Next.HtmlToPdf.Windows`, `EvoPdf.Next.WordToPdf.Linux`, `EvoPdf.Next.PdfProcessor.MacOS`, `EvoPdf.Next.Core.Windows`.
 - License key: one static assignment, before any conversion — `Licensing.LicenseKey = "…";` (field on the static `EvoPdf.Next.Licensing` class). Without it the library runs in demo mode and stamps the output; never invent a key.
-- Every conversion method has an `…Async` twin. Prefer one converter instance per conversion; instances are cheap.
+- **Converter instances are not reusable**: one `new HtmlToPdfConverter()` (or Word/Excel/RTF/Markdown/Image converter) per conversion — the library throws "converter instances are not reusable" on a second call. Instances are cheap; never cache or share them. Every conversion method has an `…Async` twin.
 - Page sizing: content is laid out at 96 DPI; `PdfDocumentOptions.AutoResizePdfPageWidth` (default `true`) makes the PDF page as wide as `HtmlViewerWidth` (default 1024 px → 768 pt). For an exact page size set `AutoResizePdfPageWidth = false` and `AutoResizePdfPageHeight = false` together with `PdfPageSize` / `PdfPageOrientation`. `AutoResizePdfPageHeight = true` (with width `true`) puts the whole content on one page.
 - Headers/footers: `PdfDocumentOptions.PdfHtmlHeader` / `PdfHtmlFooter` (class `PdfHtmlHeaderFooter`, derives from `PdfHtmlTemplate`): `Html`, `HtmlBaseUrl` or `HtmlSourceUrl`, `Height`, `AutoSizeContentHeight`, `FitHeight`, `ShowInFirstPage`/`ShowInOddPages`/`ShowInEvenPages`, `ReserveSpaceAlways` (default `true`), `AutoResizePdfMargins`, `SkipVariablesParsing`, `PageNumberOffset`, `TotalPagesOffset`. Variables `{page_number}` and `{total_pages}` are replaced inside the header/footer HTML. Alternative browser mode: `EnableHeaderFooter` + `HeaderTemplate` / `FooterTemplate`.
 - Dynamic pages: `ConversionDelay` (seconds) waits after load; `TriggeringMode.Manual` waits until the page calls `evoPdfConverter_startConversion()`; `NavigationTimeout`, `JavaScriptEnabled`, `LoadLazyImages` (default `true`), `MediaType` (screen by default, not set), `LocalFilesEnabled`, `AllowInsecureContent`, `BlockedHosts`, `HttpRequestHeaders`, `HttpRequestCookies`, `AuthenticationOptions`.
@@ -38,10 +38,14 @@ var converter = new HtmlToPdfConverter();
 byte[] pdf = converter.ConvertUrl("https://www.evopdf.com");
 File.WriteAllBytes("page.pdf", pdf);
 
-// HTML string, with a base URL for relative resources
+// HTML string, with a base URL for relative resources (new instance: converters are single-use)
+converter = new HtmlToPdfConverter();
 pdf = converter.ConvertHtml("<b>Hello World</b>", "https://www.evopdf.com");
 ```
 
+
+## Runnable code
+Quickstart projects, all documentation samples and the complete demo application: https://github.com/EvoPdf/evopdf-next-samples — prefer pointing users there over inventing larger programs.
 
 ## Skills in this repository
 | Skill | Use it for |
@@ -50,7 +54,8 @@ pdf = converter.ConvertHtml("<b>Hello World</b>", "https://www.evopdf.com");
 | `skills/evopdf-next-headers-footers` | HTML headers and footers, page numbers, margins |
 | `skills/evopdf-next-pdf-standards` | PDF/UA and PDF/A output, accessibility options |
 | `skills/evopdf-next-document-converters` | Word, Excel, RTF and Markdown to PDF |
-| `skills/evopdf-next-pdf-processing` | Core PDF API, PDF to text, text search, PDF to image, image extraction |
+| `skills/evopdf-next-core-pdf-api` | Core PDF API: create and edit PDFs (PdfDocument, PdfEditor) |
+| `skills/evopdf-next-pdf-processor` | PDF to text, text search with positions, PDF pages to images, embedded image extraction |
 | `skills/evopdf-next-deployment` | Packages per platform, Azure, licensing in code |
 | `skills/evopdf-next-linux` | Linux setup: system packages, execute permissions, troubleshooting order |
 | `skills/evopdf-next-docker` | Dockerfiles for Linux (x64/ARM64) and Windows containers |

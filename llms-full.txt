@@ -18,7 +18,7 @@ Any task that converts HTML, Word, Excel, RTF or Markdown to PDF, creates or edi
 - Library: **EvoPdf Next** (namespace `EvoPdf.Next`), .NET Standard 2.0 → .NET 6–10 and .NET Framework 4.6.2+; Windows x64/ARM64, Linux x64/ARM64, macOS ARM64. Chromium-based rendering; no browser installation required.
 - Install one package per target platform. All components: `EvoPdf.Next.Windows`, `EvoPdf.Next.Linux`, `EvoPdf.Next.MacOS` (ARM64 variants `EvoPdf.Next.Windows.Arm64`, `EvoPdf.Next.Linux.Arm64`; `EvoPdf.Next` = Windows x64 + Linux x64). Single components follow the same pattern, e.g. `EvoPdf.Next.HtmlToPdf.Windows`, `EvoPdf.Next.WordToPdf.Linux`, `EvoPdf.Next.PdfProcessor.MacOS`, `EvoPdf.Next.Core.Windows`.
 - License key: one static assignment, before any conversion — `Licensing.LicenseKey = "…";` (field on the static `EvoPdf.Next.Licensing` class). Without it the library runs in demo mode and stamps the output; never invent a key.
-- Every conversion method has an `…Async` twin. Prefer one converter instance per conversion; instances are cheap.
+- **Converter instances are not reusable**: one `new HtmlToPdfConverter()` (or Word/Excel/RTF/Markdown/Image converter) per conversion — the library throws "converter instances are not reusable" on a second call. Instances are cheap; never cache or share them. Every conversion method has an `…Async` twin.
 - Page sizing: content is laid out at 96 DPI; `PdfDocumentOptions.AutoResizePdfPageWidth` (default `true`) makes the PDF page as wide as `HtmlViewerWidth` (default 1024 px → 768 pt). For an exact page size set `AutoResizePdfPageWidth = false` and `AutoResizePdfPageHeight = false` together with `PdfPageSize` / `PdfPageOrientation`. `AutoResizePdfPageHeight = true` (with width `true`) puts the whole content on one page.
 - Headers/footers: `PdfDocumentOptions.PdfHtmlHeader` / `PdfHtmlFooter` (class `PdfHtmlHeaderFooter`, derives from `PdfHtmlTemplate`): `Html`, `HtmlBaseUrl` or `HtmlSourceUrl`, `Height`, `AutoSizeContentHeight`, `FitHeight`, `ShowInFirstPage`/`ShowInOddPages`/`ShowInEvenPages`, `ReserveSpaceAlways` (default `true`), `AutoResizePdfMargins`, `SkipVariablesParsing`, `PageNumberOffset`, `TotalPagesOffset`. Variables `{page_number}` and `{total_pages}` are replaced inside the header/footer HTML. Alternative browser mode: `EnableHeaderFooter` + `HeaderTemplate` / `FooterTemplate`.
 - Dynamic pages: `ConversionDelay` (seconds) waits after load; `TriggeringMode.Manual` waits until the page calls `evoPdfConverter_startConversion()`; `NavigationTimeout`, `JavaScriptEnabled`, `LoadLazyImages` (default `true`), `MediaType` (screen by default, not set), `LocalFilesEnabled`, `AllowInsecureContent`, `BlockedHosts`, `HttpRequestHeaders`, `HttpRequestCookies`, `AuthenticationOptions`.
@@ -37,10 +37,14 @@ var converter = new HtmlToPdfConverter();
 byte[] pdf = converter.ConvertUrl("https://www.evopdf.com");
 File.WriteAllBytes("page.pdf", pdf);
 
-// HTML string, with a base URL for relative resources
+// HTML string, with a base URL for relative resources (new instance: converters are single-use)
+converter = new HtmlToPdfConverter();
 pdf = converter.ConvertHtml("<b>Hello World</b>", "https://www.evopdf.com");
 ```
 
+
+## Runnable code
+Quickstart projects, all documentation samples and the complete demo application: https://github.com/EvoPdf/evopdf-next-samples — prefer pointing users there over inventing larger programs.
 
 ## Skills in this repository
 | Skill | Use it for |
@@ -49,7 +53,8 @@ pdf = converter.ConvertHtml("<b>Hello World</b>", "https://www.evopdf.com");
 | `skills/evopdf-next-headers-footers` | HTML headers and footers, page numbers, margins |
 | `skills/evopdf-next-pdf-standards` | PDF/UA and PDF/A output, accessibility options |
 | `skills/evopdf-next-document-converters` | Word, Excel, RTF and Markdown to PDF |
-| `skills/evopdf-next-pdf-processing` | Core PDF API, PDF to text, text search, PDF to image, image extraction |
+| `skills/evopdf-next-core-pdf-api` | Core PDF API: create and edit PDFs (PdfDocument, PdfEditor) |
+| `skills/evopdf-next-pdf-processor` | PDF to text, text search with positions, PDF pages to images, embedded image extraction |
 | `skills/evopdf-next-deployment` | Packages per platform, Azure, licensing in code |
 | `skills/evopdf-next-linux` | Linux setup: system packages, execute permissions, troubleshooting order |
 | `skills/evopdf-next-docker` | Dockerfiles for Linux (x64/ARM64) and Windows containers |
@@ -230,6 +235,36 @@ Manual alternative via the SSH console is documented but does not survive restar
 - Keep `NavigationTimeout` realistic; outbound calls from Azure to the converted site must be allowed.
 
 Docs: https://www.evopdf.com/help/evopdf-next-dotnet/html/publish-to-azure-app-service-windows.htm · …-app-service-linux.htm · …-azure-function-windows.htm · …-azure-function-linux.htm
+
+
+---
+
+---
+name: evopdf-next-core-pdf-api
+description: "Create PDF documents from scratch and edit existing ones in .NET with the EvoPdf Next Core PDF API: PdfDocument, PdfEditor, text, images, shapes, HTML templates, attachments, annotations, links, merge with AddPdfTemplate, PDF/UA and PDF/A settings. Use for PDF creation, editing, stamping and merging tasks in C#; for text extraction, search, page images or image extraction use the evopdf-next-pdf-processor skill."
+---
+
+# EvoPdf Next — Core PDF API (create and edit)
+
+Package: `EvoPdf.Next.Core.Windows` / `.Linux` / `.MacOS` (or the all-components package). Namespace `EvoPdf.Next`. Text extraction, search, page images and image extraction are a different component — see `evopdf-next-pdf-processor`.
+
+## Create a PDF
+```csharp
+using EvoPdf.Next;
+
+using var pdf = new PdfDocument(new PdfDocumentCreateSettings {
+    PageSize = PdfPageSize.A4, Margins = new PdfMargins(36, 36, 36, 36) });
+var font = PdfFontManager.CreateStandardFont(PdfStandardFont.Helvetica, 16f, PdfFontStyle.Bold, PdfColor.Black);
+pdf.AddText(new PdfTextElement("Hello", font));
+pdf.AddImage(…); pdf.AddLine(…); pdf.AddRectangle(…); pdf.AddHtmlTemplate(…); pdf.AddFileAttachment(…);
+pdf.SaveToFile("created.pdf");            // or byte[] Save()
+```
+`PdfEditor` opens an existing PDF and exposes the same `Add…` methods plus `GetPageCount()` / `GetPdfPageInfo()` — stamp, merge (`AddPdfTemplate`), annotate, attach, sign, encrypt.
+
+## Merge and stamp (PdfEditor)
+See `evopdf-next-pdf-features` for `AddHtmlTemplate`, `AddPdfTemplate`, security and signatures on existing documents.
+
+Docs: https://www.evopdf.com/help/evopdf-next-dotnet/html/create-pdf-documents.htm · Runnable: `quickstarts/Samples/PdfEditor.Stamp.cs` in https://github.com/EvoPdf/evopdf-next-samples
 
 
 ---
@@ -683,7 +718,7 @@ word.PdfDocumentOptions.GenerateTableOfContents = true;
 byte[] pdf = word.ConvertToPdf(docxBytes);          // or ConvertToPdf(string path), ConvertToPdfFile(…)
 
 var excel = new ExcelToPdfConverter();
-excel.ExcelToPdfDocumentOptions.UsePageSettingsFromExcel = true;
+excel.PdfDocumentOptions.UsePageSettingsFromExcel = true;   // ExcelToPdfDocumentOptions: also PageBreakBetweenWorksheets, ConvertOnlyFirstWorksheet, Zoom
 pdf = excel.ConvertToPdf(xlsxBytes);
 
 var rtf = new RtfToPdfConverter();
@@ -693,6 +728,7 @@ var md = new MarkdownToPdfConverter();
 pdf = md.ConvertStringToPdf(markdown, baseUrl);     // baseUrl resolves relative images and links; also ConvertFileToPdf
 ```
 - Every converter has `…Async` methods and `…ToPdfFile` variants that write directly to disk.
+- Converter instances are not reusable: create a new one per document.
 - All share the `PdfDocumentOptions` model: page size/orientation/margins, headers and footers (`PdfHtmlHeader` / `PdfHtmlFooter`), table of contents, `PdfStandard`, security and stamps — see the headers-footers and pdf-standards skills.
 - Excel: `UsePageSettingsFromExcel = true` keeps the workbook's page setup; `false` reflows into `PdfPageSize` / orientation / margins you set.
 - Word: keeps the document's page settings by default; set your own on `PdfDocumentOptions` to reflow.
@@ -761,7 +797,11 @@ converter.CaptureEntirePage = true;             // whole page height, not just t
 byte[] png = converter.ConvertUrl("https://www.evopdf.com", ImageType.Png);   // ImageType: Png, Jpeg, Webp
 File.WriteAllBytes("page.png", png);
 
+// converters are single-use: a new instance for every conversion
+converter = new HtmlToImageConverter();
 byte[] jpg = converter.ConvertHtml("<h1>Hello</h1>", "https://www.example.com/", ImageType.Jpeg);
+
+converter = new HtmlToImageConverter();
 converter.ConvertUrlToFile("https://www.evopdf.com", ImageType.Png, "page.png");   // …Async variants exist
 ```
 
@@ -779,6 +819,7 @@ converter.ConvertUrlToFile("https://www.evopdf.com", ImageType.Png, "page.png");
 ## Pitfalls
 - Formats: `ImageType.Png`, `ImageType.Jpeg`, `ImageType.Webp`. JPEG has no transparency — use PNG or WebP for transparent backgrounds.
 - Fonts and lazy images follow the HTML to PDF rules (see the troubleshooting and Linux skills).
+- One `HtmlToImageConverter` per conversion — instances are not reusable.
 - License key: `Licensing.LicenseKey` once per process; demo mode stamps the image.
 
 Docs: https://www.evopdf.com/help/evopdf-next-dotnet/
@@ -806,7 +847,8 @@ var converter = new HtmlToPdfConverter();
 byte[] pdf = converter.ConvertUrl("https://www.evopdf.com");
 File.WriteAllBytes("page.pdf", pdf);
 
-// HTML string, with a base URL for relative resources
+// HTML string, with a base URL for relative resources (new instance: converters are single-use)
+converter = new HtmlToPdfConverter();
 pdf = converter.ConvertHtml("<b>Hello World</b>", "https://www.evopdf.com");
 ```
 
@@ -857,7 +899,7 @@ converter.IgnoreCertificateErrors = true; // self-signed dev servers
 ## Pitfalls
 - Set `Licensing.LicenseKey` once, before the first conversion; the property is static.
 - A page that renders fine in Chrome renders the same way here; if output looks wrong, check `MediaType`, `PrintBackgrounds` and `@page` rules in the CSS.
-- Do not reuse one converter instance across threads; create one per conversion.
+- **One converter instance per conversion.** A second `Convert…` call on the same `HtmlToPdfConverter` throws "HTML to PDF converter instances are not reusable"; create a new instance every time (they are cheap) and never share one across threads.
 
 Docs: https://www.evopdf.com/help/evopdf-next-dotnet/ · Product page: https://www.evopdf.com/evopdf-next-html-to-pdf-dotnet
 
@@ -958,8 +1000,9 @@ On a generated or existing PDF, through `PdfEditor`:
 ```csharp
 using var editor = new PdfEditor(pdfBytes, password: null);   // or (path, password)
 int pages = editor.GetPageCount();
-editor.AddHtmlTemplate(pageNumber, x, y, "<div style='opacity:.3;font:48px Arial'>DRAFT</div>"); // HTML stamp; overloads take width/height/base URL/alignment
-editor.AddText(pageNumber, new PdfTextElement(…));   // PdfTextElement, PdfImageElement
+PdfHtmlTemplate stamp = editor.AddHtmlTemplate(x, y, width, "<div style='opacity:.3;font:48px Arial'>DRAFT</div>", htmlBaseUrl); // repeated on the pages; overloads: (x, y, width, height, html, baseUrl), (x, y, width, htmlSourceUrl), alignment variants
+stamp.ShowInFirstPage = true;                          // ShowInOddPages / ShowInEvenPages select the pages
+editor.AddText(pageNumber, new PdfTextElement(…));     // page-based: AddText, AddImage, AddLine, AddRectangle, AddPath, annotations
 editor.AddImage(pageNumber, new PdfImageElement(…));
 byte[] result = editor.Save();                        // or SaveToFile(path)
 ```
@@ -980,43 +1023,122 @@ Docs: https://www.evopdf.com/help/evopdf-next-dotnet/
 ---
 
 ---
-name: evopdf-next-pdf-processing
-description: "Create, edit and process PDF documents in .NET with EvoPdf Next: Core PDF API (PdfDocument, PdfEditor), PDF to text with search (PdfToTextConverter.FindText), PDF to image, embedded image extraction. Use for PDF manipulation tasks in C#."
+name: evopdf-next-pdf-processor
+description: "Process existing PDF documents in .NET with the EvoPdf Next PDF Processor: extract text (PdfToTextConverter, layout or reading order), search text and get the position of every match (FindText, FindTextLocation), render pages to PNG images (PdfToImageConverter, DPI, color space, transparency), extract embedded images (PdfImagesExtractor). Use for PDF to text, PDF search, PDF to image, PDF thumbnails and image extraction tasks in C#."
 ---
 
-# EvoPdf Next — PDF processing
+# EvoPdf Next — PDF Processor
 
-Packages: `EvoPdf.Next.Core.*` (create/edit), `EvoPdf.Next.PdfProcessor.*` (text, images) — `.Windows` / `.Linux` / `.MacOS`. Namespace `EvoPdf.Next`.
+Package: `EvoPdf.Next.PdfProcessor.Windows` / `.Linux` / `.MacOS` (or the all-components package). Namespace `EvoPdf.Next`. Three classes: `PdfToTextConverter`, `PdfToImageConverter`, `PdfImagesExtractor`. Read `references/api.md` for every overload.
 
-## Create a PDF
+## Rules shared by the three classes
+- **Instances are not reusable** — a new instance for every conversion, search or extraction; a second call throws.
+- Input as file path, `byte[]` or `Stream`. Page ranges in every method: `(source)` = all pages, `(source, startPage)` = to the end, `(source, startPage, endPage)` = inclusive; pages are 1-based.
+- Protected PDFs: set `UserPassword` or `OwnerPassword` before the call.
+- Guards: `MaxPageCount` (0 = unlimited, default) caps the pages processed; `RunTimeoutSec` caps the run time.
+- After a call, `ConversionInfo` / `ExtractionInfo` report `PageCount` (and `ImagesPerPage` for extraction).
+- Every method has an `…Async(…, CancellationToken)` twin.
+- On Linux the native runtime needs execute permission; on Azure Functions Linux call `PdfProcessorInstallation.ConfigureRuntime(true, null)` first — see the linux and azure skills.
+
+## PDF to text
 ```csharp
 using EvoPdf.Next;
 
-using var pdf = new PdfDocument(new PdfDocumentCreateSettings {
-    PageSize = PdfPageSize.A4, Margins = new PdfMargins(36, 36, 36, 36) });
-var font = PdfFontManager.CreateStandardFont(PdfStandardFont.Helvetica, 16f, PdfFontStyle.Bold, PdfColor.Black);
-pdf.AddText(new PdfTextElement("Hello", font));
-pdf.AddImage(…); pdf.AddLine(…); pdf.AddRectangle(…); pdf.AddHtmlTemplate(…); pdf.AddFileAttachment(…);
-pdf.SaveToFile("created.pdf");            // or byte[] Save()
+var converter = new PdfToTextConverter();
+converter.TextLayout = PdfToTextLayout.Original;   // default: keep the visual layout; Reading = reading order
+converter.MarkPageBreaks = true;                    // insert PdfToTextConverter.PAGE_BREAK_MARK between pages (default false)
+converter.UserPassword = "…";                       // only for protected PDFs
+string all = converter.ConvertToText("input.pdf");
+string pages2to5 = new PdfToTextConverter().ConvertToText(pdfBytes, 2, 5);
 ```
-`PdfEditor` opens an existing PDF and exposes the same `Add…` methods plus `GetPageCount()` / `GetPdfPageInfo()` — stamp, merge (`AddPdfTemplate`), annotate, attach, sign, encrypt.
+Use `Original` for invoices, tables and forms where position matters; `Reading` for articles and multi-column text that will be indexed or fed to an LLM.
 
-## Text, search, images
+## Find text with positions
 ```csharp
-var text = new PdfToTextConverter();
-text.TextLayout = PdfToTextLayout.Original;              // or reading order
-string s = text.ConvertToText(pdfBytes);
-FindTextLocation[] hits = text.FindText(pdfBytes, "invoice", caseSensitive: false, wholeWord: true);
-foreach (var h in hits) Console.WriteLine($"page {h.PageNumber}: {h.X},{h.Y} {h.Width}x{h.Height}");
-
-var toImage = new PdfToImageConverter();                 // one PNG per page
-var pages = toImage.ConvertToImages(pdfBytes);           // or ConvertToImageFiles(…)
-
-var extractor = new PdfImagesExtractor();
-var images = extractor.ExtractImages(pdfBytes);          // PNG, transparency preserved; ExtractImagesToFile(…)
+var search = new PdfToTextConverter();
+FindTextLocation[] hits = search.FindText(pdfBytes, "Total", caseSensitive: false, wholeWord: true);
+foreach (FindTextLocation h in hits)
+    Console.WriteLine($"page {h.PageNumber}: x={h.X} y={h.Y} w={h.Width} h={h.Height}");   // points, origin top-left of the page
 ```
-- All processing methods accept password-protected PDFs and page ranges; each has an `…Async` variant.
-- Positions are in PDF points, origin top-left of the page.
+Results come in document order (top to bottom, left to right). Typical uses: highlight (draw a rectangle at the location with `PdfEditor.AddRectangle`), redact, locate a signature field, verify that generated PDFs contain expected text.
+
+## PDF pages to images
+```csharp
+var toImage = new PdfToImageConverter();
+toImage.Resolution = 150;                              // DPI, default 150
+toImage.ColorSpace = PdfPageImageColorSpace.RGB;       // RGB (default), Gray, Mono
+toImage.TransparencyEnabled = false;                   // true only with RGB or Gray
+PdfPageImage[] pages = toImage.ConvertToImages("input.pdf");     // PNG per page: ImageData, PageNumber
+foreach (PdfPageImage p in pages) File.WriteAllBytes($"page-{p.PageNumber}.png", p.ImageData);
+
+new PdfToImageConverter().ConvertToImageFiles("input.pdf", 1, 3, "out", "page");   // writes out/page-1.png …
+```
+Thumbnails: lower `Resolution` (e.g. 40–72 DPI) instead of resizing full-size images. `StdFontsDir` points at standard fonts for PDFs that do not embed them.
+
+## Extract embedded images
+```csharp
+var extractor = new PdfImagesExtractor();
+ExtractedImage[][] perPage = extractor.ExtractImages("input.pdf");   // one array per page; ExtractedImage.ImageData (PNG), PageNumber
+int n = 0;
+foreach (ExtractedImage[] page in perPage)
+    foreach (ExtractedImage img in page) File.WriteAllBytes($"img-{img.PageNumber}-{++n}.png", img.ImageData);
+
+new PdfImagesExtractor().ExtractImagesToFile("input.pdf", "out", "img");   // files out/img-… ; extractor.ExtractionInfo.ImagesPerPage
+```
+Images are returned as PNG with transparency preserved; vector graphics are not images and are not extracted (render the page instead).
+
+## Choosing between them
+| Need | Use |
+|---|---|
+| Index, search, feed text to an LLM | `ConvertToText` with `Reading` layout |
+| Exact position of a string | `FindText` |
+| Preview, thumbnail, OCR input, print-like snapshot | `ConvertToImages` |
+| The photos/logos inside the PDF, at original resolution | `ExtractImages` |
+
+Runnable versions: `quickstarts/Samples/PdfProcessor.*.cs` in https://github.com/EvoPdf/evopdf-next-samples · Docs: https://www.evopdf.com/help/evopdf-next-dotnet/html/convert-pdf-to-text.htm · search-for-text-in-pdf.htm · convert-pdf-pages-to-images.htm · extract-images-from-pdf.htm
+
+
+# PDF Processor — API reference summary
+
+Namespace `EvoPdf.Next`. Every method below also exists as `…Async(…, CancellationToken ct = default)`.
+
+## PdfToTextConverter
+Properties: `TextLayout` (`PdfToTextLayout.Original` | `Reading`), `MarkPageBreaks` (bool; marker `PdfToTextConverter.PAGE_BREAK_MARK`), `UserPassword`, `OwnerPassword`, `MaxPageCount` (0 = unlimited), `RunTimeoutSec`, `ConversionInfo` (`PageCount`), `PdfLoaderFilePath`.
+
+```
+string ConvertToText(byte[] pdfData)                                   string ConvertToText(byte[] pdfData, int startPageNumber)
+string ConvertToText(byte[] pdfData, int startPageNumber, int endPageNumber)
+string ConvertToText(Stream pdfStream [, int startPageNumber [, int endPageNumber]])
+string ConvertToText(string pdfFile   [, int startPageNumber [, int endPageNumber]])
+
+FindTextLocation[] FindText(byte[] pdfData, string textToFind, bool caseSensitive, bool wholeWord)
+FindTextLocation[] FindText(byte[] pdfData, string textToFind, int startPageNumber, bool caseSensitive, bool wholeWord)
+FindTextLocation[] FindText(byte[] pdfData, string textToFind, int startPageNumber, int endPageNumber, bool caseSensitive, bool wholeWord)
+  … the same three shapes for Stream pdfStream and string pdfFile
+```
+`FindTextLocation`: `PageNumber`, `X`, `Y`, `Width`, `Height` (points, origin top-left).
+
+## PdfToImageConverter
+Properties: `Resolution` (DPI, default 150), `ColorSpace` (`PdfPageImageColorSpace.RGB` default | `Gray` | `Mono`), `TransparencyEnabled` (RGB/Gray only), `UserPassword`, `OwnerPassword`, `MaxPageCount`, `RunTimeoutSec`, `StdFontsDir`, `ConversionInfo` (`PageCount`), `PdfLoaderFilePath`.
+
+```
+PdfPageImage[] ConvertToImages(byte[] pdfData [, int startPageNumber [, int endPageNumber]])
+PdfPageImage[] ConvertToImages(Stream pdfStream [, …])          PdfPageImage[] ConvertToImages(string pdfFile [, …])
+void ConvertToImageFiles(byte[] pdfData [, int startPageNumber [, int endPageNumber]], string outputDirectory, string imageFileName)
+  … the same for Stream and string pdfFile
+```
+`PdfPageImage`: `PageNumber`, `ImageData` (PNG bytes). Files are named `<imageFileName>-<page>.png` in `outputDirectory`.
+
+## PdfImagesExtractor
+Properties: `UserPassword`, `OwnerPassword`, `MaxPageCount`, `RunTimeoutSec`, `ExtractionInfo` (`PageCount`, `ImagesPerPage`), `PdfLoaderFilePath`.
+
+```
+ExtractedImage[][] ExtractImages(byte[] pdfData [, int startPageNumber [, int endPageNumber]])
+ExtractedImage[][] ExtractImages(Stream pdfStream [, …])        ExtractedImage[][] ExtractImages(string pdfFile [, …])
+void ExtractImagesToFile(byte[] pdfData [, int startPageNumber [, int endPageNumber]], string outputDirectory, string imageFileName)
+  … the same for Stream and string pdfFile
+```
+`ExtractedImage`: `PageNumber`, `ImageData` (PNG bytes). The outer array has one entry per processed page.
 
 
 ---
@@ -1033,7 +1155,9 @@ var o = converter.PdfDocumentOptions;
 o.PdfStandard = PdfStandard.PdfUa1;          // accessible, tagged (ISO 14289-1)
 // o.PdfStandard = PdfStandard.PdfA2b;       // archival, level B
 // o.PdfStandard = PdfStandard.PdfUa1PdfA2b; // both at once
-o.AccessibilityOptions.Language = "en-US";   // applies when a tagged standard is selected
+o.AccessibilityOptions.AddMissingImageAlternateText = true;   // PdfAccessibilityOptions; applies when a tagged standard is selected
+o.AccessibilityOptions.InsertMissingTableHeaders = true;
+converter.PdfDocumentInfo.Language = "en-US";                 // document language lives in PdfDocumentInfo
 converter.PdfDocumentInfo.Title = "Invoice 2026-001";
 ```
 - `PdfStandard.None` (default) = plain PDF. Other PDF/A conformance levels (2a/3a/3b/3u/4/4f) are members of the same enum; the documentation lists the exact names.
@@ -1132,6 +1256,7 @@ Ask for: the call used (`ConvertUrl` / `ConvertHtml`), the platform, whether the
 | Frameset / iframe content missing | frames are separate documents | convert the frame's URL directly, or include the content inline |
 | Landscape / custom size | — | `o.PdfPageOrientation = PdfPageOrientation.Landscape`; custom: `o.PdfPageSize = new PdfPageSize(width, height)` in points, with `AutoResizePdfPageWidth = false` |
 | Append other PDFs to the result | — | open the result in `PdfEditor` and `AddPdfTemplate` the others, or merge with the Core API (see the pdf-features skill) |
+| "converter instances are not reusable" exception | a second conversion on the same converter object | create a new converter for every conversion (also in loops and cached services) |
 | Linux: works on Windows, fails on Linux | missing system packages or execute permissions | follow the `evopdf-next-linux` skill, in that order |
 
 Always test the page in Chrome first: EvoPdf Next renders what Chrome renders. If Chrome shows the problem too, fix the HTML/CSS.
