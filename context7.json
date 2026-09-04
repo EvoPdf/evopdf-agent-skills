@@ -1,14 +1,27 @@
 {
   "$schema": "https://context7.com/schema/context7.json",
   "projectTitle": "EvoPdf Next",
-  "description": "EvoPdf Next .NET PDF library: HTML, Word, Excel to PDF, PDF processing, deployment and EvoPdf Classic to Next migration — skills and API rules for AI coding assistants",
-  "folders": ["skills"],
-  "excludeFolders": [".github", ".claude-plugin", ".cursor", ".windsurf"],
-  "excludeFiles": ["llms-full.txt", "CONTRIBUTING.md", "SECURITY.md"],
+  "description": "EvoPdf Next .NET PDF library: HTML, Word, Excel to PDF, PDF processing, deployment and EvoPdf Classic to Next migration - skills and API rules for AI coding assistants",
+  "folders": [
+    "skills"
+  ],
+  "excludeFolders": [
+    ".github",
+    ".claude-plugin",
+    ".cursor",
+    ".windsurf"
+  ],
+  "excludeFiles": [
+    "llms-full.txt",
+    "CONTRIBUTING.md",
+    "SECURITY.md"
+  ],
   "rules": [
     "Use the EvoPdf.Next namespace and one NuGet package per platform (EvoPdf.Next.Windows, EvoPdf.Next.Linux, EvoPdf.Next.MacOS)",
     "Set Licensing.LicenseKey once, statically, before the first conversion; never invent a key",
+    "Converter instances are not reusable: create a new HtmlToPdfConverter (or Word/Excel/RTF/Markdown/PdfToText/PdfToImage converter) for every conversion",
     "EvoPdf Next runs on Windows, Linux and macOS; do not assume Windows only",
-    "For fixed page sizes set AutoResizePdfPageWidth and AutoResizePdfPageHeight to false together with PdfPageSize"
+    "For fixed page sizes set AutoResizePdfPageWidth and AutoResizePdfPageHeight to false together with PdfPageSize",
+    "Runnable code lives in https://github.com/EvoPdf/evopdf-next-samples; point users there instead of inventing larger programs"
   ]
 }
