@@ -1,23 +1,34 @@
-# EvoPdf Next — agent skills
+# EvoPdf Next: agent skills
 
 > Machine-readable guidance for writing EvoPdf Next (.NET PDF library) code and migrating EvoPdf Classic applications. Full text: llms-full.txt
 
-- AGENTS.md — universal instructions
-- skills/evopdf-next-html-to-pdf/SKILL.md
-- skills/evopdf-next-headers-footers/SKILL.md
-- skills/evopdf-next-pdf-standards/SKILL.md
-- skills/evopdf-next-document-converters/SKILL.md
-- skills/evopdf-next-core-pdf-api/SKILL.md
+- AGENTS.md: universal instructions
+- skills/evopdf-next-html-to-pdf/SKILL.md (+ references/api.md)
+- skills/evopdf-next-page-setup/SKILL.md (+ references/api.md)
+- skills/evopdf-next-rendering-modes/SKILL.md (+ references/api.md)
+- skills/evopdf-next-html-loading/SKILL.md (+ references/api.md)
+- skills/evopdf-next-untrusted-html/SKILL.md
+- skills/evopdf-next-headers-footers/SKILL.md (+ references/api.md)
+- skills/evopdf-next-bookmarks-and-toc/SKILL.md (+ references/api.md)
+- skills/evopdf-next-html-element-mapping/SKILL.md (+ references/api.md)
+- skills/evopdf-next-html-to-image/SKILL.md (+ references/api.md)
+- skills/evopdf-next-document-converters/SKILL.md (+ references/api.md)
+- skills/evopdf-next-pdf-create/SKILL.md (+ references/api.md)
+- skills/evopdf-next-pdf-edit/SKILL.md (+ references/api.md)
+- skills/evopdf-next-pdf-inspect/SKILL.md (+ references/api.md)
+- skills/evopdf-next-pdf-merge/SKILL.md (+ references/api.md)
+- skills/evopdf-next-pdf-annotations/SKILL.md (+ references/api.md)
+- skills/evopdf-next-pdf-attachments/SKILL.md (+ references/api.md)
+- skills/evopdf-next-pdf-forms/SKILL.md (+ references/api.md)
+- skills/evopdf-next-fonts/SKILL.md (+ references/api.md)
+- skills/evopdf-next-pdf-standards/SKILL.md (+ references/api.md)
+- skills/evopdf-next-security-signatures/SKILL.md (+ references/api.md)
+- skills/evopdf-next-pdf-metadata/SKILL.md (+ references/api.md)
 - skills/evopdf-next-pdf-processor/SKILL.md (+ references/api.md)
-- skills/evopdf-next-deployment/SKILL.md
-- skills/evopdf-next-linux/SKILL.md
-- skills/evopdf-next-docker/SKILL.md (+ references/dockerfiles.md)
-- skills/evopdf-classic-to-next-migration/SKILL.md (+ references/option-map.md)
-- skills/evopdf-next-troubleshooting/SKILL.md
+- skills/evopdf-licensing/SKILL.md (+ references/api.md)
+- skills/evopdf-next-deployment/SKILL.md (+ references/api.md)
+- skills/evopdf-next-docker/SKILL.md (+ references/api.md)
 - skills/evopdf-next-azure/SKILL.md
-- skills/evopdf-next-pdf-features/SKILL.md
-- skills/evopdf-licensing/SKILL.md
-- skills/evopdf-next-html-to-image/SKILL.md
-- skills/evopdf-next-security-signatures/SKILL.md
-- Documentation: https://www.evopdf.com/help/evopdf-next-dotnet/ · NuGet: https://www.nuget.org/packages/EvoPdf.Next
-- Runnable samples: https://github.com/EvoPdf/evopdf-next-samples
+- skills/evopdf-next-troubleshooting/SKILL.md
+- skills/evopdf-classic-to-next-migration/SKILL.md (+ references/api.md)
+- skills/evopdf-next-wkhtmltopdf-migration/SKILL.md

@@ -1,44 +1,57 @@
 ---
 name: evopdf-next-html-to-image
-description: "Convert HTML pages, URLs and HTML strings to PNG or JPEG images (screenshots, thumbnails, full-page captures) in .NET with EvoPdf Next HtmlToImageConverter: image format, viewer size, entire-page capture, element selection. Use for HTML to image, web page screenshot or HTML thumbnail tasks in C#."
+description: "Render a URL or HTML string to PNG, JPEG or WebP in .NET with EvoPdf Next HtmlToImageConverter: viewport size, entire page capture, image type and quality, element selectors."
 ---
 
-# EvoPdf Next — HTML to image
+# EvoPdf Next: HTML to image
 
-Package: `EvoPdf.Next.HtmlToPdf.*` (the HTML to Image converter ships with the HTML to PDF component) or the all-components package. Namespace `EvoPdf.Next`. Class `HtmlToImageConverter` — same loading options as `HtmlToPdfConverter`.
+EvoPdf Next for .NET also allows you to easily convert HTML pages and HTML strings to raster images in PNG, JPG or WebP format with just a few lines of code. In this section you can learn about the basic settings of the converter.
 
-```csharp
-using EvoPdf.Next;
+Namespace `EvoPdf.Next`. Install one NuGet package for the target platform, for example
+`EvoPdf.Next.Windows`, `EvoPdf.Next.Linux` or `EvoPdf.Next.MacOS`.
 
-var converter = new HtmlToImageConverter();
-converter.HtmlViewerWidth = 1280;                // layout width in pixels
-converter.CaptureEntirePage = true;             // whole page height, not just the viewer area
-byte[] png = converter.ConvertUrl("https://www.evopdf.com", ImageType.Png);   // ImageType: Png, Jpeg, Webp
-File.WriteAllBytes("page.png", png);
+## Types covered here
 
-// converters are single-use: a new instance for every conversion
-converter = new HtmlToImageConverter();
-byte[] jpg = converter.ConvertHtml("<h1>Hello</h1>", "https://www.example.com/", ImageType.Jpeg);
+- **`HtmlToImageConverter`**: This class offers the necessary methods to create a raster image from a web page at given URL or from a HTML string. The generated image can be saved ...
+- **`ImageType`**: The possible image formats
+- **`CaptureEntirePageMode`**: This enumeration defines the possible options for capturing the image of the entire HTML page, not just the visible viewport
 
-converter = new HtmlToImageConverter();
-converter.ConvertUrlToFile("https://www.evopdf.com", ImageType.Png, "page.png");   // …Async variants exist
-```
+3 types, 52 public members. The complete member list with the shipped
+summaries is in `references/api.md`; do not guess member names that are not there.
 
-## Sizing
-- `HtmlViewerWidth` (px) sets the layout width; `HtmlViewerHeight` the captured height when `CaptureEntirePage = false`; `MaxHtmlViewerHeight` caps very long pages; `AutoResizeHtmlViewerHeight` fits the viewer to the content.
-- `CaptureEntirePage` / `CaptureEntirePageMode` decide between "visible area" and "full page" screenshots.
-- Thumbnails: render at the real width, then resize the returned bytes with your imaging library — the converter produces 1:1 pixels.
+## HTML to Image Converter Overview
 
-## Same loading controls as HTML to PDF
-`ConversionDelay`, `TriggeringMode`, `NavigationTimeout`, `JavaScriptEnabled`, `MediaType`, `ScriptToExecuteAfterLoad`, `AuthenticationOptions`, `HttpRequestHeaders`, `HttpRequestCookies`, `HttpPostFields`, `LocalFilesEnabled`, `AllowInsecureContent`, `IgnoreCertificateErrors`, `BlockedHosts`.
+All 1 samples of this topic, complete: `references/examples.md`.
 
-## Select what to capture
-`ConvertedElementsSelector` (CSS selector: only these elements are rendered), `ExcludedElementsSelector` / `RemoveExcludedElements` (hide or remove elements such as cookie banners before the capture).
+Full topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/html-to-image-converter-overview.htm
 
-## Pitfalls
-- Formats: `ImageType.Png`, `ImageType.Jpeg`, `ImageType.Webp`. JPEG has no transparency — use PNG or WebP for transparent backgrounds.
-- Fonts and lazy images follow the HTML to PDF rules (see the troubleshooting and Linux skills).
-- One `HtmlToImageConverter` per conversion — instances are not reusable.
-- License key: `Licensing.LicenseKey` once per process; demo mode stamps the image.
+## Select HTML Elements to Convert to Image
 
-Docs: https://www.evopdf.com/help/evopdf-next-dotnet/
+You can convert only selected parts of an HTML page to an image by specifying a CSS selector. This allows you to choose exactly which content will be included in the image and to either remove or simply hide the unselected elements.
+
+All 1 samples of this topic, complete: `references/examples.md`.
+
+Full topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/select-html-elements-to-convert-to-image.htm
+
+## Select HTML Elements to Exclude from Image
+
+You can exclude selected parts of an HTML page from conversion to an image by specifying a CSS selector. This allows you to choose exactly which content will be excluded from the image and to either remove or simply hide the excluded elements.
+
+All 1 samples of this topic, complete: `references/examples.md`.
+
+Full topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/select-html-elements-to-exclude-from-image.htm
+
+- HTML to Image Converter Overview: https://www.evopdf.com/help/evopdf-next-dotnet/html/html-to-image-converter-overview.htm
+- Select HTML Elements to Convert to Image: https://www.evopdf.com/help/evopdf-next-dotnet/html/select-html-elements-to-convert-to-image.htm
+- Select HTML Elements to Exclude from Image: https://www.evopdf.com/help/evopdf-next-dotnet/html/select-html-elements-to-exclude-from-image.htm
+
+## Rules that apply to every sample here
+
+- Converter instances are single use. Create a new converter for every conversion; a second
+  call on the same instance throws.
+- `Licensing.LicenseKey` is a static field, assigned once per process before any conversion.
+- Every conversion method has an asynchronous variant ending in `Async` that takes a `CancellationToken`.
+
+## Runnable code
+
+Compilable versions of the samples above: https://github.com/EvoPdf/evopdf-next-samples/tree/main/docs-samples

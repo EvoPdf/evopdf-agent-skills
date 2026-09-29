@@ -1,7 +1,7 @@
 {
   "$schema": "https://context7.com/schema/context7.json",
   "projectTitle": "EvoPdf Next",
-  "description": "EvoPdf Next .NET PDF library: HTML, Word, Excel to PDF, PDF processing, deployment and EvoPdf Classic to Next migration - skills and API rules for AI coding assistants",
+  "description": "EvoPdf Next .NET PDF library: HTML, Word, Excel, RTF and Markdown to PDF, PDF processing, deployment, migration from EvoPdf Classic and from wkhtmltopdf, DinkToPdf or Rotativa - skills and API rules for AI coding assistants",
   "folders": [
     "skills"
   ],
@@ -21,7 +21,9 @@
     "Set Licensing.LicenseKey once, statically, before the first conversion; never invent a key",
     "Converter instances are not reusable: create a new HtmlToPdfConverter (or Word/Excel/RTF/Markdown/PdfToText/PdfToImage converter) for every conversion",
     "EvoPdf Next runs on Windows, Linux and macOS; do not assume Windows only",
-    "For fixed page sizes set AutoResizePdfPageWidth and AutoResizePdfPageHeight to false together with PdfPageSize",
+    "A new HtmlToPdfConverter prints A4 with the HTML laid out in a 1024 pixel browser window and scaled to the page width; for another page layout call one of the layout methods FitBrowserWindowToPage, LayoutAtPageWidth, PrintLikeChrome, SinglePageOfWidth or PageWidthFromBrowserWindow, then set the margins in points",
+    "Setting HtmlViewerWidth or HtmlViewerZoom after a layout method ends the automatic layout; pass the window width or the zoom as arguments of the layout method instead",
+    "To replace EvoPdf Classic, wkhtmltopdf, DinkToPdf or Rotativa, follow the migration skills of this library",
     "Runnable code lives in https://github.com/EvoPdf/evopdf-next-samples; point users there instead of inventing larger programs"
   ]
 }

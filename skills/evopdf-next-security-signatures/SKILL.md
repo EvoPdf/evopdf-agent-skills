@@ -1,52 +1,50 @@
 ---
 name: evopdf-next-security-signatures
-description: "Protect PDFs generated or edited with EvoPdf Next: user and owner passwords, encryption algorithm and key size, permissions (print, copy, edit, fill forms), digital signatures with PFX certificates and timestamp servers, document metadata (title, author, keywords, language). Use when a .NET PDF must be encrypted, permission-restricted, signed or tagged with metadata."
+description: "Protect and sign PDF documents with EvoPdf Next: user and owner passwords, encryption algorithm and key size, permission flags, digital signatures from a PFX certificate, timestamp servers, signature appearance and certification levels."
 ---
 
-# EvoPdf Next — security, digital signatures, metadata
+# EvoPdf Next: encryption, permissions and digital signatures
 
-Available on every converter (`converter.PdfSecurityOptions`, `converter.DigitalSignature`, `converter.PdfDocumentInfo`) and on `PdfDocument` / `PdfEditor` for created or existing PDFs.
+EVO HTML to PDF Converter allows you set the permissions of generated PDF document like printing and editing and to password protect the generated PDF document with separate user and owner passwords.
 
-## Passwords and permissions
-```csharp
-var sec = converter.PdfSecurityOptions;
-sec.UserPassword = "open-me";          // required to open
-sec.OwnerPassword = "owner-secret";    // required to change permissions
-sec.EncryptionAlgorithm = …;           // RC4 or AES; prefer AES
-sec.KeySize = …;                       // e.g. 128 or 256 bits
-sec.CanPrint = true;
-sec.CanCopyContent = false;
-sec.CanEditContent = false;
-sec.CanEditAnnotations = false;
-sec.CanFillFormFields = true;
-sec.CanAssembleDocument = false;
-sec.CanCopyAccessibilityContent = true; // keep screen readers working
-```
-Permissions are only enforced by viewers when an owner password is set. A user password alone encrypts the file; an owner password alone restricts without asking on open.
+Namespace `EvoPdf.Next`. Install one NuGet package for the target platform, for example
+`EvoPdf.Next.Windows`, `EvoPdf.Next.Linux` or `EvoPdf.Next.MacOS`.
 
-## Digital signature
-```csharp
-var sig = converter.DigitalSignature;
-sig.PfxCertificateData = File.ReadAllBytes("company.pfx");
-sig.PfxCertificatePassword = Environment.GetEnvironmentVariable("PFX_PASSWORD");
-sig.Reason = "Approved"; sig.Location = "Bucharest"; sig.ContactInfo = "office@example.com";
-sig.TimestampServerUrl = "http://timestamp.digicert.com";   // optional RFC 3161 TSA (+ Username/Password if required)
-sig.AppearanceEnabled = true;                                 // visible signature; configure sig.Appearance
-sig.FieldName = "Signature1";
-```
-To sign an **existing** PDF, open it with `new PdfEditor(pdfBytes, password, digitalSignature)` and save. Keep certificates and passwords out of source code.
+## Types covered here
 
-## Metadata
-```csharp
-var info = converter.PdfDocumentInfo;
-info.Title = "Invoice 2026-001"; info.AuthorName = "ACME"; info.Subject = "…"; info.Keywords = "invoice, 2026";
-info.Language = "en-US";   // also used by PDF/UA readers
-```
-`Creator`, `Producer`, `CreatedDate`, `ModificationDate` are available too.
+- **`PdfSecurityOptions`**: This class encapsulates the options to control the PDF document security like permissions, encryption, password protection
+- **`EncryptionAlgorithm`**: This enumeration contains the possible values of the encryption algorithm used to encrypt a PDF document
+- **`EncryptionKeySize`**: This enumeration contains the possible values of the length of the encryption key used to encrypt a PDF document
+- **`PdfDigitalSignature`**: This class encapsulates the options used to control the digital signature applied to a PDF document
+- **`PdfDigitalSignatureAppearance`**: This class encapsulates the options used to control the appearance of the digital signature applied to a PDF document
 
-## Rules
-- Encryption and PDF/A: PDF/A forbids encryption — do not combine `PdfSecurityOptions` passwords with `PdfStandard.PdfA*`.
-- Signing after any other modification: the signature covers the final bytes; edit first, sign last.
-- Read secrets (PFX password, owner password) from configuration or a key vault, never from literals.
+5 types, 35 public members. The complete member list with the shipped
+summaries is in `references/api.md`; do not guess member names that are not there.
 
-Docs: https://www.evopdf.com/help/evopdf-next-dotnet/
+## Set Permissions and Password of the Generated PDF Document
+
+All 1 samples of this topic, complete: `references/examples.md`.
+
+Full topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/set-pdf-permissions-and-password.htm
+
+## Add a Digital Signature to Generated PDF Document
+
+EVO HTML to PDF Converter allows you to add digital signatures to the generated PDF document. In order to add digital signatures you need a certificate with private and public keys. These certificates are usually stored in a .pfx or a .p12 file in PKCS#12 format and they can be password protected. A digital signature is represented by a `PdfDigitalSignature` object. An object of this type is exposed by the `HtmlToPdfConverter.DigitalSignature` property of the HTML to PDF Converter class.
+
+All 1 samples of this topic, complete: `references/examples.md`.
+
+Full topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/digitally-sign-the-generated-pdf.htm
+
+- Set Permissions and Password of the Generated PDF Document: https://www.evopdf.com/help/evopdf-next-dotnet/html/set-pdf-permissions-and-password.htm
+- Add a Digital Signature to Generated PDF Document: https://www.evopdf.com/help/evopdf-next-dotnet/html/digitally-sign-the-generated-pdf.htm
+
+## Rules that apply to every sample here
+
+- Converter instances are single use. Create a new converter for every conversion; a second
+  call on the same instance throws.
+- `Licensing.LicenseKey` is a static field, assigned once per process before any conversion.
+- Every conversion method has an asynchronous variant ending in `Async` that takes a `CancellationToken`.
+
+## Runnable code
+
+Compilable versions of the samples above: https://github.com/EvoPdf/evopdf-next-samples/tree/main/docs-samples

@@ -1,74 +1,170 @@
 ---
 name: evopdf-next-pdf-processor
-description: "Process existing PDF documents in .NET with the EvoPdf Next PDF Processor: extract text (PdfToTextConverter, layout or reading order), search text and get the position of every match (FindText, FindTextLocation), render pages to PNG images (PdfToImageConverter, DPI, color space, transparency), extract embedded images (PdfImagesExtractor). Use for PDF to text, PDF search, PDF to image, PDF thumbnails and image extraction tasks in C#."
+description: "Extract content from existing PDF documents with the EvoPdf Next PDF Processor: PDF to text with layout options, text search with page positions, PDF pages to PNG images, embedded image extraction, passwords, page limits and run timeouts."
 ---
 
-# EvoPdf Next — PDF Processor
+# EvoPdf Next: text extraction, search and page images
 
-Package: `EvoPdf.Next.PdfProcessor.Windows` / `.Linux` / `.MacOS` (or the all-components package). Namespace `EvoPdf.Next`. Three classes: `PdfToTextConverter`, `PdfToImageConverter`, `PdfImagesExtractor`. Read `references/api.md` for every overload.
+The PDF to Text Converter component allows you to extract the text from PDF documents. This component is distributed as part of the EvoPdf.Next.PdfProcessor.Windows NuGet package when targeting Windows x64 and as part of the EvoPdf.Next.PdfProcessor.Linux package when targeting Linux x64. The Windows x64 package is referenced by the EvoPdf.Next.Windows metapackage and the Linux x64 package is referenced by the EvoPdf.Next.Linux metapackage.
 
-## Rules shared by the three classes
-- **Instances are not reusable** — a new instance for every conversion, search or extraction; a second call throws.
-- Input as file path, `byte[]` or `Stream`. Page ranges in every method: `(source)` = all pages, `(source, startPage)` = to the end, `(source, startPage, endPage)` = inclusive; pages are 1-based.
-- Protected PDFs: set `UserPassword` or `OwnerPassword` before the call.
-- Guards: `MaxPageCount` (0 = unlimited, default) caps the pages processed; `RunTimeoutSec` caps the run time.
-- After a call, `ConversionInfo` / `ExtractionInfo` report `PageCount` (and `ImagesPerPage` for extraction).
-- Every method has an `…Async(…, CancellationToken)` twin.
-- On Linux the native runtime needs execute permission; on Azure Functions Linux call `PdfProcessorInstallation.ConfigureRuntime(true, null)` first — see the linux and azure skills.
+Namespace `EvoPdf.Next`. Install one NuGet package for the target platform, for example
+`EvoPdf.Next.Windows`, `EvoPdf.Next.Linux` or `EvoPdf.Next.MacOS`.
 
-## PDF to text
+## Types covered here
+
+- **`PdfToTextConverter`**: Provides PDF to text conversion functionality
+- **`PdfToTextLayout`**: The resulted text layout
+- **`PdfToTextConversionInfo`**: Holds information about the result of a PDF to Text conversion. This object is populated after the conversion completes and is exposed via the Convers...
+- **`FindTextLocation`**: Represents the location of text on a PDF page
+- **`PdfToImageConverter`**: Encapsulates PDF to image conversion functionality and allows converting PDF pages to PNG images
+- **`PdfPageImage`**: Represents an image of a PDF page
+- **`PdfPageImageColorSpace`**: Specifies the color space of a PDF page image
+- **`PdfToImageConversionInfo`**: Holds information about the result of a PDF to Image conversion. This object is populated after the conversion completes and is exposed via the Conver...
+- **`PdfImagesExtractor`**: Encapsulates the PDF Images Extractor functionality and allows you to extract images from a PDF document
+- **`ExtractedImage`**: Encapsulates an image extracted from a PDF page
+- **`PdfImagesExtractionInfo`**: Holds information about the result of extracting images from a PDF. This object is populated after the conversion completes and is exposed via the Ext...
+- **`PdfProcessorImageType`**: The possible image formats for PDF processor operations
+- **`PdfProcessorGlobalSettings`**: Contains global settings that configure the behavior of the library within application
+- **`PdfProcessorInstallation`**: Provides information about the global installation of the PDF processor
+
+14 types, 161 public members. The complete member list with the shipped
+summaries is in `references/api.md`; do not guess member names that are not there.
+
+## Convert PDF to Text
+
+### Create the PDF to Text Converter
+
 ```csharp
-using EvoPdf.Next;
-
-var converter = new PdfToTextConverter();
-converter.TextLayout = PdfToTextLayout.Original;   // default: keep the visual layout; Reading = reading order
-converter.MarkPageBreaks = true;                    // insert PdfToTextConverter.PAGE_BREAK_MARK between pages (default false)
-converter.UserPassword = "…";                       // only for protected PDFs
-string all = converter.ConvertToText("input.pdf");
-string pages2to5 = new PdfToTextConverter().ConvertToText(pdfBytes, 2, 5);
+// Create a new PDF to Text converter instance
+PdfToTextConverter pdfToTextConverter = new PdfToTextConverter();
 ```
-Use `Original` for invoices, tables and forms where position matters; `Reading` for articles and multi-column text that will be indexed or fed to an LLM.
 
-## Find text with positions
+### Open Password Protected PDFs
+
 ```csharp
-var search = new PdfToTextConverter();
-FindTextLocation[] hits = search.FindText(pdfBytes, "Total", caseSensitive: false, wholeWord: true);
-foreach (FindTextLocation h in hits)
-    Console.WriteLine($"page {h.PageNumber}: x={h.X} y={h.Y} w={h.Width} h={h.Height}");   // points, origin top-left of the page
+pdfToTextConverter.UserPassword = userPasswordString;
+pdfToTextConverter.OwnerPassword = ownerPasswordString;
 ```
-Results come in document order (top to bottom, left to right). Typical uses: highlight (draw a rectangle at the location with `PdfEditor.AddRectangle`), redact, locate a signature field, verify that generated PDFs contain expected text.
 
-## PDF pages to images
 ```csharp
-var toImage = new PdfToImageConverter();
-toImage.Resolution = 150;                              // DPI, default 150
-toImage.ColorSpace = PdfPageImageColorSpace.RGB;       // RGB (default), Gray, Mono
-toImage.TransparencyEnabled = false;                   // true only with RGB or Gray
-PdfPageImage[] pages = toImage.ConvertToImages("input.pdf");     // PNG per page: ImageData, PageNumber
-foreach (PdfPageImage p in pages) File.WriteAllBytes($"page-{p.PageNumber}.png", p.ImageData);
-
-new PdfToImageConverter().ConvertToImageFiles("input.pdf", 1, 3, "out", "page");   // writes out/page-1.png …
+string extractedText = pdfToTextConverter.ConvertToText(inputPdfStream);
+string extractedText = pdfToTextConverter.ConvertToText(inputPdfFile);
 ```
-Thumbnails: lower `Resolution` (e.g. 40–72 DPI) instead of resizing full-size images. `StdFontsDir` points at standard fonts for PDFs that do not embed them.
 
-## Extract embedded images
 ```csharp
-var extractor = new PdfImagesExtractor();
-ExtractedImage[][] perPage = extractor.ExtractImages("input.pdf");   // one array per page; ExtractedImage.ImageData (PNG), PageNumber
-int n = 0;
-foreach (ExtractedImage[] page in perPage)
-    foreach (ExtractedImage img in page) File.WriteAllBytes($"img-{img.PageNumber}-{++n}.png", img.ImageData);
-
-new PdfImagesExtractor().ExtractImagesToFile("input.pdf", "out", "img");   // files out/img-… ; extractor.ExtractionInfo.ImagesPerPage
+string extractedText = pdfToTextConverter.ConvertToText(inputPdfStream, startPageNumber);
+string extractedText = pdfToTextConverter.ConvertToText(inputPdfFile, startPageNumber);
 ```
-Images are returned as PNG with transparency preserved; vector graphics are not images and are not extracted (render the page instead).
 
-## Choosing between them
-| Need | Use |
-|---|---|
-| Index, search, feed text to an LLM | `ConvertToText` with `Reading` layout |
-| Exact position of a string | `FindText` |
-| Preview, thumbnail, OCR input, print-like snapshot | `ConvertToImages` |
-| The photos/logos inside the PDF, at original resolution | `ExtractImages` |
+All 9 samples of this topic, complete: `references/examples.md`.
 
-Runnable versions: `quickstarts/Samples/PdfProcessor.*.cs` in https://github.com/EvoPdf/evopdf-next-samples · Docs: https://www.evopdf.com/help/evopdf-next-dotnet/html/convert-pdf-to-text.htm · search-for-text-in-pdf.htm · convert-pdf-pages-to-images.htm · extract-images-from-pdf.htm
+Full topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/convert-pdf-to-text.htm
+
+## Search for Text in PDF
+
+The PDF to Text Converter component allows you to search for text in PDF documents and retrieve the text location and bounding rectangle information in PDF documents. This component is distributed as part of the EvoPdf.Next.PdfProcessor.Windows NuGet package when targeting Windows x64 and as part of the EvoPdf.Next.PdfProcessor.Linux package when targeting Linux x64. The Windows x64 package is referenced by the EvoPdf.Next.Windows metapackage and the Linux x64 package is referenced by the EvoPdf.Next.Linux metapackage.
+
+### Create the PDF to Text Converter
+
+```csharp
+// Create a new PDF to Text converter instance
+PdfToTextConverter pdfToTextConverter = new PdfToTextConverter();
+```
+
+### Open Password Protected PDFs
+
+```csharp
+pdfToTextConverter.UserPassword = userPasswordString;
+pdfToTextConverter.OwnerPassword = ownerPasswordString;
+```
+
+### Find Text in PDF
+
+```csharp
+FindTextLocation[] findTextLocations = pdfToTextConverter.FindText(inputPdfStream, textToFindString, caseSensitive, wholeWord);
+FindTextLocation[] findTextLocations = pdfToTextConverter.FindText(inputPdfFile, textToFindString, caseSensitive, wholeWord);
+```
+
+```csharp
+FindTextLocation[] findTextLocations = pdfToTextConverter.FindText(inputPdfStream, textToFindString, startPageNumber, caseSensitive, wholeWord);
+FindTextLocation[] findTextLocations = pdfToTextConverter.FindText(inputPdfFile, textToFindString, startPageNumber, caseSensitive, wholeWord);
+```
+
+All 9 samples of this topic, complete: `references/examples.md`.
+
+Full topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/search-for-text-in-pdf.htm
+
+## Convert PDF Pages to Images
+
+The PDF to Image Converter component allows you to convert PDF pages into PNG images. This component is distributed as part of the EvoPdf.Next.PdfProcessor.Windows NuGet package when targeting Windows x64 and as part of the EvoPdf.Next.PdfProcessor.Linux package when targeting Linux x64. The Windows x64 package is referenced by the EvoPdf.Next.Windows metapackage and the Linux x64 package is referenced by the EvoPdf.Next.Linux metapackage.
+
+### Create the PDF to Image Converter
+
+```csharp
+// Create a new PDF to Image converter instance
+PdfToImageConverter pdfToImageConverter = new PdfToImageConverter();
+```
+
+### Open Password Protected PDFs
+
+```csharp
+pdfToImageConverter.UserPassword = userPasswordString;
+pdfToImageConverter.OwnerPassword = ownerPasswordString;
+```
+
+```csharp
+PdfPageImage[] pdfPageImages = pdfToImageConverter.ConvertToImages(inputPdfStream);
+PdfPageImage[] pdfPageImages = pdfToImageConverter.ConvertToImages(inputPdfFile);
+```
+
+```csharp
+PdfPageImage[] pdfPageImages = pdfToImageConverter.ConvertToImages(inputPdfStream, startPageNumber);
+PdfPageImage[] pdfPageImages = pdfToImageConverter.ConvertToImages(inputPdfFile, startPageNumber);
+```
+
+All 15 samples of this topic, complete: `references/examples.md`.
+
+Full topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/convert-pdf-pages-to-images.htm
+
+## Extract Images from PDF
+
+The PDF Images Extractor component of the library allows you to extract images from PDF documents in PNG format. This component is distributed as part of the EvoPdf.Next.PdfProcessor.Windows NuGet package when targeting Windows x64 and as part of the EvoPdf.Next.PdfProcessor.Linux package when targeting Linux x64. The Windows x64 package is referenced by the EvoPdf.Next.Windows metapackage and the Linux x64 package is referenced by the EvoPdf.Next.Linux metapackage.
+
+### Create the PDF Images Extractor
+
+```csharp
+ // Create the PDF Images Extractor instance with default options
+PdfImagesExtractor pdfImagesExtractor = new PdfImagesExtractor();
+```
+
+### Open Password Protected PDFs
+
+```csharp
+pdfImagesExtractor.UserPassword = userPasswordString;
+pdfImagesExtractor.OwnerPassword = ownerPasswordString;
+```
+
+```csharp
+ExtractedImage[][] extractedImages = pdfImagesExtractor.ExtractImages(inputPdfStream);
+ExtractedImage[][] extractedImages = pdfImagesExtractor.ExtractImages(inputPdfFile);
+```
+
+```csharp
+ExtractedImage[][] extractedImages = pdfImagesExtractor.ExtractImages(inputPdfStream, startPageNumber);
+ExtractedImage[][] extractedImages = pdfImagesExtractor.ExtractImages(inputPdfFile, startPageNumber);
+```
+
+All 15 samples of this topic, complete: `references/examples.md`.
+
+Full topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/extract-images-from-pdf.htm
+
+## Rules that apply to every sample here
+
+- Converter instances are single use. Create a new converter for every conversion; a second
+  call on the same instance throws.
+- `Licensing.LicenseKey` is a static field, assigned once per process before any conversion.
+- Every conversion method has an asynchronous variant ending in `Async` that takes a `CancellationToken`.
+
+## Runnable code
+
+Compilable versions of the samples above: https://github.com/EvoPdf/evopdf-next-samples/tree/main/docs-samples

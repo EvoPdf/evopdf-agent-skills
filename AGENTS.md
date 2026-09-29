@@ -1,29 +1,30 @@
-# AGENTS.md — EvoPdf Next
+# AGENTS.md: EvoPdf Next
 
 Instructions for AI coding agents (Claude Code, Codex, GitHub Copilot, Cursor, Gemini CLI, Windsurf and others) working in projects that use **EvoPdf Next**, the .NET PDF library from EVO PDF Software.
 
 ## When these instructions apply
-Any task that converts HTML, Word, Excel, RTF or Markdown to PDF, creates or edits PDF documents, or extracts text and images from PDF in .NET — and any migration from **EvoPdf Classic** (`EvoPdf` namespace) to **EvoPdf Next**.
+Any task that converts HTML, Word, Excel, RTF or Markdown to PDF, creates or edits PDF documents, or extracts text and images from PDF in .NET, and any migration from **EvoPdf Classic** (`EvoPdf` namespace) to **EvoPdf Next**.
 
 ## Rules
 1. Use the current API surface listed below and in `skills/*/SKILL.md`. Do not guess member names; if a member is not listed, say so and link the documentation.
 2. Never fabricate license keys, package versions or platform claims. Reference packages without a version unless the user pins one.
 3. Prefer the smallest correct sample: `using EvoPdf.Next;`, one converter, one call, `File.WriteAllBytes`. Add options only when the task asks for them.
 4. Windows-only assumptions are wrong for EvoPdf Next: it runs on Windows, Linux and macOS. Choose the NuGet package for the target platform.
-5. For Classic → Next migrations follow `skills/evopdf-classic-to-next-migration/SKILL.md`: namespace, license key, page sizing model and header/footer model change; the conversion calls do not.
+5. For Classic to Next migrations follow `skills/evopdf-classic-to-next-migration/SKILL.md`: namespace, license key, page sizing model and header/footer model change; the conversion calls do not.
 
 
-## EvoPdf Next — facts every generated answer must respect
+## EvoPdf Next: facts every generated answer must respect
 
-- Library: **EvoPdf Next** (namespace `EvoPdf.Next`), .NET Standard 2.0 → .NET 6–10 and .NET Framework 4.6.2+; Windows x64/ARM64, Linux x64/ARM64, macOS ARM64. Chromium-based rendering; no browser installation required.
+- Library: **EvoPdf Next** (namespace `EvoPdf.Next`), .NET Standard 2.0, for .NET 6 to 10 and .NET Framework 4.6.2 or later; Windows x64/ARM64, Linux x64/ARM64, macOS ARM64. Chromium-based rendering; no browser installation required.
 - Install one package per target platform. All components: `EvoPdf.Next.Windows`, `EvoPdf.Next.Linux`, `EvoPdf.Next.MacOS` (ARM64 variants `EvoPdf.Next.Windows.Arm64`, `EvoPdf.Next.Linux.Arm64`; `EvoPdf.Next` = Windows x64 + Linux x64). Single components follow the same pattern, e.g. `EvoPdf.Next.HtmlToPdf.Windows`, `EvoPdf.Next.WordToPdf.Linux`, `EvoPdf.Next.PdfProcessor.MacOS`, `EvoPdf.Next.Core.Windows`.
-- License key: one static assignment, before any conversion — `Licensing.LicenseKey = "…";` (field on the static `EvoPdf.Next.Licensing` class). Without it the library runs in demo mode and stamps the output; never invent a key.
-- **Converter instances are not reusable**: one `new HtmlToPdfConverter()` (or Word/Excel/RTF/Markdown/Image converter) per conversion — the library throws "converter instances are not reusable" on a second call. Instances are cheap; never cache or share them. Every conversion method has an `…Async` twin.
-- Page sizing: content is laid out at 96 DPI; `PdfDocumentOptions.AutoResizePdfPageWidth` (default `true`) makes the PDF page as wide as `HtmlViewerWidth` (default 1024 px → 768 pt). For an exact page size set `AutoResizePdfPageWidth = false` and `AutoResizePdfPageHeight = false` together with `PdfPageSize` / `PdfPageOrientation`. `AutoResizePdfPageHeight = true` (with width `true`) puts the whole content on one page.
+- License key: one static assignment, before any conversion: `Licensing.LicenseKey = "...";` (field on the static `EvoPdf.Next.Licensing` class). Without it the library runs in demo mode and stamps the output; never invent a key.
+- **Converter instances are not reusable**: one `new HtmlToPdfConverter()` (or Word/Excel/RTF/Markdown/Image converter) per conversion; the library throws "converter instances are not reusable" on a second call. Instances are cheap; never cache or share them. Every conversion method has an `...Async` twin.
+- Page layout: a new `HtmlToPdfConverter` prints an A4 page with the HTML laid out as in a 1024 px browser window and scaled to the page width. Another layout is one method call on the converter: `FitBrowserWindowToPage(pageSize, orientation, windowWidth)` for a web page on paper, `LayoutAtPageWidth(pageSize)` for HTML designed for the paper size, drawn 1:1, `PrintLikeChrome(pageSize)` for the Save as PDF output of Chrome, `SinglePageOfWidth(widthPt, marginPt)` for receipts and `PageWidthFromBrowserWindow(windowWidth)` for a page as wide as the window. The `singlePage` argument of a method puts the whole content on one page. Set the margins, in points, after the method; setting `HtmlViewerWidth` or `HtmlViewerZoom` after it ends the automatic layout.
 - Headers/footers: `PdfDocumentOptions.PdfHtmlHeader` / `PdfHtmlFooter` (class `PdfHtmlHeaderFooter`, derives from `PdfHtmlTemplate`): `Html`, `HtmlBaseUrl` or `HtmlSourceUrl`, `Height`, `AutoSizeContentHeight`, `FitHeight`, `ShowInFirstPage`/`ShowInOddPages`/`ShowInEvenPages`, `ReserveSpaceAlways` (default `true`), `AutoResizePdfMargins`, `SkipVariablesParsing`, `PageNumberOffset`, `TotalPagesOffset`. Variables `{page_number}` and `{total_pages}` are replaced inside the header/footer HTML. Alternative browser mode: `EnableHeaderFooter` + `HeaderTemplate` / `FooterTemplate`.
 - Dynamic pages: `ConversionDelay` (seconds) waits after load; `TriggeringMode.Manual` waits until the page calls `evoPdfConverter_startConversion()`; `NavigationTimeout`, `JavaScriptEnabled`, `LoadLazyImages` (default `true`), `MediaType` (screen by default, not set), `LocalFilesEnabled`, `AllowInsecureContent`, `BlockedHosts`, `HttpRequestHeaders`, `HttpRequestCookies`, `AuthenticationOptions`.
-- Standards: `PdfDocumentOptions.PdfStandard` = `PdfStandard.None` (default), `PdfUa1`, `PdfA2b`, `PdfUa1PdfA2b`, plus the other PDF/A levels; `AccessibilityOptions` applies when a tagged standard is selected.
-- Documentation: https://www.evopdf.com/help/evopdf-next-dotnet/ — product pages: https://www.evopdf.com/evopdf-next-dotnet
+- Standards: `PdfDocumentOptions.PdfStandard` = `PdfStandard.None` (default), `PdfUa1`, `PdfUa2`, `PdfA2b`, `PdfA4`, `PdfUa1PdfA2b`, `PdfUa2PdfA4`, plus the other PDF/A levels and combinations; `AccessibilityOptions` applies when a tagged standard is selected.
+- Migration: from EvoPdf Classic follow `skills/evopdf-classic-to-next-migration`; from wkhtmltopdf, DinkToPdf, Rotativa or TuesPechkin follow `skills/evopdf-next-wkhtmltopdf-migration`.
+- Documentation: https://www.evopdf.com/help/evopdf-next-dotnet/; product pages: https://www.evopdf.com/evopdf-next-dotnet
 
 
 ## Minimal HTML to PDF sample
@@ -31,7 +32,7 @@ Any task that converts HTML, Word, Excel, RTF or Markdown to PDF, creates or edi
 ```csharp
 using EvoPdf.Next;
 
-Licensing.LicenseKey = "…"; // once per process; omit while evaluating
+Licensing.LicenseKey = "..."; // once per process; omit while evaluating
 
 var converter = new HtmlToPdfConverter();
 byte[] pdf = converter.ConvertUrl("https://www.evopdf.com");
@@ -44,24 +45,37 @@ pdf = converter.ConvertHtml("<b>Hello World</b>", "https://www.evopdf.com");
 
 
 ## Runnable code
-Quickstart projects, all documentation samples and the complete demo application: https://github.com/EvoPdf/evopdf-next-samples — prefer pointing users there over inventing larger programs.
+Quickstart projects, all documentation samples and the complete demo application: https://github.com/EvoPdf/evopdf-next-samples; prefer pointing users there over inventing larger programs.
 
 ## Skills in this repository
 | Skill | Use it for |
 |---|---|
-| `skills/evopdf-next-html-to-pdf` | URL/HTML string → PDF, options, dynamic pages, authentication |
-| `skills/evopdf-next-headers-footers` | HTML headers and footers, page numbers, margins |
-| `skills/evopdf-next-pdf-standards` | PDF/UA and PDF/A output, accessibility options |
-| `skills/evopdf-next-document-converters` | Word, Excel, RTF and Markdown to PDF |
-| `skills/evopdf-next-core-pdf-api` | Core PDF API: create and edit PDFs (PdfDocument, PdfEditor) |
-| `skills/evopdf-next-pdf-processor` | PDF to text, text search with positions, PDF pages to images, embedded image extraction |
-| `skills/evopdf-next-deployment` | Packages per platform, Azure, licensing in code |
-| `skills/evopdf-next-linux` | Linux setup: system packages, execute permissions, troubleshooting order |
-| `skills/evopdf-next-docker` | Dockerfiles for Linux (x64/ARM64) and Windows containers |
-| `skills/evopdf-classic-to-next-migration` | Moving code from EvoPdf Classic to EvoPdf Next |
-| `skills/evopdf-next-troubleshooting` | Symptom → cause → fix table for HTML to PDF problems |
-| `skills/evopdf-next-azure` | App Service and Functions, Windows and Linux, plan sizing, startup command, ConfigureRuntime |
-| `skills/evopdf-next-pdf-features` | Forms, bookmarks, TOC, links, stamps, merge, PdfEditor, security |
-| `skills/evopdf-licensing` | Deployment vs Company, prices, renewals, refunds — pre-sales answers |
-| `skills/evopdf-next-html-to-image` | HTML/URL to PNG or JPEG screenshots and thumbnails |
-| `skills/evopdf-next-security-signatures` | Passwords, permissions, encryption, digital signatures, metadata |
+| `skills/evopdf-next-html-to-pdf` | Convert URLs and HTML strings to PDF in .NET with EvoPdf Next HtmlToPdfConverter |
+| `skills/evopdf-next-page-setup` | Choose the PDF page size and how the HTML is laid out and scaled on it with the EvoPdf Next layout methods |
+| `skills/evopdf-next-rendering-modes` | Control the Chromium rendering process of EvoPdf Next |
+| `skills/evopdf-next-html-loading` | Control how EvoPdf Next fetches the HTML |
+| `skills/evopdf-next-untrusted-html` | Harden EvoPdf Next when the HTML comes from users |
+| `skills/evopdf-next-headers-footers` | Add headers, footers and HTML stamps to PDF with EvoPdf Next |
+| `skills/evopdf-next-bookmarks-and-toc` | Generate a document outline and an automatic table of contents from HTML headings with EvoPdf Next |
+| `skills/evopdf-next-html-element-mapping` | Convert or exclude parts of an HTML page with CSS selectors in EvoPdf Next and read back where each element landed in the PDF |
+| `skills/evopdf-next-html-to-image` | Render a URL or HTML string to PNG, JPEG or WebP in .NET with EvoPdf Next HtmlToImageConverter |
+| `skills/evopdf-next-document-converters` | Convert DOCX, XLSX, RTF and Markdown documents to PDF in .NET with EvoPdf Next |
+| `skills/evopdf-next-pdf-create` | Build PDF documents from scratch in .NET with the EvoPdf Next Core PDF API |
+| `skills/evopdf-next-pdf-edit` | Open and modify an existing PDF in .NET with EvoPdf Next PdfEditor |
+| `skills/evopdf-next-pdf-inspect` | Read the properties of an existing PDF with EvoPdf Next before processing it |
+| `skills/evopdf-next-pdf-merge` | Combine PDF documents in .NET with EvoPdf Next |
+| `skills/evopdf-next-pdf-annotations` | Add clickable link annotations and sticky-note text annotations to generated or existing PDFs with EvoPdf Next |
+| `skills/evopdf-next-pdf-attachments` | Attach files to a PDF with EvoPdf Next |
+| `skills/evopdf-next-pdf-forms` | Turn HTML form controls into interactive PDF form fields with EvoPdf Next PdfFormOptions |
+| `skills/evopdf-next-fonts` | Work with fonts in EvoPdf Next PDF documents |
+| `skills/evopdf-next-pdf-standards` | Produce standards-compliant PDF with EvoPdf Next |
+| `skills/evopdf-next-security-signatures` | Protect and sign PDF documents with EvoPdf Next |
+| `skills/evopdf-next-pdf-metadata` | Set the PDF document description and how viewers open the file with EvoPdf Next |
+| `skills/evopdf-next-pdf-processor` | Extract content from existing PDF documents with the EvoPdf Next PDF Processor |
+| `skills/evopdf-licensing` | Apply an EvoPdf Next license key in .NET, understand demo mode and the watermark, and know where the key goes in web applications and services. |
+| `skills/evopdf-next-deployment` | Install and deploy EvoPdf Next |
+| `skills/evopdf-next-docker` | Run EvoPdf Next in Docker containers on Linux and Windows |
+| `skills/evopdf-next-azure` | Run EvoPdf Next on Azure App Service and Azure Functions, on both Linux and Windows plans |
+| `skills/evopdf-next-troubleshooting` | Diagnose EvoPdf Next failures |
+| `skills/evopdf-classic-to-next-migration` | Migrate .NET applications from EvoPdf Classic (EvoPdf namespace) to EvoPdf Next |
+| `skills/evopdf-next-wkhtmltopdf-migration` | Replace wkhtmltopdf, DinkToPdf, Rotativa, TuesPechkin or Pechkin with EvoPdf Next in .NET |

@@ -1,8 +1,8 @@
 # Reference Dockerfiles (from the EvoPdf Next documentation)
 
-The demo application is used as the example; replace `EvoPdf_Next_AspNetDemo_Linux.dll` / `…_Windows.dll` and the port with your own.
+The demo application is used as the example; replace `EvoPdf_Next_AspNetDemo_Linux.dll` / `..._Windows.dll` and the port with your own.
 
-## Linux Debian 12 — ASP.NET Core Runtime 8.0
+## Linux Debian 12, ASP.NET Core Runtime 8.0
 ```dockerfile
 FROM mcr.microsoft.com/dotnet/aspnet:8.0
 
@@ -37,7 +37,7 @@ ENV ASPNETCORE_URLS=http://+:27101
 ENTRYPOINT ["dotnet", "EvoPdf_Next_AspNetDemo_Linux.dll"]
 ```
 
-## Linux Ubuntu 24.04 — ASP.NET Core Runtime 10.0
+## Linux Ubuntu 24.04, ASP.NET Core Runtime 10.0
 ```dockerfile
 FROM mcr.microsoft.com/dotnet/aspnet:10.0
 
@@ -72,7 +72,7 @@ ENV ASPNETCORE_URLS=http://+:27101
 ENTRYPOINT ["dotnet", "EvoPdf_Next_AspNetDemo_Linux.dll"]
 ```
 
-## Linux Ubuntu 22.04 (jammy) — ASP.NET Core Runtime 8.0
+## Linux Ubuntu 22.04 (jammy), ASP.NET Core Runtime 8.0
 ```dockerfile
 FROM mcr.microsoft.com/dotnet/aspnet:8.0-jammy
 
@@ -212,7 +212,7 @@ ENV ASPNETCORE_URLS=http://+:27101
 ENTRYPOINT ["dotnet", "EvoPdf_Next_AspNetDemo_Linux.Arm64.dll"]
 ```
 
-## Windows Server Core LTSC 2022 — ASP.NET Core Runtime 8.0
+## Windows Server Core LTSC 2022, ASP.NET Core Runtime 8.0
 ```dockerfile
 FROM mcr.microsoft.com/windows/server:ltsc2022
 
@@ -237,7 +237,7 @@ ENV ASPNETCORE_URLS=http://+:27102
 ENTRYPOINT ["C:\\dotnet\\dotnet.exe", "C:\\app\\EvoPdf_Next_AspNetDemo_Windows.dll"]
 ```
 
-## Windows Server Core LTSC 2025 — ASP.NET Core Runtime 10.0
+## Windows Server Core LTSC 2025, ASP.NET Core Runtime 10.0
 ```dockerfile
 FROM mcr.microsoft.com/windows/server:ltsc2025
 

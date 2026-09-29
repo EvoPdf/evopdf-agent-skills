@@ -1,0 +1,410 @@
+# Selecting HTML elements and reading their PDF position: samples
+
+Every code sample of the documentation topics behind this skill, complete and in the order of the topic.
+
+## Select HTML Elements to Convert to PDF
+
+Topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/select-html-elements-to-convert-to-pdf.htm
+
+### Code Sample - Select HTML Elements to Convert to PDF
+
+```csharp
+using System;
+using System.IO;
+using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Hosting;
+using EvoPdf_Next_AspNetDemo.Models;
+using EvoPdf_Next_AspNetDemo.Models.HTML_to_PDF;
+
+// Use EVO PDF Namespace
+using EvoPdf.Next;
+
+namespace EvoPdf_Next_AspNetDemo.Controllers.HTML_to_PDF
+{
+    public class Select_HTML_Elements_to_Convert_to_PDFController : Controller
+    {
+        private readonly IWebHostEnvironment m_hostingEnvironment;
+        public Select_HTML_Elements_to_Convert_to_PDFController(IWebHostEnvironment hostingEnvironment)
+        {
+            m_hostingEnvironment = hostingEnvironment;
+        }
+
+        public ActionResult Index()
+        {
+            var model = SetCurrentViewModel();
+            return View(model);
+        }
+
+        [HttpPost]
+        public ActionResult ConvertHtmlToPdf(Select_HTML_Elements_to_Convert_to_PDF_ViewModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                var errorMessage = ModelStateHelper.GetModelErrors(ModelState);
+                throw new ValidationException(errorMessage);
+            }
+
+            // Set the license key received after purchase to use the library in licensed mode; leave it commented for demo mode
+            // Licensing.LicenseKey = "your-license-key";
+
+            // Create a HTML to PDF converter object with default settings
+            HtmlToPdfConverter htmlToPdfConverter = new HtmlToPdfConverter();
+
+            bool enableElementsSelector = model.EnableElementsSelector;
+            if (enableElementsSelector)
+            {
+                // The CSS selector used to identify the elements to include in the PDF
+                htmlToPdfConverter.ConvertedElementsSelector = model.ConvertedElementsSelector;
+
+                // Specify whether elements that are not matched by ConvertedElementsSelector
+                // should be completely removed from the layout rather than just hidden
+                htmlToPdfConverter.RemoveUnselectedElements = model.RemoveUnselectedElements;
+
+                // Automatically resizes the PDF page height to match the selected HTML content height
+                htmlToPdfConverter.PdfDocumentOptions.AutoResizePdfPageHeight = model.AutoResizePdfPageHeight;
+            }
+
+            byte[] outPdfBuffer = null;
+
+            if (model.HtmlPageSource == "Html")
+            {
+                string htmlWithForm = model.HtmlString;
+                string baseUrl = model.BaseUrl;
+                // Convert a HTML string to a PDF document
+                outPdfBuffer = htmlToPdfConverter.ConvertHtml(htmlWithForm, baseUrl);
+            }
+            else
+            {
+                string url = model.Url;
+                // Convert the HTML page to a PDF document
+                outPdfBuffer = htmlToPdfConverter.ConvertUrl(url);
+            }
+
+            // Send the PDF file to browser
+            FileResult fileResult = new FileContentResult(outPdfBuffer, "application/pdf");
+            fileResult.FileDownloadName = "Selected_HTML_Elements.pdf";
+
+            return fileResult;
+        }
+
+        private Select_HTML_Elements_to_Convert_to_PDF_ViewModel SetCurrentViewModel()
+        {
+            var model = new Select_HTML_Elements_to_Convert_to_PDF_ViewModel();
+
+            var contentRootPath = m_hostingEnvironment.ContentRootPath + "/wwwroot";
+
+            HttpRequest request = ControllerContext.HttpContext.Request;
+            UriBuilder uriBuilder = new UriBuilder();
+            uriBuilder.Scheme = request.Scheme;
+            uriBuilder.Host = request.Host.Host;
+            if (request.Host.Port != null)
+                uriBuilder.Port = (int)request.Host.Port;
+            uriBuilder.Path = request.PathBase.ToString() + request.Path.ToString();
+            uriBuilder.Query = request.QueryString.ToString();
+
+            string currentPageUrl = uriBuilder.Uri.AbsoluteUri;
+            string rootUrl = currentPageUrl.Substring(0, currentPageUrl.Length - "Select_HTML_Elements_to_Convert_to_PDF".Length);
+
+            model.HtmlString = System.IO.File.ReadAllText(Path.Combine(contentRootPath, "DemoAppFiles/Input/HTML_Files/Partially_Converterted.html"));
+            model.BaseUrl = rootUrl + "DemoAppFiles/Input/HTML_Files/";
+            model.Url = rootUrl + "DemoAppFiles/Input/HTML_Files/Partially_Converterted.html";
+
+            return model;
+        }
+    }
+}
+```
+
+## Select HTML Elements to Exclude from PDF
+
+Topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/select-html-elements-to-exclude-from-pdf.htm
+
+### Code Sample - Select HTML Elements to Convert to PDF
+
+```csharp
+using System;
+using System.IO;
+using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using EvoPdf_Next_AspNetDemo.Models;
+using EvoPdf_Next_AspNetDemo.Models.HTML_to_PDF;
+
+// Use EVO PDF Namespace
+using EvoPdf.Next;
+
+namespace EvoPdf_Next_AspNetDemo.Controllers.HTML_to_PDF
+{
+    public class Select_HTML_Elements_to_Exclude_from_PDFController : Controller
+    {
+        private readonly IWebHostEnvironment m_hostingEnvironment;
+        public Select_HTML_Elements_to_Exclude_from_PDFController(IWebHostEnvironment hostingEnvironment)
+        {
+            m_hostingEnvironment = hostingEnvironment;
+        }
+
+        public ActionResult Index()
+        {
+            var model = SetViewModel();
+            return View(model);
+        }
+
+        [HttpPost]
+        public ActionResult ConvertHtmlToPdf(Select_HTML_Elements_to_Exclude_from_PDF_ViewModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                var errorMessage = ModelStateHelper.GetModelErrors(ModelState);
+                throw new ValidationException(errorMessage);
+            }
+
+            // Set the license key received after purchase to use the library in licensed mode; leave it commented for demo mode
+            // Licensing.LicenseKey = "your-license-key";
+
+            // Create a HTML to PDF converter object with default settings
+            HtmlToPdfConverter htmlToPdfConverter = new HtmlToPdfConverter();
+
+            bool enableExcludedElementsSelector = model.EnableExcludedElementsSelector;
+            if (enableExcludedElementsSelector)
+            {
+                // The CSS selector used to identify the elements to exclude from conversion to PDF
+                htmlToPdfConverter.ExcludedElementsSelector = model.ExcludedElementsSelector;
+
+                // Specify whether elements that are not matched by ExcludedElementsSelector
+                // should be completely removed from the layout rather than just hidden
+                htmlToPdfConverter.RemoveExcludedElements = model.RemoveExcludedElements;
+            }
+
+            byte[] outPdfBuffer = null;
+
+            if (model.HtmlPageSource == "Html")
+            {
+                string htmlWithForm = model.HtmlString;
+                string baseUrl = model.BaseUrl;
+
+                // Convert a HTML string to a PDF document
+                outPdfBuffer = htmlToPdfConverter.ConvertHtml(htmlWithForm, baseUrl);
+            }
+            else
+            {
+                string url = model.Url;
+
+                // Convert the HTML page to a PDF document
+                outPdfBuffer = htmlToPdfConverter.ConvertUrl(url);
+            }
+
+            // Send the PDF file to browser
+            FileResult fileResult = new FileContentResult(outPdfBuffer, "application/pdf");
+            fileResult.FileDownloadName = "Select_HTML_Elements_to_Convert.pdf";
+
+            return fileResult;
+        }
+
+        private Select_HTML_Elements_to_Exclude_from_PDF_ViewModel SetViewModel()
+        {
+            var model = new Select_HTML_Elements_to_Exclude_from_PDF_ViewModel();
+
+            var contentRootPath = Path.Combine(m_hostingEnvironment.ContentRootPath, "wwwroot");
+
+            HttpRequest request = ControllerContext.HttpContext.Request;
+            UriBuilder uriBuilder = new UriBuilder();
+            uriBuilder.Scheme = request.Scheme;
+            uriBuilder.Host = request.Host.Host;
+            if (request.Host.Port != null)
+                uriBuilder.Port = (int)request.Host.Port;
+            uriBuilder.Path = request.PathBase.ToString() + request.Path.ToString();
+            uriBuilder.Query = request.QueryString.ToString();
+
+            string currentPageUrl = uriBuilder.Uri.AbsoluteUri;
+            string rootUrl = currentPageUrl.Substring(0, currentPageUrl.Length - "Select_HTML_Elements_to_Exclude_from_PDF".Length);
+
+            model.HtmlString = System.IO.File.ReadAllText(Path.Combine(contentRootPath, "DemoAppFiles/Input/HTML_Files/Excluded_Elements.html"));
+            model.BaseUrl = rootUrl + "DemoAppFiles/Input/HTML_Files/";
+            model.Url = rootUrl + "DemoAppFiles/Input/HTML_Files/Excluded_Elements.html";
+
+            return model;
+        }
+    }
+}
+```
+
+## Retrieve HTML Element Positions in PDF
+
+Topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/retrieve-html-element-positions-in-pdf.htm
+
+### Code Sample - Retrieve HTML Element Positions in PDF
+
+```csharp
+using System;
+using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using EvoPdf_Next_AspNetDemo.Models;
+using EvoPdf_Next_AspNetDemo.Models.HTML_to_PDF;
+
+// Use EVO PDF Namespace
+using EvoPdf.Next;
+
+namespace EvoPdf_Next_AspNetDemo.Controllers.HTML_to_PDF
+{
+    public class Retrieve_HTML_Element_Positions_in_PDFController : Controller
+    {
+        private readonly IWebHostEnvironment m_hostingEnvironment;
+        public Retrieve_HTML_Element_Positions_in_PDFController(IWebHostEnvironment hostingEnvironment)
+        {
+            m_hostingEnvironment = hostingEnvironment;
+        }
+
+        public ActionResult Index()
+        {
+            var model = SetViewModel();
+
+            return View(model);
+        }
+
+        [HttpPost]
+        public ActionResult ConvertHtmlToPdf(Retrieve_HTML_Element_Positions_in_PDF_ViewModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                var errorMessage = ModelStateHelper.GetModelErrors(ModelState);
+                throw new ValidationException(errorMessage);
+            }
+
+            // Set the license key received after purchase to use the library in licensed mode; leave it commented for demo mode
+            // Licensing.LicenseKey = "your-license-key";
+
+            // Create a HTML to PDF converter object with default settings
+            HtmlToPdfConverter htmlToPdfConverter = new HtmlToPdfConverter();
+
+            bool enableElementsInfoSelector = model.EnableElementsInfoSelector;
+            if (enableElementsInfoSelector)
+            {
+                // The CSS selector used to identify HTML elements for metadata collection.
+                // The retrieved information will be available in the HtmlElementsInfo object,
+                // which is exposed by htmlToPdfConverter after the conversion
+                htmlToPdfConverter.HtmlElementsInfoSelector = model.RetrieveElementsInfoSelector;
+            }
+
+            // Optionally generate a table of contents for the PDF document
+            htmlToPdfConverter.PdfDocumentOptions.GenerateTableOfContents = model.GenerateToc;
+
+            // Optionally set a conversion delay to allow asynchronous content (e.g., JavaScript)
+            // to load before rendering
+            if (model.ConversionDelay.HasValue)
+                htmlToPdfConverter.ConversionDelay = model.ConversionDelay.Value;
+
+            byte[] outPdfBuffer = null;
+
+            if (model.HtmlPageSource == "Html")
+            {
+                string htmlWithForm = model.HtmlString;
+                string baseUrl = model.BaseUrl;
+
+                // Convert a HTML string to a PDF document
+                outPdfBuffer = htmlToPdfConverter.ConvertHtml(htmlWithForm, baseUrl);
+            }
+            else
+            {
+                string url = model.Url;
+
+                // Convert the HTML page to a PDF document
+                outPdfBuffer = htmlToPdfConverter.ConvertUrl(url);
+            }
+
+            // Process the retrieved HTML elements info
+            if (htmlToPdfConverter.HtmlElementsInfo != null)
+            {
+                // Load the generated PDF document into a PDF editor
+                using PdfEditor pdfEditor = new PdfEditor(outPdfBuffer);
+
+                // Highlight each retrieved HTML element in the PDF with a colored rectangle
+                // based on its tag type. By default, GetHighlightColor() assigns specific colors
+                // to h1, h2, h3 and h4 tags while other tags are highlighted in red
+                foreach (HtmlElementInfo elemInfo in htmlToPdfConverter.HtmlElementsInfo.Elements)
+                {
+                    // An HTML element may be rendered across multiple PDF pages,
+                    // resulting in multiple PdfRenderedRectangle instances
+                    foreach (PdfRenderedRectangle renderedRectangle in elemInfo.RenderedRectangles)
+                    {
+                        int pageNumber = renderedRectangle.PageNumber;
+                        PdfRectangleF bounds = renderedRectangle.Bounds;
+
+                        PdfColor borderColor = GetHighlightColor(elemInfo.TagName);
+                        var rectangleElement = new PdfRectangleElement(
+                            bounds.X, bounds.Y, bounds.Width, bounds.Height)
+                        {
+                            BorderColor = borderColor
+                        };
+
+                        pdfEditor.AddRectangle(pageNumber, rectangleElement);
+                    }
+                }
+
+                // Save the PDF with highlighted elements into the output buffer
+                outPdfBuffer = pdfEditor.Save();
+            }
+
+            // Send the PDF file to browser
+            FileResult fileResult = new FileContentResult(outPdfBuffer, "application/pdf");
+            fileResult.FileDownloadName = "Retrieve_HTML_Element_Positions_in_PDF.pdf";
+
+            return fileResult;
+        }
+
+        private PdfColor GetHighlightColor(string tagName)
+        {
+            PdfColor color = PdfColor.Red;
+            switch (tagName)
+            {
+                case "h1":
+                    color = PdfColor.Green;
+                    break;
+                case "h2":
+                    color = PdfColor.Blue;
+                    break;
+                case "h3":
+                    color = PdfColor.Purple;
+                    break;
+                case "h4":
+                    color = PdfColor.Yellow;
+                    break;
+                default:
+                    color = PdfColor.Red;
+                    break;
+            }
+
+            return color;
+        }
+
+        private Retrieve_HTML_Element_Positions_in_PDF_ViewModel SetViewModel()
+        {
+            var model = new Retrieve_HTML_Element_Positions_in_PDF_ViewModel();
+
+            var contentRootPath = m_hostingEnvironment.ContentRootPath + "/wwwroot";
+
+            HttpRequest request = ControllerContext.HttpContext.Request;
+            UriBuilder uriBuilder = new UriBuilder();
+            uriBuilder.Scheme = request.Scheme;
+            uriBuilder.Host = request.Host.Host;
+            if (request.Host.Port != null)
+                uriBuilder.Port = (int)request.Host.Port;
+            uriBuilder.Path = request.PathBase.ToString() + request.Path.ToString();
+            uriBuilder.Query = request.QueryString.ToString();
+
+            string currentPageUrl = uriBuilder.Uri.AbsoluteUri;
+            string rootUrl = currentPageUrl.Substring(0, currentPageUrl.Length - "Retrieve_HTML_Element_Positions_in_PDF".Length);
+
+            model.HtmlString = System.IO.File.ReadAllText(System.IO.Path.Combine(contentRootPath, "DemoAppFiles/Input/HTML_Files/HTML_Element_Positions.html"));
+            model.BaseUrl = rootUrl + "DemoAppFiles/Input/HTML_Files/";
+            model.Url = rootUrl + "DemoAppFiles/Input/HTML_Files/HTML_Element_Positions.html";
+
+            return model;
+        }
+    }
+}
+```
