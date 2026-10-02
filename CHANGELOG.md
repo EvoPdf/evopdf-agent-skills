@@ -1,5 +1,8 @@
 # Changelog
 
+## 2.0.1
+- Skills updated for EvoPdf Next 14.84.
+
 ## 2.0.0
 - Skills updated for EvoPdf Next 14.81.
 
