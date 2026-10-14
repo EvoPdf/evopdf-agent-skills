@@ -39,7 +39,7 @@ namespace EvoPdf_Next_AspNetDemo.Controllers.HTML_to_Image
             // Set HTML Viewer width in pixels which is the equivalent in converter of the browser window width
             htmlToImageConverter.HtmlViewerWidth = model.HtmlViewerWidth;
 
-            // Set HTML viewer height in pixels to convert the top part of a HTML page 
+            // Set HTML viewer height in pixels to convert the top part of a HTML page
             // Leave it not set to convert the entire HTML
             if (model.HtmlViewerHeight.HasValue)
                 htmlToImageConverter.HtmlViewerHeight = model.HtmlViewerHeight.Value;
@@ -54,7 +54,7 @@ namespace EvoPdf_Next_AspNetDemo.Controllers.HTML_to_Image
             // Optionally auto resize HTML viewer height at the HTML content size determined after the initial loading
             htmlToImageConverter.AutoResizeHtmlViewerHeight = model.AutoResizeViewerHeight;
 
-            // Set the maximum time in seconds to wait for HTML page to be loaded 
+            // Set the maximum time in seconds to wait for HTML page to be loaded
             // Leave it not set for a default 120 seconds maximum wait time
             htmlToImageConverter.NavigationTimeout = model.NavigationTimeout;
 
@@ -138,7 +138,7 @@ namespace EvoPdf_Next_AspNetDemo.Controllers.HTML_to_Image
             // Set the license key received after purchase to use the library in licensed mode; leave it commented for demo mode
             // Licensing.LicenseKey = "your-license-key";
 
-            // Create a HTML to Image converter object with default settings    
+            // Create a HTML to Image converter object with default settings
             HtmlToImageConverter htmlToImageConverter = new HtmlToImageConverter();
 
             bool enableElementsSelector = model.EnableElementsSelector;

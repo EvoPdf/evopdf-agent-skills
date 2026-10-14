@@ -47,9 +47,9 @@ Process-level settings of the persistent HTML renderer process used when HtmlRen
 ### Properties
 
 - `AllowInsecureContent`: Allows loading insecure HTTP content in secure HTTPS pages. The default value is false
-- `DisableSiteIsolation`: Disables site isolation when loading content from different sources. The default value is false
 - `DisableWebSecurity`: Disables web security features such as CORS and same-origin policy. The default value is false
 - `EnableElevatedRendering`: Enables the HTML renderer to inherit the elevated privileges of the application using the library when the application is running elevated on Windows. The default value is true
+- `EnableSiteIsolation`: Enables site isolation, which renders the frames of a page that come from different sites in separate processes. The default value is false
 - `EnableSoftwareGpuRendering`: When set to true, hardware GPU rendering is disabled and software rendering is used for both general page rendering and WebGL content. When set to false, hardware GPU rendering is allowed and is further controlled by GpuRenderingEnabled and GpuCompositingEnabled. The default value is false
 - `GpuCompositingEnabled`: A flag indicating if hardware GPU compositing is enabled in the HTML renderer process. This property has effect only when EnableSoftwareGpuRendering is false. Hardware WebGL rendering may require both GpuRenderingEnabled and GpuCompositingEnabled to be enabled, depending on system and driver support. The default value is false
 - `GpuRenderingEnabled`: A flag indicating if hardware GPU rendering is enabled in the HTML renderer process. This property has effect only when EnableSoftwareGpuRendering is false. The default value is false

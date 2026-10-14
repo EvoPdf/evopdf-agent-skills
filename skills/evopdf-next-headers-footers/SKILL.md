@@ -329,7 +329,7 @@ byte[] pdfBytes = pdfEditor.Save();
 </html>
 ```
 
-All 5 samples of this topic, complete: `references/examples.md`.
+All 7 samples of this topic, complete: `references/examples.md`.
 
 Full topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/add-html-stamp-to-existing-pdf.htm
 

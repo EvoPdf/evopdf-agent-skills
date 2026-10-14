@@ -15,7 +15,7 @@ Namespace `EvoPdf.Next`. Install one NuGet package for the target platform, for 
 - **`PdfSignatureInfo`**: Represents digital signature information extracted from a loaded PDF document. Reports the presence and metadata of signatures, but does NOT validate ...
 - **`PdfCertificationLevel`**: PDF certification levels
 
-4 types, 27 public members. The complete member list with the shipped
+4 types, 28 public members. The complete member list with the shipped
 summaries is in `references/api.md`; do not guess member names that are not there.
 
 ## Reading a PDF before you process it

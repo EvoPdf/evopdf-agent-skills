@@ -56,7 +56,7 @@ string extractedText = pdfToTextConverter.ConvertToText(inputPdfStream, startPag
 string extractedText = pdfToTextConverter.ConvertToText(inputPdfFile, startPageNumber);
 ```
 
-All 9 samples of this topic, complete: `references/examples.md`.
+All 20 samples of this topic, complete: `references/examples.md`.
 
 Full topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/convert-pdf-to-text.htm
 
@@ -90,7 +90,7 @@ FindTextLocation[] findTextLocations = pdfToTextConverter.FindText(inputPdfStrea
 FindTextLocation[] findTextLocations = pdfToTextConverter.FindText(inputPdfFile, textToFindString, startPageNumber, caseSensitive, wholeWord);
 ```
 
-All 9 samples of this topic, complete: `references/examples.md`.
+All 18 samples of this topic, complete: `references/examples.md`.
 
 Full topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/search-for-text-in-pdf.htm
 
@@ -122,7 +122,7 @@ PdfPageImage[] pdfPageImages = pdfToImageConverter.ConvertToImages(inputPdfStrea
 PdfPageImage[] pdfPageImages = pdfToImageConverter.ConvertToImages(inputPdfFile, startPageNumber);
 ```
 
-All 15 samples of this topic, complete: `references/examples.md`.
+All 27 samples of this topic, complete: `references/examples.md`.
 
 Full topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/convert-pdf-pages-to-images.htm
 
@@ -154,7 +154,7 @@ ExtractedImage[][] extractedImages = pdfImagesExtractor.ExtractImages(inputPdfSt
 ExtractedImage[][] extractedImages = pdfImagesExtractor.ExtractImages(inputPdfFile, startPageNumber);
 ```
 
-All 15 samples of this topic, complete: `references/examples.md`.
+All 24 samples of this topic, complete: `references/examples.md`.
 
 Full topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/extract-images-from-pdf.htm
 

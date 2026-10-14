@@ -3,7 +3,7 @@
 Instructions for AI coding agents (Claude Code, Codex, GitHub Copilot, Cursor, Gemini CLI, Windsurf and others) working in projects that use **EvoPdf Next**, the .NET PDF library from EVO PDF Software.
 
 ## When these instructions apply
-Any task that converts HTML, Word, Excel, RTF or Markdown to PDF, creates or edits PDF documents, or extracts text and images from PDF in .NET, and any migration from **EvoPdf Classic** (`EvoPdf` namespace) to **EvoPdf Next**.
+Any task that converts HTML, Word, Excel, RTF or Markdown to PDF, creates, edits or signs PDF documents, creates electronic invoices, or extracts text and images from PDF in .NET, any deployment of these to a server, container or cloud service, and any migration from **EvoPdf Classic** (`EvoPdf` namespace) to **EvoPdf Next**.
 
 ## Rules
 1. Use the current API surface listed below and in `skills/*/SKILL.md`. Do not guess member names; if a member is not listed, say so and link the documentation.
@@ -22,7 +22,10 @@ Any task that converts HTML, Word, Excel, RTF or Markdown to PDF, creates or edi
 - Page layout: a new `HtmlToPdfConverter` prints an A4 page with the HTML laid out as in a 1024 px browser window and scaled to the page width. Another layout is one method call on the converter: `FitBrowserWindowToPage(pageSize, orientation, windowWidth)` for a web page on paper, `LayoutAtPageWidth(pageSize)` for HTML designed for the paper size, drawn 1:1, `PrintLikeChrome(pageSize)` for the Save as PDF output of Chrome, `SinglePageOfWidth(widthPt, marginPt)` for receipts and `PageWidthFromBrowserWindow(windowWidth)` for a page as wide as the window. The `singlePage` argument of a method puts the whole content on one page. Set the margins, in points, after the method; setting `HtmlViewerWidth` or `HtmlViewerZoom` after it ends the automatic layout.
 - Headers/footers: `PdfDocumentOptions.PdfHtmlHeader` / `PdfHtmlFooter` (class `PdfHtmlHeaderFooter`, derives from `PdfHtmlTemplate`): `Html`, `HtmlBaseUrl` or `HtmlSourceUrl`, `Height`, `AutoSizeContentHeight`, `FitHeight`, `ShowInFirstPage`/`ShowInOddPages`/`ShowInEvenPages`, `ReserveSpaceAlways` (default `true`), `AutoResizePdfMargins`, `SkipVariablesParsing`, `PageNumberOffset`, `TotalPagesOffset`. Variables `{page_number}` and `{total_pages}` are replaced inside the header/footer HTML. Alternative browser mode: `EnableHeaderFooter` + `HeaderTemplate` / `FooterTemplate`.
 - Dynamic pages: `ConversionDelay` (seconds) waits after load; `TriggeringMode.Manual` waits until the page calls `evoPdfConverter_startConversion()`; `NavigationTimeout`, `JavaScriptEnabled`, `LoadLazyImages` (default `true`), `MediaType` (screen by default, not set), `LocalFilesEnabled`, `AllowInsecureContent`, `BlockedHosts`, `HttpRequestHeaders`, `HttpRequestCookies`, `AuthenticationOptions`.
-- Standards: `PdfDocumentOptions.PdfStandard` = `PdfStandard.None` (default), `PdfUa1`, `PdfUa2`, `PdfA2b`, `PdfA4`, `PdfUa1PdfA2b`, `PdfUa2PdfA4`, plus the other PDF/A levels and combinations; `AccessibilityOptions` applies when a tagged standard is selected.
+- Standards: `PdfDocumentOptions.PdfStandard` = `PdfStandard.None` (default), `PdfUa1`, `PdfUa2`, `PdfA2b`, `PdfA4`, `PdfUa1PdfA2b`, `PdfUa2PdfA4`, `Wtpdf1`, plus the other PDF/A levels and combinations; `AccessibilityOptions` applies when a tagged standard is selected.
+- Electronic invoices: `ElectronicInvoice.FromXml(...)` or `FromFile(path)`, then `PdfDocumentOptions.AddElectronicInvoice(invoice)` with `PdfStandard` set to a PDF/A-3 level (`PdfA3b`, `PdfA3u`, `PdfA3a` or `PdfUa1PdfA3a`). Factur-X, ZUGFeRD, XRechnung and Order-X; profile and document type are read from the XML.
+- Digital signatures: a `PdfDigitalSignature` (PFX file, `X509Certificate2`, or an `IExternalDigitalSignature` for a hardware security module or cloud key service) on `HtmlToPdfConverter.DigitalSignature`, `PdfDocument.DigitalSignature` or the `PdfEditor` constructor for existing PDFs. `Profile` selects PAdES B-B, B-T, B-LT or B-LTA (T and above need `TimestampServerUrl`). `PdfEditor.AddSignatureField` prepares fields for several signers; `PdfEditor.AddLongTermValidation` adds validation data to signed documents.
+- Cloud and containers: Windows hosts need nothing extra; Linux needs `libnss3 libatk-bridge2.0-0 libcairo2 libpango-1.0-0` (Debian/Ubuntu names) and execute permission on the runtimes in `evopdf_runtimes/<rid>/native/`. Azure Functions need an App Service or Premium plan (not Consumption or Flex Consumption); AWS Lambda needs a container image for the HTML to PDF Converter. See the docker, azure, aws, google-cloud and kubernetes skills.
 - Migration: from EvoPdf Classic follow `skills/evopdf-classic-to-next-migration`; from wkhtmltopdf, DinkToPdf, Rotativa or TuesPechkin follow `skills/evopdf-next-wkhtmltopdf-migration`.
 - Documentation: https://www.evopdf.com/help/evopdf-next-dotnet/; product pages: https://www.evopdf.com/evopdf-next-dotnet
 
@@ -69,13 +72,17 @@ Quickstart projects, all documentation samples and the complete demo application
 | `skills/evopdf-next-pdf-forms` | Turn HTML form controls into interactive PDF form fields with EvoPdf Next PdfFormOptions |
 | `skills/evopdf-next-fonts` | Work with fonts in EvoPdf Next PDF documents |
 | `skills/evopdf-next-pdf-standards` | Produce standards-compliant PDF with EvoPdf Next |
+| `skills/evopdf-next-electronic-invoices` | Create Factur-X, ZUGFeRD and XRechnung electronic invoices and Order-X electronic orders with EvoPdf Next |
 | `skills/evopdf-next-security-signatures` | Protect and sign PDF documents with EvoPdf Next |
 | `skills/evopdf-next-pdf-metadata` | Set the PDF document description and how viewers open the file with EvoPdf Next |
 | `skills/evopdf-next-pdf-processor` | Extract content from existing PDF documents with the EvoPdf Next PDF Processor |
 | `skills/evopdf-licensing` | Apply an EvoPdf Next license key in .NET, understand demo mode and the watermark, and know where the key goes in web applications and services. |
 | `skills/evopdf-next-deployment` | Install and deploy EvoPdf Next |
 | `skills/evopdf-next-docker` | Run EvoPdf Next in Docker containers on Linux and Windows |
-| `skills/evopdf-next-azure` | Run EvoPdf Next on Azure App Service and Azure Functions, on both Linux and Windows plans |
+| `skills/evopdf-next-azure` | Run EvoPdf Next on Azure |
+| `skills/evopdf-next-aws` | Run EvoPdf Next on AWS |
+| `skills/evopdf-next-google-cloud` | Run EvoPdf Next on Google Cloud |
+| `skills/evopdf-next-kubernetes` | Run EvoPdf Next in Kubernetes |
 | `skills/evopdf-next-troubleshooting` | Diagnose EvoPdf Next failures |
 | `skills/evopdf-classic-to-next-migration` | Migrate .NET applications from EvoPdf Classic (EvoPdf namespace) to EvoPdf Next |
 | `skills/evopdf-next-wkhtmltopdf-migration` | Replace wkhtmltopdf, DinkToPdf, Rotativa, TuesPechkin or Pechkin with EvoPdf Next in .NET |
@@ -98,7 +105,7 @@ Namespace `EvoPdf.Next`. Install one NuGet package for the target platform, for 
 - **`HtmlToPdfConversionInfo`**: Holds information about the result of an HTML to PDF conversion. This object is populated after the conversion completes and is exposed by the Convers...
 - **`PdfDocumentCreateSettings`**: Represents configuration settings for creating a PDF document
 
-6 types, 122 public members. The complete member list with the shipped
+6 types, 123 public members. The complete member list with the shipped
 summaries is in `references/api.md`; do not guess member names that are not there.
 
 ## HTML to PDF Converter Overview
@@ -725,13 +732,15 @@ document access it does not need.
 | Setting | Default | What it gives up |
 | --- | --- | --- |
 | `DisableWebSecurity` | false | same-origin policy and CORS |
-| `DisableSiteIsolation` | false | process isolation between origins |
 | `IgnoreCertificateErrors` | false | TLS validation |
 | `AllowInsecureContent` | false | mixed content blocking |
 | `EnableElevatedRendering` | true | on Windows, the elevated privileges of an application running elevated |
 | `LocalFilesEnabled` | true | access to local files |
 | `LocalhostEnabled` | true | access to the machine itself |
 | `UncPathEnabled` | true | access to network shares |
+
+`EnableSiteIsolation` is false by default. Set it to true to render the frames of a page that come from different
+sites in separate processes, the isolation between sites of a browser.
 
 ## Process isolation
 
@@ -1079,7 +1088,7 @@ byte[] pdfBytes = pdfEditor.Save();
 </html>
 ```
 
-All 5 samples of this topic, complete: `references/examples.md`.
+All 7 samples of this topic, complete: `references/examples.md`.
 
 Full topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/add-html-stamp-to-existing-pdf.htm
 
@@ -1142,7 +1151,7 @@ htmlToPdfConverter.PdfDocumentOptions.TableOfContents.Title = "Table of Contents
 htmlToPdfConverter.PdfDocumentOptions.TableOfContents.CreateInline = true;
 ```
 
-All 6 samples of this topic, complete: `references/examples.md`.
+All 8 samples of this topic, complete: `references/examples.md`.
 
 Full topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/auto-create-table-of-contents.htm
 
@@ -1318,7 +1327,7 @@ wordToPdfConverter.PdfDocumentOptions.TopMargin = 30;
 wordToPdfConverter.PdfDocumentOptions.BottomMargin = 30;
 ```
 
-All 3 samples of this topic, complete: `references/examples.md`.
+All 15 samples of this topic, complete: `references/examples.md`.
 
 Full topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/convert-word-docx-to-pdf.htm
 
@@ -1357,7 +1366,7 @@ excelToPdfConverter.PdfDocumentOptions.ConvertOnlyFirstWorksheet = false;
 excelToPdfConverter.PdfDocumentOptions.PageBreakBetweenWorksheets = true;
 ```
 
-All 5 samples of this topic, complete: `references/examples.md`.
+All 17 samples of this topic, complete: `references/examples.md`.
 
 Full topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/convert-excel-xlsx-to-pdf.htm
 
@@ -1383,7 +1392,7 @@ rtfToPdfConverter.PdfDocumentOptions.TopMargin = 30;
 rtfToPdfConverter.PdfDocumentOptions.BottomMargin = 30;
 ```
 
-All 3 samples of this topic, complete: `references/examples.md`.
+All 21 samples of this topic, complete: `references/examples.md`.
 
 Full topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/convert-rtf-to-pdf.htm
 
@@ -1426,7 +1435,7 @@ string markdownString = Encoding.UTF8.GetString(inputMarkdownBytes);
 string baseUrl = "file://" + markdownFilePath;
 ```
 
-All 6 samples of this topic, complete: `references/examples.md`.
+All 12 samples of this topic, complete: `references/examples.md`.
 
 Full topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/convert-markdown-to-pdf.htm
 
@@ -1488,8 +1497,15 @@ Namespace `EvoPdf.Next`. Install one NuGet package for the target platform, for 
 - **`PdfImageRenderInfo`**: Contains metadata about how and where an image was rendered on a PDF page. Exposes both the axis-aligned bounding box and the rotated four-corner outl...
 - **`PdfRenderedRectangle`**: Represents a single occurrence of an element on a PDF page. Carries the axis-aligned bounding rectangle, the rotated four-corner outline and the page ...
 
-35 types, 446 public members. The complete member list with the shipped
+35 types, 448 public members. The complete member list with the shipped
 summaries is in `references/api.md`; do not guess member names that are not there.
+
+The Core PDF API alone is installed with `EvoPdf.Next.Core.Windows` (x64 and ARM64), `EvoPdf.Next.Core.Linux` (x64 and
+ARM64), `EvoPdf.Next.Core.MacOS` or the `EvoPdf.Next.Core` metapackage for all three; the full packages include it.
+Core Component Overview: https://www.evopdf.com/help/evopdf-next-dotnet/html/core-component.htm
+
+`PdfDocument.DigitalSignature`, `PdfDocument.AddSignatureField` and `PdfDocument.AddElectronicInvoice` are described in
+`evopdf-next-security-signatures` and `evopdf-next-electronic-invoices`.
 
 ## Create PDF Documents
 
@@ -1530,7 +1546,7 @@ pdfDocument.Margins = new PdfMargins(100, 100, 100, 100);
 pdfDocument.AddPage();
 ```
 
-All 9 samples of this topic, complete: `references/examples.md`.
+All 11 samples of this topic, complete: `references/examples.md`.
 
 Full topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/create-pdf-documents.htm
 
@@ -1690,8 +1706,11 @@ Namespace `EvoPdf.Next`. Install one NuGet package for the target platform, for 
 
 - **`PdfEditor`**: Allows editing of existing PDF documents by adding HTML content, setting metadata, applying security options, and digital signatures. Use Save or Save...
 
-1 types, 49 public members. The complete member list with the shipped
+1 types, 52 public members. The complete member list with the shipped
 summaries is in `references/api.md`; do not guess member names that are not there.
+
+`PdfEditor` also signs existing documents, adds signature fields and long-term validation data (see
+`evopdf-next-security-signatures`) and embeds electronic invoices in PDF/A-3 documents (see `evopdf-next-electronic-invoices`).
 
 ## Add Text to Existing PDF
 
@@ -1758,7 +1777,7 @@ Namespace `EvoPdf.Next`. Install one NuGet package for the target platform, for 
 - **`PdfSignatureInfo`**: Represents digital signature information extracted from a loaded PDF document. Reports the presence and metadata of signatures, but does NOT validate ...
 - **`PdfCertificationLevel`**: PDF certification levels
 
-4 types, 27 public members. The complete member list with the shipped
+4 types, 28 public members. The complete member list with the shipped
 summaries is in `references/api.md`; do not guess member names that are not there.
 
 ## Reading a PDF before you process it
@@ -2122,7 +2141,7 @@ Namespace `EvoPdf.Next`. Install one NuGet package for the target platform, for 
 
 ## Types covered here
 
-- **`PdfFormOptions`**: Specifies options for converting HTML form controls into interactive PDF form fields These options control field naming, button action generation, sub...
+- **`PdfFormOptions`**: Specifies options for converting HTML form controls into interactive PDF form fields. These options control field naming, button action generation, su...
 - **`PdfFieldNamingMode`**: Specifies how PDF field names are generated from HTML form controls
 - **`PdfSubmitBehavior`**: Specifies how submit actions are generated for PDF buttons
 - **`PdfSubmitFormat`**: Specifies the format used when a PDF form is submitted
@@ -2172,7 +2191,8 @@ summaries is in `references/api.md`; do not guess member names that are not ther
 ## Three kinds of font
 
 **Standard fonts** are the 14 fonts every PDF reader has. They are not embedded, so they cost
-nothing in file size.
+nothing in file size. For the same reason they cannot be used in PDF/A or PDF/UA documents; create
+the fonts of those documents from a font file.
 
 ```csharp
 PdfFont font = PdfFontManager.CreateStandardFont(PdfStandardFont.Helvetica, 12f);
@@ -2238,7 +2258,7 @@ Namespace `EvoPdf.Next`. Install one NuGet package for the target platform, for 
 - **`PdfAccessibilityProperties`**: Accessibility metadata controlling how an element is inserted into the structure tree of a tagged PDF
 - **`PdfStructureType`**: Identifies the PDF logical structure role attached to a content element when the document is tagged
 
-4 types, 48 public members. The complete member list with the shipped
+4 types, 51 public members. The complete member list with the shipped
 summaries is in `references/api.md`; do not guess member names that are not there.
 
 ## PDF/UA and PDF/A from HTML
@@ -2258,6 +2278,10 @@ byte[] pdf = converter.ConvertUrl(url);
 standard selected, `PdfDocumentOptions.AccessibilityOptions` adds a default alternate text to images
 that have none (`AddMissingImageAlternateText`) and a header row to tables without header cells
 (`InsertMissingTableHeaders`); both are on by default.
+
+`PdfStandard.Wtpdf1`, `Wtpdf1PdfA4` and `Wtpdf1PdfA4f` produce Well-Tagged PDF 1.0 documents, also identified as
+PDF/UA-2 and written as PDF 2.0. `PdfA4f`, `PdfUa2PdfA4f` and `Wtpdf1PdfA4f` require at least one embedded file.
+Electronic invoices (Factur-X, ZUGFeRD) are PDF/A-3 documents: see the `evopdf-next-electronic-invoices` skill.
 
 ## Create PDF/UA and PDF/A Compliant Documents
 
@@ -2302,9 +2326,72 @@ Compilable versions of the samples above: https://github.com/EvoPdf/evopdf-next-
 
 
 
+# EvoPdf Next: electronic invoices
+
+EVO HTML to PDF Converter creates electronic invoices in the Factur-X and ZUGFeRD formats (including the XRechnung profile) and electronic orders in the Order-X format. An electronic invoice is a PDF/A-3 document that shows the invoice as a page a person reads and carries the same invoice as an XML file that accounting software reads automatically.
+
+Namespace `EvoPdf.Next`. Install one NuGet package for the target platform, for example
+`EvoPdf.Next.Windows`, `EvoPdf.Next.Linux` or `EvoPdf.Next.MacOS`.
+
+## Types covered here
+
+- **`ElectronicInvoice`**: A Factur-X / ZUGFeRD electronic invoice (or credit note, corrected invoice and the other invoice types) or an Order-X electronic order: the XML in the...
+- **`ElectronicInvoiceProfile`**: The profile of a Factur-X / ZUGFeRD electronic invoice or of an Order-X electronic order. The profile is read from the guideline identifier of the XML...
+- **`ElectronicDocumentType`**: The type of an electronic document, read from the document type code (UNTDID 1001) of the Factur-X / ZUGFeRD invoice XML or of the Order-X order XML
+
+3 types, 32 public members. The complete member list with the shipped
+summaries is in `references/api.md`; do not guess member names that are not there.
+
+## Invoice from HTML
+
+```csharp
+ElectronicInvoice invoice = ElectronicInvoice.FromFile("factur-x.xml");   // or FromXml(byte[]) / FromXml(string)
+
+var converter = new HtmlToPdfConverter();
+converter.PdfDocumentOptions.PdfStandard = PdfStandard.PdfA3b;           // PdfA3b, PdfA3u, PdfA3a or PdfUa1PdfA3a
+converter.PdfDocumentOptions.AddElectronicInvoice(invoice);
+byte[] pdf = converter.ConvertHtml(invoiceHtml, baseUrl);
+```
+
+- The profile, the document type and the number are read from the XML: `invoice.Profile`, `invoice.DocumentType`,
+  `invoice.InvoiceNumber`, `invoice.IsOrder`. Nothing else has to be set; the XML is embedded as given.
+- Profiles: `Minimum`, `BasicWL`, `Basic`, `EN16931` (ZUGFeRD COMFORT), `Extended`, `XRechnung`, and for orders
+  `OrderXBasic`, `OrderXComfort`, `OrderXExtended`. UBL invoices and ZUGFeRD 1.0 are not supported.
+- The document must be PDF/A-3. `PdfStandard.PdfUa1PdfA3a` makes the invoice page accessible as well, for invoices
+  delivered to consumers; the HTML should then use headings, table header cells and alternate text for images.
+- `Relationship` defaults to `PdfAttachmentRelationship.Alternative`; MINIMUM and BASIC WL are always attached as `Data`.
+- One electronic invoice per document. Other attachments can be added with `PdfDocumentOptions.AddFileAttachment`.
+- `PdfViewerPreferences.PageMode = ViewerPageMode.UseAttachments` opens the Attachments panel, so the reader sees the XML.
+- The same `AddElectronicInvoice` method exists on `PdfDocument` (documents created from code) and on `PdfEditor`
+  (an existing document that is already PDF/A-3).
+- A digital signature can be added to the same converter; the document keeps its PDF/A-3 conformance.
+
+## Create Factur-X, ZUGFeRD and XRechnung Electronic Invoices
+
+All 1 samples of this topic, complete: `references/examples.md`.
+
+Full topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/create-electronic-invoice-pdf.htm
+
+## Rules that apply to every sample here
+
+- Converter instances are single use. Create a new converter for every conversion; a second
+  call on the same instance throws.
+- `Licensing.LicenseKey` is a static field, assigned once per process before any conversion.
+- Every conversion method has an asynchronous variant ending in `Async` that takes a `CancellationToken`.
+
+## Runnable code
+
+Compilable versions of the samples above: https://github.com/EvoPdf/evopdf-next-samples/tree/main/docs-samples
+
+
+
 # EvoPdf Next: encryption, permissions and digital signatures
 
-EVO HTML to PDF Converter allows you set the permissions of generated PDF document like printing and editing and to password protect the generated PDF document with separate user and owner passwords.
+EVO HTML to PDF Converter allows you to set the permissions of the generated PDF document like printing and editing and to password protect the generated PDF document with separate user and owner passwords.
+
+The digital signatures are PAdES signatures. The same `PdfDigitalSignature` object signs a PDF generated from HTML
+(`HtmlToPdfConverter.DigitalSignature`), a PDF created from code (`PdfDocument.DigitalSignature`) and an existing PDF
+(the `PdfEditor` constructor), with the same signature levels, signing keys and appearance options.
 
 Namespace `EvoPdf.Next`. Install one NuGet package for the target platform, for example
 `EvoPdf.Next.Windows`, `EvoPdf.Next.Linux` or `EvoPdf.Next.MacOS`.
@@ -2316,9 +2403,83 @@ Namespace `EvoPdf.Next`. Install one NuGet package for the target platform, for 
 - **`EncryptionKeySize`**: This enumeration contains the possible values of the length of the encryption key used to encrypt a PDF document
 - **`PdfDigitalSignature`**: This class encapsulates the options used to control the digital signature applied to a PDF document
 - **`PdfDigitalSignatureAppearance`**: This class encapsulates the options used to control the appearance of the digital signature applied to a PDF document
+- **`PdfDigitalSignatureProfile`**: The PAdES baseline profile applied when digitally signing a PDF document, as defined by ETSI EN 319 142-1. Higher profiles embed progressively more ma...
+- **`PdfSignatureDigestAlgorithm`**: The digest algorithm of a digital signature
+- **`IExternalDigitalSignature`**: Implement this interface to produce the signature value with a private key that never enters the application process: a hardware security module acces...
+- **`PdfLongTermValidationOptions`**: The options used by AddLongTermValidation to add long-term validation data to the signatures of a PDF document. When TimestampServerUrl is set, a docu...
+- **`PdfSignatureField`**: An empty signature field placed in a page of the document, to be signed later by a digital signature with the same field name. A form with a field for...
 
-5 types, 35 public members. The complete member list with the shipped
+10 types, 65 public members. The complete member list with the shipped
 summaries is in `references/api.md`; do not guess member names that are not there.
+
+When `EncryptionAlgorithm` and `KeySize` are not set, PDF 1.x documents are encrypted with RC4 and a 128 bit key and
+PDF 2.0 documents (PDF/UA-2, PDF/A-4, WTPDF) with AES and a 256 bit key.
+
+## Signature levels and signing keys
+
+| `PdfDigitalSignature.Profile` | Result | Needs |
+|---|---|---|
+| `Auto` (default) | B-T when `TimestampServerUrl` is set, otherwise B-B | |
+| `PadesBaselineB` | integrity and authenticity, signing time declared by the signer | |
+| `PadesBaselineT` | adds a trusted timestamp | `TimestampServerUrl` |
+| `PadesBaselineLT` | adds the certificate chain and its revocation information (OCSP or CRL), verifiable offline after the certificates expire | `TimestampServerUrl`, network access, a certificate whose issuer publishes revocation information |
+| `PadesBaselineLTA` | adds a document timestamp over the validation data, for archiving | same as LT |
+
+LT and LTA cannot be combined with document encryption. `DigestAlgorithm` selects SHA-256 (default), SHA-384 or SHA-512.
+`TrustedCaCertificates` completes a chain that does not come with the signing certificate.
+
+```csharp
+// PFX file
+var signature = new PdfDigitalSignature("signing.pfx", pfxPassword);
+// X509Certificate2: Windows certificate store, smartcard, USB token (RSA or ECDSA); the key stays in its store
+var signature2 = new PdfDigitalSignature(certificate);
+// Hardware security module or cloud key service (Azure Key Vault, AWS KMS): implement IExternalDigitalSignature
+var signature3 = new PdfDigitalSignature(new MyKeyVaultSignature(), new[] { signerCertificate.RawData });
+
+signature.Profile = PdfDigitalSignatureProfile.PadesBaselineLT;
+signature.TimestampServerUrl = timestampServerUrl;
+signature.Reason = "Approved";
+
+var converter = new HtmlToPdfConverter();
+converter.DigitalSignature = signature;
+byte[] pdf = converter.ConvertUrl(url);
+```
+
+`IExternalDigitalSignature` has two members: `GetSignatureAlgorithmName()` returns "RSA", "RSASSA-PSS", "DSA" or
+"ECDSA", and `Sign(byte[] message)` returns the signature value of the DER encoded signed attributes, computed with the
+configured digest. On Windows servers without a user profile (IIS application pools, Azure App Service), load a PFX
+into an `X509Certificate2` with `X509KeyStorageFlags.MachineKeySet`; the PFX file constructor needs no such flag.
+
+## Existing PDFs, several signers, long-term validation
+
+```csharp
+// Sign an existing PDF; signatures already in the document stay valid
+using (var editor = new PdfEditor(pdfBytes, password, signature))
+    signedPdf = editor.Save();
+
+// Prepare a form with an empty field for each signer, then sign the fields one by one by name
+using (var editor = new PdfEditor(pdfBytes))
+{
+    editor.AddSignatureField(new PdfSignatureField("Manager", pageNumber, bounds));   // bounds: PdfRectangleF
+    editor.AddSignatureField(new PdfSignatureField("Client", 1, 320, 700, 200, 50));
+    prepared = editor.Save();
+}
+signature.FieldName = "Manager";   // placed in the field of that name, on its page and in its rectangle
+
+// Add validation data (timestamped signatures reach B-LT) and, with TimestampServerUrl, a document timestamp (B-LTA)
+using (var editor = new PdfEditor(signedPdf))
+{
+    editor.AddLongTermValidation(new PdfLongTermValidationOptions { TimestampServerUrl = timestampServerUrl });
+    archivedPdf = editor.Save();
+}
+```
+
+A signed document accepts only new signatures and long-term validation data: adding content, pages, annotations,
+fields or security options is refused because it would invalidate the signatures, so add the fields before the first
+signature. A certification signature (`CertificationLevel` other than `NotCertified`) must be the first signature; a
+document certified with `NoChanges` accepts no further signatures. Signing keeps the PDF/A and PDF/UA conformance of the
+document. `PdfEditor.PdfSignatureInfo` reports the signatures already present. Adding long-term validation data needs
+network access when the document is saved; encrypted documents do not accept it.
 
 ## Set Permissions and Password of the Generated PDF Document
 
@@ -2334,8 +2495,26 @@ All 1 samples of this topic, complete: `references/examples.md`.
 
 Full topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/digitally-sign-the-generated-pdf.htm
 
+## Digitally Sign Existing PDF
+
+The `PdfEditor` class adds a digital signature to an existing PDF document. The signature is given to the `PdfEditor.PdfEditor(Byte[], String, PdfDigitalSignature)` or `PdfEditor.PdfEditor(String, String, PdfDigitalSignature)` constructor as a `PdfDigitalSignature` object, the same object used by the HTML to PDF converter and the PDF creator, with the same signature levels, signing keys and appearance options described in the Digital Signatures topic. The signature is applied when the document is saved with `PdfEditor.Save()`. The signed document keeps the PDF/A and PDF/UA conformance of the source document.
+
+All 1 samples of this topic, complete: `references/examples.md`.
+
+Full topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/digitally-sign-existing-pdf.htm
+
+## Add Signature Fields from HTML Elements
+
+A document that several people sign needs an empty signature field for each signer, placed where the layout shows the signature. EVO HTML to PDF Converter and the PDF editor prepare such a document from a HTML page: the page marks the place of each signature with an element, the converter returns the page and the rectangle where the element was rendered and `PdfEditor.AddSignatureField(PdfSignatureField)` adds an empty signature field there. Each signer then fills in the field prepared for them with a digital signature that has the same field name, as described in the Digitally Sign Existing PDF topic, and the signatures already in the document stay valid.
+
+All 1 samples of this topic, complete: `references/examples.md`.
+
+Full topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/add-signature-fields-from-html-elements.htm
+
 - Set Permissions and Password of the Generated PDF Document: https://www.evopdf.com/help/evopdf-next-dotnet/html/set-pdf-permissions-and-password.htm
 - Add a Digital Signature to Generated PDF Document: https://www.evopdf.com/help/evopdf-next-dotnet/html/digitally-sign-the-generated-pdf.htm
+- Digitally Sign Existing PDF: https://www.evopdf.com/help/evopdf-next-dotnet/html/digitally-sign-existing-pdf.htm
+- Add Signature Fields from HTML Elements: https://www.evopdf.com/help/evopdf-next-dotnet/html/add-signature-fields-from-html-elements.htm
 
 ## Rules that apply to every sample here
 
@@ -2443,7 +2622,7 @@ string extractedText = pdfToTextConverter.ConvertToText(inputPdfStream, startPag
 string extractedText = pdfToTextConverter.ConvertToText(inputPdfFile, startPageNumber);
 ```
 
-All 9 samples of this topic, complete: `references/examples.md`.
+All 20 samples of this topic, complete: `references/examples.md`.
 
 Full topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/convert-pdf-to-text.htm
 
@@ -2477,7 +2656,7 @@ FindTextLocation[] findTextLocations = pdfToTextConverter.FindText(inputPdfStrea
 FindTextLocation[] findTextLocations = pdfToTextConverter.FindText(inputPdfFile, textToFindString, startPageNumber, caseSensitive, wholeWord);
 ```
 
-All 9 samples of this topic, complete: `references/examples.md`.
+All 18 samples of this topic, complete: `references/examples.md`.
 
 Full topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/search-for-text-in-pdf.htm
 
@@ -2509,7 +2688,7 @@ PdfPageImage[] pdfPageImages = pdfToImageConverter.ConvertToImages(inputPdfStrea
 PdfPageImage[] pdfPageImages = pdfToImageConverter.ConvertToImages(inputPdfFile, startPageNumber);
 ```
 
-All 15 samples of this topic, complete: `references/examples.md`.
+All 27 samples of this topic, complete: `references/examples.md`.
 
 Full topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/convert-pdf-pages-to-images.htm
 
@@ -2541,7 +2720,7 @@ ExtractedImage[][] extractedImages = pdfImagesExtractor.ExtractImages(inputPdfSt
 ExtractedImage[][] extractedImages = pdfImagesExtractor.ExtractImages(inputPdfFile, startPageNumber);
 ```
 
-All 15 samples of this topic, complete: `references/examples.md`.
+All 24 samples of this topic, complete: `references/examples.md`.
 
 Full topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/extract-images-from-pdf.htm
 
@@ -2662,7 +2841,8 @@ dotnet add package EvoPdf.Next.Windows
 
 ## Runtime notes
 - Windows and macOS: no extra dependencies. Linux: the HTML to PDF Converter needs four system packages and execute permissions on the native runtimes; see the Linux section of this skill. Containers: follow the `evopdf-next-docker` skill (complete Dockerfiles).
-- Azure App Service (Windows and Linux) and Azure Functions are supported; Docker on Linux and Windows containers too.
+- Cloud: Azure App Service, Azure Functions, Azure Container Apps (`evopdf-next-azure`), AWS Elastic Beanstalk, Lambda and
+  Amazon ECS (`evopdf-next-aws`), Google Cloud Run (`evopdf-next-google-cloud`), AKS, EKS and GKE (`evopdf-next-kubernetes`).
 - The rendering engine ships inside the package; nothing to install on the server, xcopy deployment works.
 
 ## License key
@@ -2764,7 +2944,7 @@ cd publish/linux-x64-net10.0
 dotnet EvoPdf_Next_AspNetDemo_Linux_net10.0.dll
 ```
 
-All 16 samples of this topic, complete: `references/examples.md`.
+All 33 samples of this topic, complete: `references/examples.md`.
 
 Full topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/build-and-publish-demo-applications.htm
 
@@ -2806,6 +2986,22 @@ System.IO.File.WriteAllBytes("UrlToMemory.pdf", urlToPdfBuffer);
 
 Full topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/evopdf-next-overview.htm
 
+## Getting Started with EvoPdf Next for .NET on Linux
+
+EvoPdf Next for .NET is a library that can be integrated into any type of .NET application to create and process PDF documents.
+
+All 9 samples of this topic, complete: `references/examples.md`.
+
+Full topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/getting-started-on-linux.htm
+
+## Getting Started with EvoPdf Next for .NET on macOS
+
+EvoPdf Next for .NET is a library that can be integrated into any type of .NET application to create and process PDF documents.
+
+All 5 samples of this topic, complete: `references/examples.md`.
+
+Full topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/getting-started-on-macos.htm
+
 ## Rules that apply to every sample here
 
 - Converter instances are single use. Create a new converter for every conversion; a second
@@ -2826,7 +3022,7 @@ This guide explains how to build and run a Docker container for a published ASP.
 Namespace `EvoPdf.Next`. Install one NuGet package for the target platform, for example
 `EvoPdf.Next.Windows`, `EvoPdf.Next.Linux` or `EvoPdf.Next.MacOS`.
 
-Read `references/dockerfiles.md` for the full, copy-ready Dockerfiles (Linux Debian 12 / ASP.NET Core 8, Ubuntu 24.04 / ASP.NET Core 10, Windows Server Core 2022 and 2025).
+Read `references/dockerfiles.md` for the full, copy-ready Dockerfiles of the documentation (Linux x64 and ARM64: Ubuntu 24.04 with ASP.NET Core 10, Debian 12 and Ubuntu 22.04 with ASP.NET Core 8; Windows Server LTSC 2025 and 2022, Windows Server Core with the ASP.NET Core runtime).
 
 ## Linux container: the pattern
 1. Publish the application for Linux: `dotnet publish -c Release -r linux-x64 -o publish` (or `-r linux-arm64`). The `publish` folder must contain the app DLL and `evopdf_runtimes/` at its root.
@@ -2834,7 +3030,7 @@ Read `references/dockerfiles.md` for the full, copy-ready Dockerfiles (Linux Deb
 3. Install the four HTML to PDF dependencies, copy `publish/`, `chmod +x` the two native runtimes, expose the port.
 
 ```dockerfile
-FROM mcr.microsoft.com/dotnet/aspnet:8.0
+FROM mcr.microsoft.com/dotnet/aspnet:10.0
 RUN apt-get update && apt-get install -y libnss3 libatk-bridge2.0-0 libcairo2 libpango-1.0-0 && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
 COPY publish/ .
@@ -2854,7 +3050,7 @@ docker run -d --platform linux/arm64 -p 8080:8080 myapp-arm64
 For ARM64 the runtime folder is `evopdf_runtimes/linux-arm64/native/`.
 
 ## Windows container: the pattern
-Base image `mcr.microsoft.com/dotnet/aspnet:8.0-windowsservercore-ltsc2022` (or `10.0-windowsservercore-ltsc2025`). No EvoPdf dependencies to install, but **Server Core images ship almost no fonts**: copy the fonts your documents need into `C:\Windows\Fonts` and register them in the registry (see the reference Dockerfile).
+Base image `mcr.microsoft.com/dotnet/aspnet:10.0-windowsservercore-ltsc2025` (or `8.0-windowsservercore-ltsc2022`), or a Windows Server image with the ASP.NET Core runtime installed in the Dockerfile. No EvoPdf dependencies to install, but **Server Core images ship almost no fonts**: copy the fonts your documents need into `C:\Windows\Fonts` and register them in the registry (see the reference Dockerfile).
 
 ## Rules for generated Dockerfiles
 - Never bake a license key into the image; pass it as an environment variable (`Licensing.LicenseKey = Environment.GetEnvironmentVariable("EVOPDF_LICENSE_KEY")`).
@@ -2865,125 +3061,9 @@ Docs: https://www.evopdf.com/help/evopdf-next-dotnet/html/publish-to-docker-on-l
 
 ## Publish EvoPdf Next ASP.NET Demo to Docker on Linux
 
-### Publish the Demo Application to a Folder
+This guide explains how to build and run a Docker container for a published ASP.NET Core application using EvoPdf Next on Linux.
 
-```bash
-# .NET 10, for the Dockerfile with the ASP.NET Core Runtime 10.0 base image
-dotnet publish -c Release -r linux-x64 -o publish/linux-x64-net10.0 EvoPdf_Next_AspNetDemo_Linux_net10.0.csproj
-
-# .NET 8, for the Dockerfile with the ASP.NET Core Runtime 8.0 base image
-dotnet publish -c Release -r linux-x64 -o publish/linux-x64-net8.0 EvoPdf_Next_AspNetDemo_Linux_net8.0.csproj
-```
-
-### Dockerfile for Linux Debian 12 with Preinstalled ASP.NET Core Runtime 8.0
-
-```text
-FROM mcr.microsoft.com/dotnet/aspnet:8.0
-
-# Install EvoPdf dependencies
-RUN apt-get update && \
-    apt-get install -y \
-        libnss3 \
-        libatk-bridge2.0-0 \
-        libcairo2 \
-        libpango-1.0-0 && \
-    rm -rf /var/lib/apt/lists/*
-
-# Set the working directory
-WORKDIR /app
-
-# Copy the published ASP.NET Core app files from the publish folder into the image
-COPY publish/linux-x64-net8.0/ .
-
-# Ensure execute permissions for EvoPdf HTML to PDF runtime
-RUN chmod +x /app/evopdf_runtimes/linux-x64/native/evopdf_loadhtml
-
-# Ensure execute permissions for EvoPdf PDF Processor runtime
-RUN chmod +x /app/evopdf_runtimes/linux-x64/native/evopdf_pdfprocessor
-
-# Expose the port used by the app
-EXPOSE 27101
-
-# Set the ASP.NET Core application to listen on port 27101
-ENV ASPNETCORE_URLS=http://+:27101
-
-# Start the application
-ENTRYPOINT ["dotnet", "EvoPdf_Next_AspNetDemo_Linux_net8.0.dll"]
-```
-
-### Dockerfile for Linux Ubuntu 24.04 with Preinstalled ASP.NET Core Runtime 10.0
-
-```text
-FROM mcr.microsoft.com/dotnet/aspnet:10.0
-
-# Install EvoPdf dependencies
-RUN apt-get update && \
-    apt-get install -y \
-        libnss3 \
-        libatk-bridge2.0-0 \
-        libcairo2 \
-        libpango-1.0-0 && \
-    rm -rf /var/lib/apt/lists/*
-
-# Set the working directory
-WORKDIR /app
-
-# Copy the published ASP.NET Core app files from the publish folder into the image
-COPY publish/linux-x64-net10.0/ .
-
-# Ensure execute permissions for EvoPdf HTML to PDF runtime
-RUN chmod +x /app/evopdf_runtimes/linux-x64/native/evopdf_loadhtml
-
-# Ensure execute permissions for EvoPdf PDF Processor runtime
-RUN chmod +x /app/evopdf_runtimes/linux-x64/native/evopdf_pdfprocessor
-
-# Expose the port used by the app
-EXPOSE 27101
-
-# Set the ASP.NET Core application to listen on port 27101
-ENV ASPNETCORE_URLS=http://+:27101
-
-# Start the application
-ENTRYPOINT ["dotnet", "EvoPdf_Next_AspNetDemo_Linux_net10.0.dll"]
-```
-
-### Dockerfile for Linux Ubuntu 22.04 with Preinstalled ASP.NET Core Runtime 8.0
-
-```text
-FROM mcr.microsoft.com/dotnet/aspnet:8.0-jammy
-
-# Install EvoPdf dependencies
-RUN apt-get update && \
-    apt-get install -y \
-        libnss3 \
-        libatk-bridge2.0-0 \
-        libcairo2 \
-        libpango-1.0-0 && \
-    rm -rf /var/lib/apt/lists/*
-
-# Set the working directory
-WORKDIR /app
-
-# Copy the published ASP.NET Core app files from the publish folder into the image
-COPY publish/linux-x64-net8.0/ .
-
-# Ensure execute permissions for EvoPdf HTML to PDF runtime
-RUN chmod +x /app/evopdf_runtimes/linux-x64/native/evopdf_loadhtml
-
-# Ensure execute permissions for EvoPdf PDF Processor runtime
-RUN chmod +x /app/evopdf_runtimes/linux-x64/native/evopdf_pdfprocessor
-
-# Expose the port used by the app
-EXPOSE 27101
-
-# Set the ASP.NET Core application to listen on port 27101
-ENV ASPNETCORE_URLS=http://+:27101
-
-# Start the application
-ENTRYPOINT ["dotnet", "EvoPdf_Next_AspNetDemo_Linux_net8.0.dll"]
-```
-
-All 8 samples of this topic, complete: `references/examples.md`.
+All 14 samples of this topic, complete: `references/examples.md`.
 
 Full topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/publish-to-docker-on-linux.htm
 
@@ -2991,83 +3071,7 @@ Full topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/publish-to-docke
 
 This guide explains how to build and run a Docker container for a published ASP.NET Core application using EvoPdf Next on Windows.
 
-### Publish the Demo Application to a Folder
-
-```bash
-# .NET 10, for the Dockerfile with the ASP.NET Core Runtime 10.0 base image
-dotnet publish -c Release -r win-x64 -o publish/windows-x64-net10.0 EvoPdf_Next_AspNetDemo_Windows_net10.0.csproj
-
-# .NET 8, for the Dockerfile with the ASP.NET Core Runtime 8.0 base image
-dotnet publish -c Release -r win-x64 -o publish/windows-x64-net8.0 EvoPdf_Next_AspNetDemo_Windows_net8.0.csproj
-```
-
-### Dockerfile for Windows Server LTSC 2022 with Manually Installed ASP.NET Core Runtime 8.0
-
-```text
-FROM mcr.microsoft.com/windows/server:ltsc2022
-
-# Use PowerShell as default shell
-SHELL ["powershell", "-Command"]
-
-# Install .NET 8.0 ASP.NET Core Runtime from ZIP
-RUN Invoke-WebRequest -Uri 'https://builds.dotnet.microsoft.com/dotnet/aspnetcore/Runtime/8.0.22/aspnetcore-runtime-8.0.22-win-x64.zip' -OutFile 'C:\\dotnet.zip'; \
-    Expand-Archive -Path 'C:\\dotnet.zip' -DestinationPath 'C:\\dotnet'; \
-    Remove-Item 'C:\\dotnet.zip' -Force
-
-ENV DOTNET_ROOT=C:\dotnet
-
-WORKDIR C:/app
-
-# Copy the published ASP.NET Core app files from the publish folder into the image
-COPY publish/windows-x64-net8.0/ .
-
-EXPOSE 27102
-ENV ASPNETCORE_URLS=http://+:27102
-
-ENTRYPOINT ["C:\\dotnet\\dotnet.exe", "C:\\app\\EvoPdf_Next_AspNetDemo_Windows_net8.0.dll"]
-```
-
-### Dockerfile for Windows Server LTSC 2025 with Manually Installed ASP.NET Core Runtime 10.0
-
-```text
-FROM mcr.microsoft.com/windows/server:ltsc2025
-
-# Use PowerShell as default shell
-SHELL ["powershell", "-Command"]
-
-# Install .NET 10.0 ASP.NET Core Runtime from ZIP
-RUN Invoke-WebRequest -Uri 'https://builds.dotnet.microsoft.com/dotnet/aspnetcore/Runtime/10.0.0/aspnetcore-runtime-10.0.0-win-x64.zip' -OutFile 'C:\\dotnet.zip'; \
-    Expand-Archive -Path 'C:\\dotnet.zip' -DestinationPath 'C:\\dotnet'; \
-    Remove-Item 'C:\\dotnet.zip' -Force
-
-ENV DOTNET_ROOT=C:\dotnet
-
-WORKDIR C:/app
-
-# Copy the published ASP.NET Core app files from the publish folder into the image
-COPY publish/windows-x64-net10.0/ .
-
-EXPOSE 27102
-ENV ASPNETCORE_URLS=http://+:27102
-
-ENTRYPOINT ["C:\\dotnet\\dotnet.exe", "C:\\app\\EvoPdf_Next_AspNetDemo_Windows_net10.0.dll"]
-```
-
-### Copy Fonts from Host to Local Build Context Folder
-
-```powershell
-$sourceFontsPath = Join-Path $env:SystemRoot "Fonts"
-$targetFontsPath = ".\Fonts"
-if (-not (Test-Path $targetFontsPath)) {
-    New-Item -ItemType Directory -Path $targetFontsPath | Out-Null
-}
-# Copy font files
-Get-ChildItem $sourceFontsPath -Include *.ttf, *.ttc, *.otf -Recurse |
-    Where-Object Name -ne 'lucon.ttf' |
-    Copy-Item -Destination $targetFontsPath -Force
-```
-
-All 6 samples of this topic, complete: `references/examples.md`.
+All 9 samples of this topic, complete: `references/examples.md`.
 
 Full topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/publish-to-docker-on-windows.htm
 
@@ -3084,53 +3088,307 @@ Compilable versions of the samples above: https://github.com/EvoPdf/evopdf-next-
 
 
 
-# EvoPdf Next: Azure App Service and Azure Functions
+# EvoPdf Next: Azure
 
-EvoPdf Next for .NET is a library that can be integrated into applications running on Azure App Service for Linux to create and process PDF documents.
+EvoPdf Next for .NET is a library that can be integrated into applications running on Azure App Service, Azure Functions, Azure Container Apps and Azure Kubernetes Service to create and process PDF documents.
 
 Namespace `EvoPdf.Next`. Install one NuGet package for the target platform, for example
 `EvoPdf.Next.Windows`, `EvoPdf.Next.Linux` or `EvoPdf.Next.MacOS`.
 
-EvoPdf Next runs in 64-bit Azure App Service and Azure Functions, Windows and Linux. Windows needs nothing extra; Linux needs the HTML to PDF system packages installed at startup.
+EvoPdf Next runs in 64-bit Azure App Service and Azure Functions, Windows and Linux, and in Linux containers. Windows
+needs nothing extra. On Linux the HTML to PDF Converter needs four system packages: either install them at startup, or
+deploy a container image that already has them, the option the documentation recommends for production.
 
 ## Plan sizing (from the documentation)
-- HTML to PDF is CPU/RAM intensive. App Service Windows: **B1** minimum for low volume, **B2** for development, **P1v3** or higher for production; Free/Shared are not suitable. App Service Linux: F1 is the minimum for tests, B2 for development, P1v3+ for production.
-- Azure Functions: choose **App Service plan or Premium**: the **Consumption plan is not suitable**; minimum B2 on Linux. Target runtime: *Portable*.
+- HTML to PDF is CPU and memory intensive. App Service Windows: **B1** minimum for low volume, **B2** for development,
+  **P1v3** or higher for production; Free and Shared are not suitable. App Service Linux: F1 for tests, B2 for development,
+  P1v3 or higher for production.
+- Azure Functions: **App Service plan or Premium**. The **Consumption and Flex Consumption plans are not suitable**.
+  On Linux the minimum is B2 and the Visual Studio publish profile uses the *Portable* target runtime; on Windows B1.
+- Azure Container Apps: at least **2 vCPUs and 4 GiB** per replica; `--min-replicas 1` keeps a replica ready.
 
-## App Service on Windows
+## App Service and Functions on Windows
 Reference `EvoPdf.Next.Windows` (or single components), `using EvoPdf.Next;`, publish. No further configuration.
 
 ## App Service on Linux
-Reference `EvoPdf.Next.Linux`. Install the dependencies at every start, because App Service does not persist packages across restarts. Recommended: **Startup Command** (Portal > Configuration > Stack settings), on the same line, before the dotnet command:
+Reference `EvoPdf.Next.Linux`. App Service does not keep installed packages across restarts, so install them at every
+start with the **Startup Command** (Portal > Configuration > Stack settings), before the dotnet command:
 ```
 apt update && apt install -y libnss3 libatk-bridge2.0-0 libcairo2 libpango-1.0-0 && dotnet MyApp.dll
 ```
-Save, then Restart; the first start takes a few minutes. Alternative in code: `Installation.ConfigureRuntime(true, null, "apt update && apt install -y libnss3 libatk-bridge2.0-0 libcairo2 libpango-1.0-0");` before the first conversion.
-
-## Azure Functions on Windows
-Reference `EvoPdf.Next.Windows`; App Service or Premium plan, Windows OS. Nothing else.
+or in code, before the first conversion:
+```csharp
+Installation.ConfigureRuntime(false, null, "apt update && apt install -y libnss3 libatk-bridge2.0-0 libcairo2 libpango-1.0-0");
+```
+Alternative recommended for production: deploy a container image built as for Container Apps
+(`az webapp create ... --container-image-name myregistry.azurecr.io/pdf-app:1`, then `WEBSITES_PORT=8080`); no Startup
+Command and no runtime configuration in code.
 
 ## Azure Functions on Linux
-The file system is read-only outside `/tmp` and runtime files are deployed without execute permission, so use the library's installation API before the first conversion (a call made after the first conversion takes effect only after a restart):
+A function app published from Visual Studio runs from its package (`WEBSITE_RUN_FROM_PACKAGE=1`): the application folder
+is read-only and the runtime files have no execute permission. Copy the runtime to a writable location before the
+first conversion (a call made after the first conversion takes effect only after a restart):
 ```csharp
-// HTML to PDF: installs the packages and prepares a writable runtime location
+// HTML to PDF: installs the packages and copies the runtime to a writable location
 Installation.ConfigureRuntime(true, null, "apt update && apt install -y libnss3 libatk-bridge2.0-0 libcairo2 libpango-1.0-0");
-// PDF Processor (text, search, images): copies the runtime to a writable location with execute permission
+// PDF Processor (text, search, images)
 PdfProcessorInstallation.ConfigureRuntime(true, null);
 ```
-Manual alternative via the SSH console is documented but does not survive restarts as reliably.
+- A function app created with the Azure CLI and deployed with `az functionapp deployment source config-zip` runs from
+  the extracted folder: use `Installation.ConfigureRuntime(false, null, "apt update && ...")`; the PDF Processor needs
+  no configuration.
+- A function app deployed as a container image from `mcr.microsoft.com/azure-functions/dotnet-isolated:4-dotnet-isolated10.0`
+  with the packages installed needs no configuration in code (recommended for production).
+
+## Azure Container Apps and AKS
+Build a Linux image from `mcr.microsoft.com/dotnet/aspnet:10.0` with the four packages and the `chmod +x` of the
+runtimes, listening on port 8080 (`ENV ASPNETCORE_URLS=http://+:8080`), push it to Azure Container Registry and create
+the application with `az containerapp create ... --ingress external --target-port 8080 --cpu 2 --memory 4Gi`.
+The `--target-port` must match the port of `ASPNETCORE_URLS`. For AKS see the `evopdf-next-kubernetes` skill; the
+same image is used. The Dockerfile is in `references/examples.md`.
 
 ## Rules
-- Never assume the Consumption plan or the Free tier works for conversions.
+- Never assume the Consumption or Flex Consumption plan, or the Free tier, works for conversions.
 - Set `Licensing.LicenseKey` from an App Setting (environment variable), not from source.
 - Keep `NavigationTimeout` realistic; outbound calls from Azure to the converted site must be allowed.
 
-Docs: https://www.evopdf.com/help/evopdf-next-dotnet/html/publish-to-azure-app-service-windows.htm, https://www.evopdf.com/help/evopdf-next-dotnet/html/publish-to-azure-app-service-linux.htm, https://www.evopdf.com/help/evopdf-next-dotnet/html/publish-to-azure-function-windows.htm, https://www.evopdf.com/help/evopdf-next-dotnet/html/publish-to-azure-function-linux.htm
+Overview page: https://www.evopdf.com/azure-html-to-pdf-converter
 
-- Using EvoPdf Next for .NET on  Azure App Service for Linux: https://www.evopdf.com/help/evopdf-next-dotnet/html/publish-to-azure-app-service-linux.htm
 - Using EvoPdf Next for .NET on Azure App Service for Windows: https://www.evopdf.com/help/evopdf-next-dotnet/html/publish-to-azure-app-service-windows.htm
-- Using EvoPdf Next for .NET in Azure Functions on Linux: https://www.evopdf.com/help/evopdf-next-dotnet/html/publish-to-azure-function-linux.htm
 - Using EvoPdf Next for .NET in Azure Functions on Windows: https://www.evopdf.com/help/evopdf-next-dotnet/html/publish-to-azure-function-windows.htm
+
+## Using EvoPdf Next for .NET on Azure App Service for Linux
+
+All 5 samples of this topic, complete: `references/examples.md`.
+
+Full topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/publish-to-azure-app-service-linux.htm
+
+## Using EvoPdf Next for .NET in Azure Functions on Linux
+
+All 14 samples of this topic, complete: `references/examples.md`.
+
+Full topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/publish-to-azure-function-linux.htm
+
+## Using EvoPdf Next for .NET in Azure Container Apps
+
+All 7 samples of this topic, complete: `references/examples.md`.
+
+Full topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/publish-to-azure-container-apps.htm
+
+## Rules that apply to every sample here
+
+- Converter instances are single use. Create a new converter for every conversion; a second
+  call on the same instance throws.
+- `Licensing.LicenseKey` is a static field, assigned once per process before any conversion.
+- Every conversion method has an asynchronous variant ending in `Async` that takes a `CancellationToken`.
+
+## Runnable code
+
+Compilable versions of the samples above: https://github.com/EvoPdf/evopdf-next-samples/tree/main/docs-samples
+
+
+
+# EvoPdf Next: AWS
+
+EvoPdf Next for .NET is a library that can be integrated into applications running in AWS Elastic Beanstalk, AWS Lambda, Amazon ECS on AWS Fargate and Amazon EKS to create and process PDF documents.
+
+Namespace `EvoPdf.Next`. Install one NuGet package for the target platform, for example
+`EvoPdf.Next.Windows`, `EvoPdf.Next.Linux` or `EvoPdf.Next.MacOS`.
+
+## Elastic Beanstalk on Linux
+The .NET platform for Linux, based on Amazon Linux 2023, x86_64 or arm64 (Graviton; reference `EvoPdf.Next.Linux.Arm64`). Two files in the
+project root, copied to the publish folder:
+- `.ebextensions/evopdf.config`: `packages: yum:` with `nss`, `at-spi2-atk`, `cairo`, `pango` and the DejaVu font
+  packages, a fontconfig file that sets DejaVu Sans as sans-serif, and `container_commands` that `chmod +x` the two
+  runtimes in `evopdf_runtimes/linux-x64/native/` (`linux-arm64` on Graviton). Indent with spaces.
+- `.platform/nginx/conf.d/evopdf.conf`: `proxy_read_timeout 300;` and `client_max_body_size 50M;` for long
+  conversions and uploads (nginx defaults: 60 seconds, 1 MB).
+```xml
+<ItemGroup>
+  <None Include=".ebextensions\**" CopyToPublishDirectory="PreserveNewest" />
+  <None Include=".platform\**" CopyToPublishDirectory="PreserveNewest" />
+</ItemGroup>
+```
+Publish with `dotnet publish -c Release -r linux-x64 --self-contained false -o publish` and zip the content of the
+publish folder at the root of the archive (no Procfile needed). Archives whose paths use backslashes are not extracted.
+
+## Elastic Beanstalk on Windows
+Platform ".NET on Windows Server" (IIS 10, Windows Server 2022 or 2025): nothing to install. Publish for `win-x64`,
+zip the content of the publish folder as `site.zip`, then create the application bundle, a zip with `site.zip` and an
+`aws-windows-deployment-manifest.json` that declares it under `aspNetCoreWeb` with `"appBundle": "site.zip"`.
+
+## AWS Lambda
+The HTML to PDF runtime is larger than the 250 MB limit of a zip deployment, so the function is a **container image**
+from `public.ecr.aws/lambda/dotnet:10` (or `:8`) with `dnf install -y nss at-spi2-atk cairo pango` plus fonts, the
+publish folder copied to `${LAMBDA_TASK_ROOT}` and `chmod +x` on the runtime. Lambda writes only to `/tmp`; the
+documented Dockerfile handles it.
+- Build with `docker build --platform linux/amd64 --provenance=false --sbom=false` (Lambda accepts single-manifest
+  images); arm64 functions reference `EvoPdf.Next.HtmlToPdf.Linux.Arm64` and build for `linux/arm64`.
+- Memory **at least 2048 MB** (CPU scales with memory) and timeout **at least 2 minutes**: the first request in a new
+  execution environment also starts the converter. A new function starts with 128 MB and 3 seconds.
+- The response is limited to 6 MB and binary bodies travel in base64, so a PDF up to about 4.5 MB fits; return larger
+  documents through Amazon S3.
+
+## Amazon ECS on Fargate
+Linux image from `mcr.microsoft.com/dotnet/aspnet:10.0` with the four packages (`libnss3 libatk-bridge2.0-0 libcairo2
+libpango-1.0-0`) and the `chmod +x` lines, listening on 8080, pushed to Amazon ECR. Task definition with at least
+**2 vCPUs ("cpu": "2048") and 4 GB ("memory": "4096")**, logs to CloudWatch. For production run an ECS service behind
+an Application Load Balancer. For EKS see the `evopdf-next-kubernetes` skill; the same image is used.
+
+## Rules
+- Never deploy the HTML to PDF Converter to Lambda as a zip archive.
+- Pass the license key as an environment variable or a secret, never in the image or the bundle.
+- On a publish folder created on Windows the execute permissions are lost; keep the `chmod +x` steps.
+
+Overview page: https://www.evopdf.com/aws-html-to-pdf-converter
+
+## Using EvoPdf Next for .NET in AWS Elastic Beanstalk on Linux
+
+All 4 samples of this topic, complete: `references/examples.md`.
+
+Full topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/publish-to-aws-elastic-beanstalk-linux.htm
+
+## Using EvoPdf Next for .NET in AWS Elastic Beanstalk on Windows
+
+All 2 samples of this topic, complete: `references/examples.md`.
+
+Full topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/publish-to-aws-elastic-beanstalk-windows.htm
+
+## Using EvoPdf Next for .NET in AWS Lambda
+
+All 7 samples of this topic, complete: `references/examples.md`.
+
+Full topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/publish-to-aws-lambda.htm
+
+## Using EvoPdf Next for .NET in Amazon ECS on AWS Fargate
+
+All 9 samples of this topic, complete: `references/examples.md`.
+
+Full topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/publish-to-amazon-ecs.htm
+
+## Rules that apply to every sample here
+
+- Converter instances are single use. Create a new converter for every conversion; a second
+  call on the same instance throws.
+- `Licensing.LicenseKey` is a static field, assigned once per process before any conversion.
+- Every conversion method has an asynchronous variant ending in `Async` that takes a `CancellationToken`.
+
+## Runnable code
+
+Compilable versions of the samples above: https://github.com/EvoPdf/evopdf-next-samples/tree/main/docs-samples
+
+
+
+# EvoPdf Next: Google Cloud
+
+EvoPdf Next for .NET is a library that can be integrated into applications running in Google Cloud Run and Google Kubernetes Engine to create and process PDF documents.
+
+Namespace `EvoPdf.Next`. Install one NuGet package for the target platform, for example
+`EvoPdf.Next.Windows`, `EvoPdf.Next.Linux` or `EvoPdf.Next.MacOS`.
+
+## Cloud Run
+- Image: `mcr.microsoft.com/dotnet/aspnet:10.0` (or `8.0`) with the four HTML to PDF packages (`libnss3
+  libatk-bridge2.0-0 libcairo2 libpango-1.0-0`), the publish folder and `chmod +x` on the runtimes; listen on 8080, the
+  port Cloud Run sends requests to by default. Cloud Run runs x86_64 images: `docker build --platform linux/amd64`.
+- Push to a Docker repository in Artifact Registry (`REGION-docker.pkg.dev/PROJECT_ID/REPOSITORY/IMAGE:TAG`).
+- Deploy with `gcloud run deploy ... --memory 2Gi --cpu 2 --timeout 300 --execution-environment gen2`:
+  2 vCPUs and 2 GiB are the recommended minimum; the second generation environment converts faster.
+- CPU is allocated only while a request is handled. Conversions that run in background tasks after the response need
+  `--no-cpu-throttling`.
+- The first request to a new instance also starts the converter and takes longer.
+
+## Google Kubernetes Engine
+The same image runs in GKE with the standard manifest of the `evopdf-next-kubernetes` skill. The node pool service
+account needs the Artifact Registry Reader role to pull the image (a 403 Forbidden in the pull events means it is
+missing).
+
+## Rules
+- Pass the license key as an environment variable or a Secret Manager secret, never in the image.
+- If the deployment reports that the container does not listen on the expected port, align `ASPNETCORE_URLS` in the
+  Dockerfile with the service port, or set `--port`.
+
+Overview page: https://www.evopdf.com/google-cloud-html-to-pdf-converter
+
+## Using EvoPdf Next for .NET in Google Cloud Run
+
+All 7 samples of this topic, complete: `references/examples.md`.
+
+Full topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/publish-to-google-cloud-run.htm
+
+## Rules that apply to every sample here
+
+- Converter instances are single use. Create a new converter for every conversion; a second
+  call on the same instance throws.
+- `Licensing.LicenseKey` is a static field, assigned once per process before any conversion.
+- Every conversion method has an asynchronous variant ending in `Async` that takes a `CancellationToken`.
+
+## Runnable code
+
+Compilable versions of the samples above: https://github.com/EvoPdf/evopdf-next-samples/tree/main/docs-samples
+
+
+
+# EvoPdf Next: Kubernetes
+
+EvoPdf Next for .NET is a library that can be integrated into applications running in Kubernetes clusters to create and process PDF documents.
+
+Namespace `EvoPdf.Next`. Install one NuGet package for the target platform, for example
+`EvoPdf.Next.Windows`, `EvoPdf.Next.Linux` or `EvoPdf.Next.MacOS`.
+
+## The image and the manifest
+The image is the Linux ASP.NET Core image of the `evopdf-next-docker` and `evopdf-next-azure` skills: the four HTML to
+PDF packages, `chmod +x` on the runtimes, port 8080. A new pod converts from its first request. The manifest contains
+only standard resources and is the same in AKS, EKS and GKE; only the image address changes:
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pdf-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: pdf-app
+  template:
+    metadata:
+      labels:
+        app: pdf-app
+    spec:
+      containers:
+      - name: pdf-app
+        image: myregistry.azurecr.io/pdf-app:1
+        ports:
+        - containerPort: 8080
+        resources:
+          requests:
+            cpu: 500m
+            memory: 1Gi
+          limits:
+            memory: 4Gi
+```
+plus a `Service` of type `LoadBalancer` from port 80 to `targetPort: 8080` (complete file in `references/examples.md`).
+
+- A memory limit of 4 GiB covers complex documents. Keep the CPU request moderate: on a 2 vCPU node the system pods
+  already reserve part of the CPU, and a request of a full vCPU can leave the pod without a node.
+- Nodes: 2 vCPUs are enough for tests, at least 4 vCPUs for production (`Standard_D4s_v3`, `m5.xlarge`, `n2-standard-4`).
+- Registry access: AKS `--attach-acr`; EKS managed node groups pull from the ECR repositories of the account; GKE needs
+  the Artifact Registry Reader role for the node pool service account.
+
+## Troubleshooting
+- `Pending` with `Insufficient cpu`: lower the CPU request or add larger nodes.
+- `ImagePullBackOff`: wrong image address or no registry access.
+- Running pod but the address refuses connections: the Service `targetPort` must equal the port in `ASPNETCORE_URLS`.
+
+## Rules
+- Store the license key in a Kubernetes Secret and pass it as an environment variable.
+- Scale with `kubectl scale deployment/pdf-app --replicas=N`; each pod runs its own converter.
+
+## Using EvoPdf Next for .NET in Kubernetes
+
+All 7 samples of this topic, complete: `references/examples.md`.
+
+Full topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/publish-to-kubernetes.htm
 
 ## Rules that apply to every sample here
 

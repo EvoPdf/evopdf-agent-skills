@@ -5,7 +5,7 @@
     {
       "name": "evopdf-next",
       "source": "./",
-      "description": "EvoPdf Next skills: HTML/Word/Excel to PDF, headers and footers, PDF/UA and PDF/A, PDF processing, deployment, Classic to Next migration."
+      "description": "EvoPdf Next skills: HTML/Word/Excel to PDF, headers and footers, PDF/UA and PDF/A, electronic invoices, digital signatures, PDF processing, cloud deployment, Classic to Next migration."
     }
   ]
 }

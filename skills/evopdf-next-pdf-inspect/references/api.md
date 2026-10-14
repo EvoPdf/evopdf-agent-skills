@@ -48,7 +48,7 @@ Represents digital signature information extracted from a loaded PDF document. R
 
 ### Properties
 
-- `CertificationLevel`: The modification permissions allowed by the certification signature, or null if the document is not certified. IMPORTANT: editing a certified document with a level of NoChanges or FormFillingAndSigning may invalidate the certification signature
+- `CertificationLevel`: The modification permissions allowed by the certification signature, or null if the document is not certified. A document certified with NoChanges does not accept a new signature; with the other levels the new signature is saved as an incremental update that keeps the certification valid
 - `ContainsTimestamp`: Indicates whether at least one signature in the document is a document timestamp signature
 - `IsCertified`: Indicates whether the loaded PDF is certified. Certified documents may forbid further modifications; see CertificationLevel
 - `IsSigned`: Indicates whether the loaded PDF contains at least one digital signature
@@ -65,3 +65,4 @@ PDF certification levels
 - `FormFillingAndSigning`: Form filling and signing are permitted. Other modifications invalidate the signature
 - `FormFillingSigningAndAnnotations`: Form filling, signing and annotations are permitted. Modifications outside these categories invalidate the signature
 - `NoChanges`: No changes to the document are permitted. Any modification invalidates the signature
+- `NotCertified`: An approval signature: the document is not certified and accepts further signatures and changes, each signature covering the revision it signed

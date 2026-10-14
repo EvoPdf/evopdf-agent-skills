@@ -8,6 +8,8 @@ Topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/add-attachments-to-ge
 
 ### Embed In-Memory Data with FromBytes
 
+**Embed an in-memory XML payload**
+
 ```csharp
 byte[] xmlBytes = Encoding.UTF8.GetBytes(BuildSampleXml());
 var xmlAttachment = PdfFileAttachment.FromBytes(xmlBytes, "data.xml");
@@ -19,6 +21,8 @@ htmlToPdfConverter.PdfDocumentOptions.AddFileAttachment(xmlAttachment);
 ```
 
 ### Embed a File from Disk with FromFile
+
+**Embed a file from disk**
 
 ```csharp
 string alphabetFilePath = Path.Combine(GetDemoTextsPath(), "Alphabet.txt");
@@ -184,6 +188,8 @@ Topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/add-file-attachments-
 
 ### Document-Level Attachments
 
+**Embed an in-memory XML payload during editing**
+
 ```csharp
 byte[] xmlBytes = Encoding.UTF8.GetBytes(BuildSampleXml());
 var xmlAttachment = PdfFileAttachment.FromBytes(xmlBytes, "data.xml");
@@ -194,6 +200,8 @@ pdfEditor.AddFileAttachment(xmlAttachment);
 ```
 
 ### Page-Level Annotations
+
+**Page-level icon for an in-memory CSV**
 
 ```csharp
 byte[] csvBytes = Encoding.UTF8.GetBytes(BuildSampleCsv());
@@ -510,7 +518,7 @@ namespace EvoPdf_Next_AspNetDemo.Controllers.PDF_Editor
         // plus a bold caption beneath identifying the icon name.  Used by
         // Section 2 to show all four PdfAttachmentIcon values in a row.
         // iconSize is used only for caption placement -- the annotation
-        // itself takes the library's default size 
+        // itself takes the library's default size
         private void AddIconSample(PdfEditor editor, ref int currentPage, PdfFont captionFont,
             byte[] data, string fileName, string mimeType,
             string tooltip, string description,
@@ -682,6 +690,8 @@ Topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/create-pdf-documents-
 
 ### Document-Level Attachments
 
+**Embed an in-memory XML payload**
+
 ```csharp
 byte[] xmlBytes = Encoding.UTF8.GetBytes(BuildSampleXml());
 var xmlAttachment = PdfFileAttachment.FromBytes(xmlBytes, "data.xml");
@@ -690,6 +700,8 @@ xmlAttachment.Description = "Source XML data";
 xmlAttachment.Relationship = PdfAttachmentRelationship.Source;
 pdfDocument.AddFileAttachment(xmlAttachment);
 ```
+
+**Embed a file from disk**
 
 ```csharp
 string alphabetFilePath = Path.Combine(GetDemoTextsPath(), "Alphabet.txt");
@@ -953,7 +965,7 @@ namespace EvoPdf_Next_AspNetDemo.Controllers.PDF_Creator
         // plus a bold caption beneath identifying the icon name.  Used by
         // Section 2 to show all four PdfAttachmentIcon values in a row.
         // iconSize is used only for caption placement -- the annotation
-        // itself takes the library's default size 
+        // itself takes the library's default size
         private void AddIconSample(
             PdfDocument doc, PdfFont captionFont,
             byte[] data, string fileName, string mimeType,

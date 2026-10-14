@@ -18,7 +18,7 @@ Specifies the PDF standards compliance level for the generated PDF document
 - `PdfA3b`: PDF/A-3b (ISO 19005-3, conformance level B) basic long-term archival with support for embedded files of arbitrary type. Commonly used for e-invoicing standards such as ZUGFeRD and Factur-X
 - `PdfA3u`: PDF/A-3u (ISO 19005-3, conformance level U) long-term archival with guaranteed Unicode character mappings and support for embedded files of arbitrary type
 - `PdfA4`: PDF/A-4 (ISO 19005-4) base conformance, based on PDF 2.0. Does not require a tagged structure tree. Use PdfUa2PdfA4 when both archival and accessibility are required
-- `PdfA4f`: PDF/A-4f (ISO 19005-4, Files subset) long-term archival based on PDF 2.0 with explicit support for embedded files of arbitrary type. Modern equivalent of PDF/A-3
+- `PdfA4f`: PDF/A-4f (ISO 19005-4, Files subset) long-term archival based on PDF 2.0 with explicit support for embedded files of arbitrary type. Modern equivalent of PDF/A-3. The document must contain at least one embedded file
 - `PdfUa1`: PDF/UA-1 (ISO 14289-1) Universal Accessibility standard. Recommended for documents that must be accessible to screen readers and other assistive technologies
 - `PdfUa1PdfA2a`: PDF/UA-1 (ISO 14289-1) combined with PDF/A-2a (ISO 19005-2 level A). The highest combined PDF/UA-1 + PDF/A-2 compliance level
 - `PdfUa1PdfA2b`: PDF/UA-1 (ISO 14289-1) combined with PDF/A-2b (ISO 19005-2 level B). Satisfies both universal-accessibility and basic long-term archival requirements
@@ -27,7 +27,10 @@ Specifies the PDF standards compliance level for the generated PDF document
 - `PdfUa2PdfA2a`: PDF/UA-2 (ISO 14289-2) combined with PDF/A-2a (ISO 19005-2 level A)
 - `PdfUa2PdfA2b`: PDF/UA-2 (ISO 14289-2) combined with PDF/A-2b (ISO 19005-2 level B). Second-generation accessibility combined with basic long-term archival
 - `PdfUa2PdfA4`: PDF/UA-2 (ISO 14289-2) combined with PDF/A-4 (ISO 19005-4). The recommended combination for PDF 2.0: second-generation accessibility with base long-term archival conformance
-- `PdfUa2PdfA4f`: PDF/UA-2 (ISO 14289-2) combined with PDF/A-4f (ISO 19005-4 Files). Recommended modern combination for accessibility, long-term archival, and support for embedded files of arbitrary type
+- `PdfUa2PdfA4f`: PDF/UA-2 (ISO 14289-2) combined with PDF/A-4f (ISO 19005-4 Files). Recommended modern combination for accessibility, long-term archival, and support for embedded files of arbitrary type. The document must contain at least one embedded file
+- `Wtpdf1`: Well-Tagged PDF 1.0 (WTPDF, PDF Association) conformance levels for accessibility and for reuse, declared with PDF Declarations in the XMP metadata. The document is also identified as PDF/UA-2 (ISO 14289-2), whose technical requirements are shared with the WTPDF conformance level for accessibility, and is written as PDF 2.0
+- `Wtpdf1PdfA4`: Well-Tagged PDF 1.0 conformance levels for accessibility and for reuse combined with PDF/UA-2 (ISO 14289-2) and PDF/A-4 (ISO 19005-4) base long-term archival conformance
+- `Wtpdf1PdfA4f`: Well-Tagged PDF 1.0 conformance levels for accessibility and for reuse combined with PDF/UA-2 (ISO 14289-2) and PDF/A-4f (ISO 19005-4 Files) long-term archival with support for embedded files of arbitrary type. The document must contain at least one embedded file
 
 ## PdfAccessibilityOptions
 

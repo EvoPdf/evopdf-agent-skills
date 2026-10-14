@@ -7,7 +7,7 @@ Every public member of the types below is listed; the summaries are the shipped 
 
 Reference: https://www.evopdf.com/help/evopdf-next-dotnet/html/T_EvoPdf_Next_PdfFormOptions.htm
 
-Specifies options for converting HTML form controls into interactive PDF form fields These options control field naming, button action generation, submit behavior, validation mapping and diagnostic logging for the HTML-to-PDF forms pipeline
+Specifies options for converting HTML form controls into interactive PDF form fields. These options control field naming, button action generation, submit behavior, validation mapping and diagnostic logging for the HTML-to-PDF forms pipeline
 
 ### Properties
 
@@ -15,10 +15,10 @@ Specifies options for converting HTML form controls into interactive PDF form fi
 - `EnableButtonActions`: Gets or sets a value indicating whether PDF actions are attached to generated PDF buttons
 - `ExcludeDisabledFieldsFromSubmit`: Gets or sets a value indicating whether disabled HTML fields are excluded from submit actions
 - `FieldNamingMode`: Gets or sets how PDF field names are generated from HTML form controls
-- `FormFieldBoldFont`: Gets or sets the default bold font used for interactive PDF form fields. If not set but FormFieldFont is set, that font will be used as a fallback. If FormFieldFont is not set either, a default bold font will be used For best compatibility with Adobe Reader interactive form fields, use open-source fonts such as Liberation Sans, Roboto or DejaVu. All modern browsers (Chrome, Edge) render PDF form fields correctly regardless of the font used
-- `FormFieldBoldItalicFont`: Gets or sets the default bold italic font used for interactive PDF form fields. If not set but FormFieldFont is set, that font will be used as a fallback. If FormFieldFont is not set either, a default bold italic font will be used For best compatibility with Adobe Reader interactive form fields, use open-source fonts such as Liberation Sans, Roboto or DejaVu. All modern browsers (Chrome, Edge) render PDF form fields correctly regardless of the font used
-- `FormFieldFont`: Gets or sets the default regular font used for interactive PDF form fields. If not set, Helvetica will be used For best compatibility with Adobe Reader interactive form fields, use open-source fonts such as Liberation Sans, Roboto or DejaVu. All modern browsers (Chrome, Edge) render PDF form fields correctly regardless of the font used
-- `FormFieldItalicFont`: Gets or sets the default italic font used for interactive PDF form fields. If not set but FormFieldFont is set, that font will be used as a fallback. If FormFieldFont is not set either, a default italic font will be used For best compatibility with Adobe Reader interactive form fields, use open-source fonts such as Liberation Sans, Roboto or DejaVu. All modern browsers (Chrome, Edge) render PDF form fields correctly regardless of the font used
+- `FormFieldBoldFont`: Gets or sets the default bold font used for interactive PDF form fields. If not set but FormFieldFont is set, that font will be used as a fallback. If FormFieldFont is not set either, a default bold font will be used. For best compatibility with Adobe Reader interactive form fields, use open-source fonts such as Liberation Sans, Roboto or DejaVu. All modern browsers (Chrome, Edge) render PDF form fields correctly regardless of the font used
+- `FormFieldBoldItalicFont`: Gets or sets the default bold italic font used for interactive PDF form fields. If not set but FormFieldFont is set, that font will be used as a fallback. If FormFieldFont is not set either, a default bold italic font will be used. For best compatibility with Adobe Reader interactive form fields, use open-source fonts such as Liberation Sans, Roboto or DejaVu. All modern browsers (Chrome, Edge) render PDF form fields correctly regardless of the font used
+- `FormFieldFont`: Gets or sets the default regular font used for interactive PDF form fields. If not set, Helvetica will be used. For best compatibility with Adobe Reader interactive form fields, use open-source fonts such as Liberation Sans, Roboto or DejaVu. All modern browsers (Chrome, Edge) render PDF form fields correctly regardless of the font used
+- `FormFieldItalicFont`: Gets or sets the default italic font used for interactive PDF form fields. If not set but FormFieldFont is set, that font will be used as a fallback. If FormFieldFont is not set either, a default italic font will be used. For best compatibility with Adobe Reader interactive form fields, use open-source fonts such as Liberation Sans, Roboto or DejaVu. All modern browsers (Chrome, Edge) render PDF form fields correctly regardless of the font used
 - `IncludeIFrameFields`: Gets or sets a value indicating whether form fields from iframes are converted to interactive PDF form fields The default value is true
 - `IncludeReadOnlyFieldsInSubmit`: Gets or sets a value indicating whether read-only fields are included in submit actions
 - `MapHtmlResetButtonsToPdfActions`: Gets or sets a value indicating whether HTML reset buttons are mapped to PDF reset actions
@@ -49,8 +49,8 @@ Specifies how submit actions are generated for PDF buttons
 
 ### Fields and values
 
-- `AcrobatJavaScriptHtmlSubmit`: Generates an Acrobat JavaScript submit action intended to behave more like an HTML form submission This option is useful when browser-like GET or POST semantics are desired. It depends on support for Acrobat JavaScript in the target PDF viewer
-- `NativePdfAction`: Generates a native PDF submit action This is the most broadly compatible option at the PDF action level. The exact HTTP behavior still depends on the PDF viewer and is not guaranteed to match browser form submission semantics exactly
+- `AcrobatJavaScriptHtmlSubmit`: Generates an Acrobat JavaScript submit action intended to behave more like an HTML form submission. This option is useful when browser-like GET or POST semantics are desired. It depends on support for Acrobat JavaScript in the target PDF viewer
+- `NativePdfAction`: Generates a native PDF submit action. This is the most broadly compatible option at the PDF action level. The exact HTTP behavior still depends on the PDF viewer and is not guaranteed to match browser form submission semantics exactly
 
 ## PdfSubmitFormat
 
@@ -73,5 +73,5 @@ Specifies how HTML validation metadata is mapped to PDF form behavior
 
 ### Fields and values
 
-- `AcrobatJavaScriptBasic`: Generates basic Acrobat JavaScript validation for supported constraints This mode can apply basic checks such as required fields, simple pattern checks and numeric min or max constraints. It depends on Acrobat JavaScript support in the viewer
+- `AcrobatJavaScriptBasic`: Generates basic Acrobat JavaScript validation for supported constraints. This mode can apply basic checks such as required fields, simple pattern checks and numeric min or max constraints. It depends on Acrobat JavaScript support in the viewer
 - `None`: Does not generate any additional validation logic

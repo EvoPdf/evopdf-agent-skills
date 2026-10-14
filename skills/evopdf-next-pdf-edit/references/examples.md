@@ -8,12 +8,16 @@ Topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/add-text-to-existing-
 
 ### Open the Source PDF
 
+**Open an existing PDF for editing**
+
 ```csharp
 string password = string.IsNullOrEmpty(ownerPassword) ? userPassword : ownerPassword;
 using PdfEditor pdfEditor = new PdfEditor(inputPdfBytes, password);
 ```
 
 ### AddText, Page Cursor and Multi-Page Flow
+
+**Page cursor discipline**
 
 ```csharp
 PdfTextElement element = new PdfTextElement(text, font) { X = 0, Y = crtYPos, Width = contentWidth };

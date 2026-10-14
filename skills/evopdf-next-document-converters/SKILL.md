@@ -45,7 +45,7 @@ wordToPdfConverter.PdfDocumentOptions.TopMargin = 30;
 wordToPdfConverter.PdfDocumentOptions.BottomMargin = 30;
 ```
 
-All 3 samples of this topic, complete: `references/examples.md`.
+All 15 samples of this topic, complete: `references/examples.md`.
 
 Full topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/convert-word-docx-to-pdf.htm
 
@@ -84,7 +84,7 @@ excelToPdfConverter.PdfDocumentOptions.ConvertOnlyFirstWorksheet = false;
 excelToPdfConverter.PdfDocumentOptions.PageBreakBetweenWorksheets = true;
 ```
 
-All 5 samples of this topic, complete: `references/examples.md`.
+All 17 samples of this topic, complete: `references/examples.md`.
 
 Full topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/convert-excel-xlsx-to-pdf.htm
 
@@ -110,7 +110,7 @@ rtfToPdfConverter.PdfDocumentOptions.TopMargin = 30;
 rtfToPdfConverter.PdfDocumentOptions.BottomMargin = 30;
 ```
 
-All 3 samples of this topic, complete: `references/examples.md`.
+All 21 samples of this topic, complete: `references/examples.md`.
 
 Full topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/convert-rtf-to-pdf.htm
 
@@ -153,7 +153,7 @@ string markdownString = Encoding.UTF8.GetString(inputMarkdownBytes);
 string baseUrl = "file://" + markdownFilePath;
 ```
 
-All 6 samples of this topic, complete: `references/examples.md`.
+All 12 samples of this topic, complete: `references/examples.md`.
 
 Full topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/convert-markdown-to-pdf.htm
 

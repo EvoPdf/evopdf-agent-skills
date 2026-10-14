@@ -23,7 +23,10 @@ alwaysApply: false
 - Page layout: a new `HtmlToPdfConverter` prints an A4 page with the HTML laid out as in a 1024 px browser window and scaled to the page width. Another layout is one method call on the converter: `FitBrowserWindowToPage(pageSize, orientation, windowWidth)` for a web page on paper, `LayoutAtPageWidth(pageSize)` for HTML designed for the paper size, drawn 1:1, `PrintLikeChrome(pageSize)` for the Save as PDF output of Chrome, `SinglePageOfWidth(widthPt, marginPt)` for receipts and `PageWidthFromBrowserWindow(windowWidth)` for a page as wide as the window. The `singlePage` argument of a method puts the whole content on one page. Set the margins, in points, after the method; setting `HtmlViewerWidth` or `HtmlViewerZoom` after it ends the automatic layout.
 - Headers/footers: `PdfDocumentOptions.PdfHtmlHeader` / `PdfHtmlFooter` (class `PdfHtmlHeaderFooter`, derives from `PdfHtmlTemplate`): `Html`, `HtmlBaseUrl` or `HtmlSourceUrl`, `Height`, `AutoSizeContentHeight`, `FitHeight`, `ShowInFirstPage`/`ShowInOddPages`/`ShowInEvenPages`, `ReserveSpaceAlways` (default `true`), `AutoResizePdfMargins`, `SkipVariablesParsing`, `PageNumberOffset`, `TotalPagesOffset`. Variables `{page_number}` and `{total_pages}` are replaced inside the header/footer HTML. Alternative browser mode: `EnableHeaderFooter` + `HeaderTemplate` / `FooterTemplate`.
 - Dynamic pages: `ConversionDelay` (seconds) waits after load; `TriggeringMode.Manual` waits until the page calls `evoPdfConverter_startConversion()`; `NavigationTimeout`, `JavaScriptEnabled`, `LoadLazyImages` (default `true`), `MediaType` (screen by default, not set), `LocalFilesEnabled`, `AllowInsecureContent`, `BlockedHosts`, `HttpRequestHeaders`, `HttpRequestCookies`, `AuthenticationOptions`.
-- Standards: `PdfDocumentOptions.PdfStandard` = `PdfStandard.None` (default), `PdfUa1`, `PdfUa2`, `PdfA2b`, `PdfA4`, `PdfUa1PdfA2b`, `PdfUa2PdfA4`, plus the other PDF/A levels and combinations; `AccessibilityOptions` applies when a tagged standard is selected.
+- Standards: `PdfDocumentOptions.PdfStandard` = `PdfStandard.None` (default), `PdfUa1`, `PdfUa2`, `PdfA2b`, `PdfA4`, `PdfUa1PdfA2b`, `PdfUa2PdfA4`, `Wtpdf1`, plus the other PDF/A levels and combinations; `AccessibilityOptions` applies when a tagged standard is selected.
+- Electronic invoices: `ElectronicInvoice.FromXml(...)` or `FromFile(path)`, then `PdfDocumentOptions.AddElectronicInvoice(invoice)` with `PdfStandard` set to a PDF/A-3 level (`PdfA3b`, `PdfA3u`, `PdfA3a` or `PdfUa1PdfA3a`). Factur-X, ZUGFeRD, XRechnung and Order-X; profile and document type are read from the XML.
+- Digital signatures: a `PdfDigitalSignature` (PFX file, `X509Certificate2`, or an `IExternalDigitalSignature` for a hardware security module or cloud key service) on `HtmlToPdfConverter.DigitalSignature`, `PdfDocument.DigitalSignature` or the `PdfEditor` constructor for existing PDFs. `Profile` selects PAdES B-B, B-T, B-LT or B-LTA (T and above need `TimestampServerUrl`). `PdfEditor.AddSignatureField` prepares fields for several signers; `PdfEditor.AddLongTermValidation` adds validation data to signed documents.
+- Cloud and containers: Windows hosts need nothing extra; Linux needs `libnss3 libatk-bridge2.0-0 libcairo2 libpango-1.0-0` (Debian/Ubuntu names) and execute permission on the runtimes in `evopdf_runtimes/<rid>/native/`. Azure Functions need an App Service or Premium plan (not Consumption or Flex Consumption); AWS Lambda needs a container image for the HTML to PDF Converter. See the docker, azure, aws, google-cloud and kubernetes skills.
 - Migration: from EvoPdf Classic follow `skills/evopdf-classic-to-next-migration`; from wkhtmltopdf, DinkToPdf, Rotativa or TuesPechkin follow `skills/evopdf-next-wkhtmltopdf-migration`.
 - Documentation: https://www.evopdf.com/help/evopdf-next-dotnet/; product pages: https://www.evopdf.com/evopdf-next-dotnet
 
@@ -70,13 +73,17 @@ Quickstart projects, all documentation samples and the complete demo application
 | `skills/evopdf-next-pdf-forms` | Turn HTML form controls into interactive PDF form fields with EvoPdf Next PdfFormOptions |
 | `skills/evopdf-next-fonts` | Work with fonts in EvoPdf Next PDF documents |
 | `skills/evopdf-next-pdf-standards` | Produce standards-compliant PDF with EvoPdf Next |
+| `skills/evopdf-next-electronic-invoices` | Create Factur-X, ZUGFeRD and XRechnung electronic invoices and Order-X electronic orders with EvoPdf Next |
 | `skills/evopdf-next-security-signatures` | Protect and sign PDF documents with EvoPdf Next |
 | `skills/evopdf-next-pdf-metadata` | Set the PDF document description and how viewers open the file with EvoPdf Next |
 | `skills/evopdf-next-pdf-processor` | Extract content from existing PDF documents with the EvoPdf Next PDF Processor |
 | `skills/evopdf-licensing` | Apply an EvoPdf Next license key in .NET, understand demo mode and the watermark, and know where the key goes in web applications and services. |
 | `skills/evopdf-next-deployment` | Install and deploy EvoPdf Next |
 | `skills/evopdf-next-docker` | Run EvoPdf Next in Docker containers on Linux and Windows |
-| `skills/evopdf-next-azure` | Run EvoPdf Next on Azure App Service and Azure Functions, on both Linux and Windows plans |
+| `skills/evopdf-next-azure` | Run EvoPdf Next on Azure |
+| `skills/evopdf-next-aws` | Run EvoPdf Next on AWS |
+| `skills/evopdf-next-google-cloud` | Run EvoPdf Next on Google Cloud |
+| `skills/evopdf-next-kubernetes` | Run EvoPdf Next in Kubernetes |
 | `skills/evopdf-next-troubleshooting` | Diagnose EvoPdf Next failures |
 | `skills/evopdf-classic-to-next-migration` | Migrate .NET applications from EvoPdf Classic (EvoPdf namespace) to EvoPdf Next |
 | `skills/evopdf-next-wkhtmltopdf-migration` | Replace wkhtmltopdf, DinkToPdf, Rotativa, TuesPechkin or Pechkin with EvoPdf Next in .NET |

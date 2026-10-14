@@ -8,27 +8,87 @@ Topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/convert-pdf-to-text.h
 
 ### Create the PDF to Text Converter
 
+**Create a PDF to Text Converter Instance**
+
 ```csharp
 // Create a new PDF to Text converter instance
 PdfToTextConverter pdfToTextConverter = new PdfToTextConverter();
 ```
 
+### Extracted Text Layout
+
+**Set Extracted Text Layout**
+
+```csharp
+pdfToTextConverter.TextLayout = PdfToTextLayout.Original;
+```
+
+### Mark Page Breaks
+
+**Mark Page Breaks in Extracted Text**
+
+```csharp
+pdfToTextConverter.MarkPageBreaks = true;
+```
+
 ### Open Password Protected PDFs
+
+**Set User and Owner Passwords**
 
 ```csharp
 pdfToTextConverter.UserPassword = userPasswordString;
 pdfToTextConverter.OwnerPassword = ownerPasswordString;
 ```
 
+### Extracted Page Range Limit
+
+**Unlimited Extracted PDF Page Range**
+
+```csharp
+pdfToTextConverter.MaxPageCount = 0;
+```
+
+**Limit the Extracted PDF Page Range to 10 Pages**
+
+```csharp
+pdfToTextConverter.MaxPageCount = 10;
+```
+
+### Convert PDF to Text
+
+**Convert All Pages in a PDF from Memory to a String**
+
+```csharp
+string extractedText = pdfToTextConverter.ConvertToText(inputPdfBytes);
+```
+
+**Convert Pages in a PDF from Memory to a String Starting at a Given Page Number**
+
+```csharp
+string extractedText = pdfToTextConverter.ConvertToText(inputPdfBytes, startPageNumber);
+```
+
+**Convert a Range of Pages in a PDF from Memory to a String**
+
+```csharp
+string extractedText = pdfToTextConverter.ConvertToText(inputPdfBytes, startPageNumber, endPageNumber);
+```
+
+**Convert All Pages in a PDF from a Stream or File to a String**
+
 ```csharp
 string extractedText = pdfToTextConverter.ConvertToText(inputPdfStream);
 string extractedText = pdfToTextConverter.ConvertToText(inputPdfFile);
 ```
 
+**Convert Pages in a PDF from a Stream or File to a String Starting at a Given Page Number**
+
 ```csharp
 string extractedText = pdfToTextConverter.ConvertToText(inputPdfStream, startPageNumber);
 string extractedText = pdfToTextConverter.ConvertToText(inputPdfFile, startPageNumber);
 ```
+
+**Convert a Range of Pages in a PDF from a Stream or File to a String**
 
 ```csharp
 string extractedText = pdfToTextConverter.ConvertToText(inputPdfStream, startPageNumber, endPageNumber);
@@ -37,22 +97,56 @@ string extractedText = pdfToTextConverter.ConvertToText(inputPdfFile, startPageN
 
 ### Asynchronous PDF to Text Methods
 
+**Asynchronously Convert All Pages in a PDF from Memory to a String**
+
+```csharp
+string extractedText = await pdfToTextConverter.ConvertToTextAsync(inputPdfBytes);
+```
+
+**Asynchronously Convert Pages in a PDF from Memory to a String Starting at a Given Page Number**
+
+```csharp
+string extractedText = await pdfToTextConverter.ConvertToTextAsync(inputPdfBytes, startPageNumber);
+```
+
+**Asynchronously Convert a Range of Pages in a PDF from Memory to a String**
+
+```csharp
+string extractedText = await pdfToTextConverter.ConvertToTextAsync(inputPdfBytes, startPageNumber, endPageNumber);
+```
+
+**Asynchronously Convert All Pages in a PDF from a Stream or File to a String**
+
 ```csharp
 string extractedText = await pdfToTextConverter.ConvertToTextAsync(inputPdfStream);
 string extractedText = await pdfToTextConverter.ConvertToTextAsync(inputPdfFile);
 ```
+
+**Asynchronously Convert Pages in a PDF from a Stream or File to a String Starting at a Given Page Number**
 
 ```csharp
 string extractedText = await pdfToTextConverter.ConvertToTextAsync(inputPdfStream, startPageNumber);
 string extractedText = await pdfToTextConverter.ConvertToTextAsync(inputPdfFile, startPageNumber);
 ```
 
+**Asynchronously Convert a Range of Pages in a PDF from a Stream or File to a String**
+
 ```csharp
 string extractedText = await pdfToTextConverter.ConvertToTextAsync(inputPdfStream, startPageNumber, endPageNumber);
 string extractedText = await pdfToTextConverter.ConvertToTextAsync(inputPdfFile, startPageNumber, endPageNumber);
 ```
 
+### Conversion Info
+
+**Gets the Number of PDF Pages Converted to Text**
+
+```csharp
+int numberOfPagesConverted = pdfToTextConverter.ConversionInfo.PageCount;
+```
+
 ### Code Sample - Convert PDF to Text
+
+**Convert PDF to Text in ASP.NET Core**
 
 ```csharp
 using System;
@@ -211,6 +305,8 @@ Topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/search-for-text-in-pd
 
 ### Create the PDF to Text Converter
 
+**Create a PDF to Text Converter Instance**
+
 ```csharp
 // Create a new PDF to Text converter instance
 PdfToTextConverter pdfToTextConverter = new PdfToTextConverter();
@@ -218,22 +314,62 @@ PdfToTextConverter pdfToTextConverter = new PdfToTextConverter();
 
 ### Open Password Protected PDFs
 
+**Set User and Owner Passwords**
+
 ```csharp
 pdfToTextConverter.UserPassword = userPasswordString;
 pdfToTextConverter.OwnerPassword = ownerPasswordString;
 ```
 
+### Searched Page Range Limit
+
+**Unlimited Searched PDF Page Range**
+
+```csharp
+pdfToTextConverter.MaxPageCount = 0;
+```
+
+**Limit the Searched PDF Page Range to 10 Pages**
+
+```csharp
+pdfToTextConverter.MaxPageCount = 10;
+```
+
 ### Find Text in PDF
+
+**Find Text in All Pages in a PDF from Memory**
+
+```csharp
+FindTextLocation[] findTextLocations = pdfToTextConverter.FindText(inputPdfBytes, textToFindString, caseSensitive, wholeWord);
+```
+
+**Search Pages in a PDF from Memory Starting at a Given Page Number**
+
+```csharp
+FindTextLocation[] findTextLocations = pdfToTextConverter.FindText(inputPdfBytes, textToFindString, startPageNumber, caseSensitive, wholeWord);
+```
+
+**Search a Range of Pages in a PDF from Memory**
+
+```csharp
+FindTextLocation[] findTextLocations = pdfToTextConverter.FindText(inputPdfBytes, textToFindString, startPageNumber, endPageNumber, caseSensitive, wholeWord);
+```
+
+**Search All Pages in a PDF from a Stream or File**
 
 ```csharp
 FindTextLocation[] findTextLocations = pdfToTextConverter.FindText(inputPdfStream, textToFindString, caseSensitive, wholeWord);
 FindTextLocation[] findTextLocations = pdfToTextConverter.FindText(inputPdfFile, textToFindString, caseSensitive, wholeWord);
 ```
 
+**Search Pages in a PDF from a Stream or File Starting at a Given Page Number**
+
 ```csharp
 FindTextLocation[] findTextLocations = pdfToTextConverter.FindText(inputPdfStream, textToFindString, startPageNumber, caseSensitive, wholeWord);
 FindTextLocation[] findTextLocations = pdfToTextConverter.FindText(inputPdfFile, textToFindString, startPageNumber, caseSensitive, wholeWord);
 ```
+
+**Search a Range of Pages in a PDF from a Stream or File**
 
 ```csharp
 FindTextLocation[] findTextLocations = pdfToTextConverter.FindText(inputPdfStream, textToFindString, startPageNumber, endPageNumber, caseSensitive, wholeWord);
@@ -242,22 +378,56 @@ FindTextLocation[] findTextLocations = pdfToTextConverter.FindText(inputPdfFile,
 
 ### Asynchronous Methods to Find Text in PDF
 
+**Asynchronously Find Text in All Pages in a PDF from Memory**
+
+```csharp
+FindTextLocation[] findTextLocations = await pdfToTextConverter.FindTextAsync(inputPdfBytes, textToFindString, caseSensitive, wholeWord);
+```
+
+**Asynchronously Search Pages in a PDF from Memory Starting at a Given Page Number**
+
+```csharp
+FindTextLocation[] findTextLocations = await pdfToTextConverter.FindTextAsync(inputPdfBytes, textToFindString, startPageNumber, caseSensitive, wholeWord);
+```
+
+**Asynchronously Search a Range of Pages in a PDF from Memory**
+
+```csharp
+FindTextLocation[] findTextLocations = await pdfToTextConverter.FindTextAsync(inputPdfBytes, textToFindString, startPageNumber, endPageNumber, caseSensitive, wholeWord);
+```
+
+**Asynchronously Search All Pages in a PDF from a Stream or File**
+
 ```csharp
 FindTextLocation[] findTextLocations = await pdfToTextConverter.FindTextAsync(inputPdfStream, textToFindString, caseSensitive, wholeWord);
 FindTextLocation[] findTextLocations = await pdfToTextConverter.FindTextAsync(inputPdfFile, textToFindString, caseSensitive, wholeWord);
 ```
+
+**Asynchronously Search Pages in a PDF from a Stream or File Starting at a Given Page Number**
 
 ```csharp
 FindTextLocation[] findTextLocations = await pdfToTextConverter.FindTextAsync(inputPdfStream, textToFindString, startPageNumber, caseSensitive, wholeWord);
 FindTextLocation[] findTextLocations = await pdfToTextConverter.FindTextAsync(inputPdfFile, textToFindString, startPageNumber, caseSensitive, wholeWord);
 ```
 
+**Asynchronously Search a Range of Pages in a PDF from a Stream or File**
+
 ```csharp
 FindTextLocation[] findTextLocations = await pdfToTextConverter.FindTextAsync(inputPdfStream, textToFindString, startPageNumber, endPageNumber, caseSensitive, wholeWord);
 FindTextLocation[] findTextLocations = await pdfToTextConverter.FindTextAsync(inputPdfFile, textToFindString, startPageNumber, endPageNumber, caseSensitive, wholeWord);
 ```
 
+### Conversion Info
+
+**Gets the Number of PDF Pages Searched for Text**
+
+```csharp
+int numberOfPagesSearched = pdfToTextConverter.ConversionInfo.PageCount;
+```
+
 ### Code Sample - Find Text in PDF
+
+**Find Text in PDF in ASP.NET Core**
 
 ```csharp
 using System;
@@ -424,67 +594,167 @@ Topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/convert-pdf-pages-to-
 
 ### Create the PDF to Image Converter
 
+**Create a PDF to Image Converter Instance**
+
 ```csharp
 // Create a new PDF to Image converter instance
 PdfToImageConverter pdfToImageConverter = new PdfToImageConverter();
 ```
 
+### Color Space of Resulting Images
+
+**Set Color Space of Resulting Images**
+
+```csharp
+pdfToImageConverter.ColorSpace = PdfPageImageColorSpace.RGB;
+```
+
+### Resolution of Resulting Images
+
+**Set Resolution of Resulting Images**
+
+```csharp
+pdfToImageConverter.Resolution = 150;
+```
+
+### Background Transparency of the Resulting Images
+
+**Enable Background Transparency of the Resulting Images**
+
+```csharp
+pdfToImageConverter.TransparencyEnabled = true;
+```
+
 ### Open Password Protected PDFs
+
+**Set User and Owner Passwords**
 
 ```csharp
 pdfToImageConverter.UserPassword = userPasswordString;
 pdfToImageConverter.OwnerPassword = ownerPasswordString;
 ```
 
+### Converted Page Range Limit
+
+**Unlimited Converted PDF Page Range**
+
+```csharp
+pdfToImageConverter.MaxPageCount = 0;
+```
+
+**Limit the Converted PDF Page Range to 10 Pages**
+
+```csharp
+pdfToImageConverter.MaxPageCount = 10;
+```
+
+### Convert PDF Pages to Images
+
+**Convert All Pages in a PDF from Memory to Images**
+
+```csharp
+PdfPageImage[] pdfPageImages = pdfToImageConverter.ConvertToImages(inputPdfBytes);
+```
+
+**Convert Pages in a PDF from Memory to Images Starting at a Given Page Number**
+
+```csharp
+PdfPageImage[] pdfPageImages = pdfToImageConverter.ConvertToImages(inputPdfBytes, startPageNumber);
+```
+
+**Convert a Range of Pages in a PDF from Memory to Images**
+
+```csharp
+PdfPageImage[] pdfPageImages = pdfToImageConverter.ConvertToImages(inputPdfBytes, startPageNumber, endPageNumber);
+```
+
+**Convert All Pages in a PDF from a Stream or File to Images**
+
 ```csharp
 PdfPageImage[] pdfPageImages = pdfToImageConverter.ConvertToImages(inputPdfStream);
 PdfPageImage[] pdfPageImages = pdfToImageConverter.ConvertToImages(inputPdfFile);
 ```
+
+**Convert Pages in a PDF from a Stream or File to Images Starting at a Given Page Number**
 
 ```csharp
 PdfPageImage[] pdfPageImages = pdfToImageConverter.ConvertToImages(inputPdfStream, startPageNumber);
 PdfPageImage[] pdfPageImages = pdfToImageConverter.ConvertToImages(inputPdfFile, startPageNumber);
 ```
 
+**Convert a Range of Pages in a PDF from a Stream or File to Images**
+
 ```csharp
 PdfPageImage[] pdfPageImages = pdfToImageConverter.ConvertToImages(inputPdfStream, startPageNumber, endPageNumber);
 PdfPageImage[] pdfPageImages = pdfToImageConverter.ConvertToImages(inputPdfFile, startPageNumber, endPageNumber);
 ```
 
+**Convert All Pages in a PDF from Memory, Stream or File to Image Files**
+
 ```csharp
-pdfToImageConverter.ConvertToImageFiles(inputPdfBytes, outputDirectory, imageFileName);          
+pdfToImageConverter.ConvertToImageFiles(inputPdfBytes, outputDirectory, imageFileName);
 pdfToImageConverter.ConvertToImageFiles(inputPdfStream, outputDirectory, imageFileName);
 pdfToImageConverter.ConvertToImageFiles(inputPdfFile, outputDirectory, imageFileName);
 ```
 
+**Convert Pages in a PDF from Memory, Stream or File to Image Files Starting at a Given Page Number**
+
 ```csharp
-pdfToImageConverter.ConvertToImageFiles(inputPdfBytes, startPageNumber, outputDirectory, imageFileName);          
+pdfToImageConverter.ConvertToImageFiles(inputPdfBytes, startPageNumber, outputDirectory, imageFileName);
 pdfToImageConverter.ConvertToImageFiles(inputPdfStream, startPageNumber, outputDirectory, imageFileName);
 pdfToImageConverter.ConvertToImageFiles(inputPdfFile, startPageNumber, outputDirectory, imageFileName);
 ```
 
+**Convert a Range of Pages in a PDF from Memory, Stream or File to Image Files**
+
 ```csharp
-pdfToImageConverter.ConvertToImageFiles(inputPdfBytes, startPageNumber, endPageNumber, outputDirectory, imageFileName);          
+pdfToImageConverter.ConvertToImageFiles(inputPdfBytes, startPageNumber, endPageNumber, outputDirectory, imageFileName);
 pdfToImageConverter.ConvertToImageFiles(inputPdfStream, startPageNumber, endPageNumber, outputDirectory, imageFileName);
 pdfToImageConverter.ConvertToImageFiles(inputPdfFile, startPageNumber, endPageNumber, outputDirectory, imageFileName);
 ```
 
 ### Asynchronous PDF to Image Methods
 
+**Asynchronously Convert All Pages in a PDF from Memory to Images**
+
+```csharp
+PdfPageImage[] pdfPageImages = await pdfToImageConverter.ConvertToImagesAsync(inputPdfBytes);
+```
+
+**Asynchronously Convert Pages in a PDF from Memory to Images Starting at a Given Page Number**
+
+```csharp
+PdfPageImage[] pdfPageImages = await pdfToImageConverter.ConvertToImagesAsync(inputPdfBytes, startPageNumber);
+```
+
+**Asynchronously Convert a Range of Pages in a PDF from Memory to Images**
+
+```csharp
+PdfPageImage[] pdfPageImages = await pdfToImageConverter.ConvertToImagesAsync(inputPdfBytes, startPageNumber, endPageNumber);
+```
+
+**Asynchronously Convert All Pages in a PDF from a Stream or File to Images**
+
 ```csharp
 PdfPageImage[] pdfPageImages = await pdfToImageConverter.ConvertToImagesAsync(inputPdfStream);
 PdfPageImage[] pdfPageImages = await pdfToImageConverter.ConvertToImagesAsync(inputPdfFile);
 ```
+
+**Asynchronously Convert Pages in a PDF from a Stream or File to Images Starting at a Given Page Number**
 
 ```csharp
 PdfPageImage[] pdfPageImages = await pdfToImageConverter.ConvertToImagesAsync(inputPdfStream, startPageNumber);
 PdfPageImage[] pdfPageImages = await pdfToImageConverter.ConvertToImagesAsync(inputPdfFile, startPageNumber);
 ```
 
+**Asynchronously Convert a Range of Pages in a PDF from a Stream or File to Images**
+
 ```csharp
 PdfPageImage[] pdfPageImages = await pdfToImageConverter.ConvertToImagesAsync(inputPdfStream, startPageNumber, endPageNumber);
 PdfPageImage[] pdfPageImages = await pdfToImageConverter.ConvertToImagesAsync(inputPdfFile, startPageNumber, endPageNumber);
 ```
+
+**Asynchronously Convert All Pages in a PDF from Memory, Stream or File to Image Files**
 
 ```csharp
 await pdfToImageConverter.ConvertToImageFilesAsync(inputPdfBytes, outputDirectory, imageFileName);
@@ -492,11 +762,15 @@ await pdfToImageConverter.ConvertToImageFilesAsync(inputPdfStream, outputDirecto
 await pdfToImageConverter.ConvertToImageFilesAsync(inputPdfFile, outputDirectory, imageFileName);
 ```
 
+**Asynchronously Convert Pages in a PDF from Memory, Stream or File to Image Files Starting at a Given Page Number**
+
 ```csharp
 await pdfToImageConverter.ConvertToImageFilesAsync(inputPdfBytes, startPageNumber, outputDirectory, imageFileName);
 await pdfToImageConverter.ConvertToImageFilesAsync(inputPdfStream, startPageNumber, outputDirectory, imageFileName);
 await pdfToImageConverter.ConvertToImageFilesAsync(inputPdfFile, startPageNumber, outputDirectory, imageFileName);
 ```
+
+**Asynchronously Convert a Range of Pages in a PDF from Memory, Stream or File to Image Files**
 
 ```csharp
 await pdfToImageConverter.ConvertToImageFilesAsync(inputPdfBytes, startPageNumber, endPageNumber, outputDirectory, imageFileName);
@@ -504,7 +778,17 @@ await pdfToImageConverter.ConvertToImageFilesAsync(inputPdfStream, startPageNumb
 await pdfToImageConverter.ConvertToImageFilesAsync(inputPdfFile, startPageNumber, endPageNumber, outputDirectory, imageFileName);
 ```
 
+### Conversion Info
+
+**Gets the Number of PDF Pages Converted to Images**
+
+```csharp
+int numberOfPagesConverted = pdfToImageConverter.ConversionInfo.PageCount;
+```
+
 ### Code Sample - Convert PDF Pages to Images
+
+**Convert PDF Pages to Images in ASP.NET Core**
 
 ```csharp
 using System;
@@ -655,7 +939,7 @@ namespace EvoPdf_Next_AspNetDemo.Controllers.PDF_to_Image
                 // Copy ZIP memory stream to a byte array
                 byte[] outputZipBytes = zipMs.ToArray();
 
-                // Return the ZIP as a downloadable file                
+                // Return the ZIP as a downloadable file
                 return File(outputZipBytes, "application/zip", outputFileName);
             }
         }
@@ -705,6 +989,8 @@ Topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/extract-images-from-p
 
 ### Create the PDF Images Extractor
 
+**Create a PDF Images Extractor Instance**
+
 ```csharp
  // Create the PDF Images Extractor instance with default options
 PdfImagesExtractor pdfImagesExtractor = new PdfImagesExtractor();
@@ -712,25 +998,69 @@ PdfImagesExtractor pdfImagesExtractor = new PdfImagesExtractor();
 
 ### Open Password Protected PDFs
 
+**Set User and Owner Passwords**
+
 ```csharp
 pdfImagesExtractor.UserPassword = userPasswordString;
 pdfImagesExtractor.OwnerPassword = ownerPasswordString;
 ```
+
+### Extracted Page Range Limit
+
+**Unlimited Extracted PDF Page Range**
+
+```csharp
+pdfImagesExtractor.MaxPageCount = 0;
+```
+
+**Limit the Extracted PDF Page Range to 10 Pages**
+
+```csharp
+pdfImagesExtractor.MaxPageCount = 10;
+```
+
+### Extract Images from PDF
+
+**Extract Images from All Pages in a PDF from Memory**
+
+```csharp
+ExtractedImage[][] extractedImages = pdfImagesExtractor.ExtractImages(inputPdfBytes);
+```
+
+**Extract Images from a PDF from Memory Starting at a Given Page Number**
+
+```csharp
+ExtractedImage[][] extractedImages = pdfImagesExtractor.ExtractImages(inputPdfBytes, startPageNumber);
+```
+
+**Extract Images from a Range of Pages in a PDF from Memory**
+
+```csharp
+ExtractedImage[][] extractedImages = pdfImagesExtractor.ExtractImages(inputPdfBytes, startPageNumber, endPageNumber);
+```
+
+**Extract Images from All Pages in a PDF from a Stream or File**
 
 ```csharp
 ExtractedImage[][] extractedImages = pdfImagesExtractor.ExtractImages(inputPdfStream);
 ExtractedImage[][] extractedImages = pdfImagesExtractor.ExtractImages(inputPdfFile);
 ```
 
+**Extract Images from Pages in a PDF from a Stream or File Starting at a Given Page Number**
+
 ```csharp
 ExtractedImage[][] extractedImages = pdfImagesExtractor.ExtractImages(inputPdfStream, startPageNumber);
 ExtractedImage[][] extractedImages = pdfImagesExtractor.ExtractImages(inputPdfFile, startPageNumber);
 ```
 
+**Extract Images from a Range of Pages in a PDF from a Stream or File**
+
 ```csharp
 ExtractedImage[][] extractedImages = pdfImagesExtractor.ExtractImages(inputPdfStream, startPageNumber, endPageNumber);
 ExtractedImage[][] extractedImages = pdfImagesExtractor.ExtractImages(inputPdfFile, startPageNumber, endPageNumber);
 ```
+
+**Extract Images from All Pages in a PDF from Memory, Stream or File to Image Files**
 
 ```csharp
 pdfImagesExtractor.ExtractImagesToFile(inputPdfBytes, outputDirectory, imageFileName);
@@ -738,11 +1068,15 @@ pdfImagesExtractor.ExtractImagesToFile(inputPdfStream, outputDirectory, imageFil
 pdfImagesExtractor.ExtractImagesToFile(inputPdfFile, outputDirectory, imageFileName);
 ```
 
+**Extract Images from Pages in a PDF from Memory, Stream or File to Image Files Starting at a Given Page Number**
+
 ```csharp
 pdfImagesExtractor.ExtractImagesToFile(inputPdfBytes, startPageNumber, outputDirectory, imageFileName);
 pdfImagesExtractor.ExtractImagesToFile(inputPdfStream, startPageNumber, outputDirectory, imageFileName);
 pdfImagesExtractor.ExtractImagesToFile(inputPdfFile, startPageNumber, outputDirectory, imageFileName);
 ```
+
+**Extract Images from a Range of Pages in a PDF from Memory, Stream or File to Image Files**
 
 ```csharp
 pdfImagesExtractor.ExtractImagesToFile(inputPdfBytes, startPageNumber, endPageNumber, outputDirectory, imageFileName);
@@ -752,20 +1086,46 @@ pdfImagesExtractor.ExtractImagesToFile(inputPdfFile, startPageNumber, endPageNum
 
 ### Asynchronous Methods to Extract Images from PDF
 
+**Asynchronously Extract Images from All Pages in a PDF from Memory**
+
+```csharp
+ExtractedImage[][] extractedImages = await pdfImagesExtractor.ExtractImagesAsync(inputPdfBytes);
+```
+
+**Asynchronously Extract Images from a PDF from Memory Starting at a Given Page Number**
+
+```csharp
+ExtractedImage[][] extractedImages = await pdfImagesExtractor.ExtractImagesAsync(inputPdfBytes, startPageNumber);
+```
+
+**Asynchronously Extract Images from a Range of Pages in a PDF from Memory**
+
+```csharp
+ExtractedImage[][] extractedImages = await pdfImagesExtractor.ExtractImagesAsync(inputPdfBytes, startPageNumber, endPageNumber);
+```
+
+**Asynchronously Extract Images from All Pages in a PDF from a Stream or File**
+
 ```csharp
 ExtractedImage[][] extractedImages = await pdfImagesExtractor.ExtractImagesAsync(inputPdfStream);
 ExtractedImage[][] extractedImages = await pdfImagesExtractor.ExtractImagesAsync(inputPdfFile);
 ```
+
+**Asynchronously Extract Images from Pages in a PDF from a Stream or File Starting at a Given Page Number**
 
 ```csharp
 ExtractedImage[][] extractedImages = await pdfImagesExtractor.ExtractImagesAsync(inputPdfStream, startPageNumber);
 ExtractedImage[][] extractedImages = await pdfImagesExtractor.ExtractImagesAsync(inputPdfFile, startPageNumber);
 ```
 
+**Asynchronously Extract Images from a Range of Pages in a PDF from a Stream or File**
+
 ```csharp
 ExtractedImage[][] extractedImages = await pdfImagesExtractor.ExtractImagesAsync(inputPdfStream, startPageNumber, endPageNumber);
 ExtractedImage[][] extractedImages = await pdfImagesExtractor.ExtractImagesAsync(inputPdfFile, startPageNumber, endPageNumber);
 ```
+
+**Asynchronously Extract Images from All Pages in a PDF from Memory, Stream or File to Image Files**
 
 ```csharp
 await pdfImagesExtractor.ExtractImagesToFileAsync(inputPdfBytes, outputDirectory, imageFileName);
@@ -773,11 +1133,15 @@ await pdfImagesExtractor.ExtractImagesToFileAsync(inputPdfStream, outputDirector
 await pdfImagesExtractor.ExtractImagesToFileAsync(inputPdfFile, outputDirectory, imageFileName);
 ```
 
+**Asynchronously Extract Images from Pages in a PDF from Memory, Stream or File to Image Files Starting at a Given Page Number**
+
 ```csharp
 await pdfImagesExtractor.ExtractImagesToFileAsync(inputPdfBytes, startPageNumber, outputDirectory, imageFileName);
 await pdfImagesExtractor.ExtractImagesToFileAsync(inputPdfStream, startPageNumber, outputDirectory, imageFileName);
 await pdfImagesExtractor.ExtractImagesToFileAsync(inputPdfFile, startPageNumber, outputDirectory, imageFileName);
 ```
+
+**Asynchronously Extract Images from a Range of Pages in a PDF from Memory, Stream or File to Image Files**
 
 ```csharp
 await pdfImagesExtractor.ExtractImagesToFileAsync(inputPdfBytes, startPageNumber, endPageNumber, outputDirectory, imageFileName);
@@ -785,7 +1149,17 @@ await pdfImagesExtractor.ExtractImagesToFileAsync(inputPdfStream, startPageNumbe
 await pdfImagesExtractor.ExtractImagesToFileAsync(inputPdfFile, startPageNumber, endPageNumber, outputDirectory, imageFileName);
 ```
 
+### Extraction Info
+
+**Gets the Number of PDF Pages from Which Images Were Extracted**
+
+```csharp
+int numberOfPagesExtracted = pdfImagesExtractor.ExtractionInfo.PageCount;
+```
+
 ### Code Sample - Extract Images from PDF Pages
+
+**Extract Images from PDF Pages in ASP.NET Core**
 
 ```csharp
 using System;

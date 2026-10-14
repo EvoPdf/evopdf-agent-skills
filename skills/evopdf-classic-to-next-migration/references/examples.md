@@ -61,6 +61,7 @@ converter.PdfDocumentOptions.SinglePage = true;
 
 // Next
 converter.PageWidthFromBrowserWindow(1024, singlePage: true);
+converter.HtmlViewerHeight = 1;
 ```
 
 ### StretchToFit

@@ -7,7 +7,7 @@ Every public member of the types below is listed; the summaries are the shipped 
 
 Reference: https://www.evopdf.com/help/evopdf-next-dotnet/html/T_EvoPdf_Next_PdfEditor.htm
 
-Allows editing of existing PDF documents by adding HTML content, setting metadata, applying security options, and digital signatures. Use Save or SaveToFile to generate the final PDF and release resources
+Allows editing of existing PDF documents by adding HTML content, setting metadata, applying security options, and digital signatures. Use Save or SaveToFile to generate the final PDF and release resources. A document that already carries digital signatures accepts a new digital signature and long-term validation data, saved as incremental updates that keep the existing signatures valid, and refuses any other change
 
 ### Properties
 
@@ -32,6 +32,7 @@ Allows editing of existing PDF documents by adding HTML content, setting metadat
 
 - `AddArc`: Adds an elliptical arc to a specified page in the existing PDF document
 - `AddCircle`: Adds a circle to a specified page in the existing PDF document
+- `AddElectronicInvoice`: Embeds a Factur-X / ZUGFeRD electronic invoice in the edited PDF document: the invoice XML is attached under the file name the standard prescribes, with the relationship of its profile, and the Factur-X identification metadata is added to the XMP metadata of the document. The edited document must be a PDF/A-3 document. A document carries one electronic invoice
 - `AddEllipse`: Adds an ellipse to a specified page in the existing PDF document
 - `AddFileAttachment`: Adds a file to the document's attachments. The attachment appears in the Attachments panel of PDF viewers but has no visible icon on any page. To also display a clickable icon on a specific page, use AddFileAttachmentAnnotation
 - `AddFileAttachmentAnnotation`: Adds a file attachment displayed as a clickable icon on a specific page. Clicking the icon opens or extracts the attached file. The file is also added to the Attachments panel alongside any other attachments
@@ -46,6 +47,7 @@ Allows editing of existing PDF documents by adding HTML content, setting metadat
 - `AddImage`: Adds an image element to the current PDF page. Supports byte array or file path images, scaling and alignment
 - `AddLine`: Adds a line to a specified page in the existing PDF document
 - `AddLinkAnnotation`: Adds a clickable hyperlink annotation placed on a specific page. The link can target an external URL, another page in the same document, a specific location on another page, or a named destination defined in the document catalog. Use one of the static factory methods on PdfLinkAnnotation (FromUrl, ToPage, ToPageLocation, ToNamedDestination) to build the link
+- `AddLongTermValidation`: Adds the validation data of the signatures when the document is saved: the certificates and their revocation information, so the signatures can be validated after the certificates expire. Signatures that carry a signature timestamp reach the PAdES B-LT level or, when a timestamp server is set and a document timestamp is added over the validation data, the PAdES B-LTA level. The document timestamp also renews the protection of the signatures that already have one. The revocation information is downloaded from the URLs published in the certificates, so saving requires network access. A revoked signing certificate or a signature without revocation information makes the save fail, with the cause of each signature in the error message. Encrypted documents are not supported
 - `AddPage`: Adds a new blank page at the end of the document. The new page inherits the size of the last existing page
 - `AddPath`: Adds a generic path composed of move, line and curve operations to a specified page in the existing PDF document
 - `AddPdfTemplate`: Creates a blank PDF Template object with the specified position and size in the PDF page. Specifies the horizontal and vertical alignment of the template on the page. The alignment takes precedence over the X and Y coordinates when set to a value other than None. The template can later be filled with custom content such as text, images or graphics
@@ -53,6 +55,7 @@ Allows editing of existing PDF documents by adding HTML content, setting metadat
 - `AddPolyline`: Adds an open polyline through a sequence of points to a specified page in the existing PDF document
 - `AddRectangle`: Adds a rectangle to a specified page in the existing PDF document
 - `AddRoundedRectangle`: Adds a rectangle with rounded corners to a specified page in the existing PDF document
+- `AddSignatureField`: Adds an empty signature field to a page of the document. The field is signed later by a digital signature with the same field name, which is placed on the field's page and in its rectangle. A form with a field for each signer is prepared this way. The field name must be unique in the document
 - `AddText`: Adds a text element to the current PDF page. If the text exceeds the current page, it will continue on subsequent pages based on element settings. Supports placeholder variables such as {page_number} and {total_pages}, which are replaced with their actual values in the rendered PDF.
 - `AddTextAnnotation`: Adds a sticky-note text annotation displayed as a clickable icon on a specific page. Clicking the icon opens a popup with the note text. The annotation also appears in the viewer's Comments panel
 - `Dispose`: Performs the actual resource cleanup

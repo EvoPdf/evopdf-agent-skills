@@ -19,7 +19,7 @@ Namespace `EvoPdf.Next`. Install one NuGet package for the target platform, for 
 - **`HtmlToPdfConversionInfo`**: Holds information about the result of an HTML to PDF conversion. This object is populated after the conversion completes and is exposed by the Convers...
 - **`PdfDocumentCreateSettings`**: Represents configuration settings for creating a PDF document
 
-6 types, 122 public members. The complete member list with the shipped
+6 types, 123 public members. The complete member list with the shipped
 summaries is in `references/api.md`; do not guess member names that are not there.
 
 ## HTML to PDF Converter Overview

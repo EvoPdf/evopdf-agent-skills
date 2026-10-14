@@ -25,11 +25,11 @@ Provides methods for loading, registering and creating PDF fonts
 - `CreateRegisteredFont`: Creates a font from a registered font name or alias using black as the font color
 - `CreateRegisteredFont`: Creates a font from a registered font name or alias using the normal style
 - `CreateRegisteredFont`: Creates a font from a registered font name or alias using the normal style and black as the font color
-- `CreateStandardBaseFont`: Creates a standard built-in PDF base font
-- `CreateStandardFont`: Creates a standard built-in PDF font
+- `CreateStandardBaseFont`: Creates a standard built-in PDF base font. The standard fonts are referenced by name and not embedded in the PDF, so they cannot be used in PDF/A or PDF/UA documents. Create the font from a font file for these standards
 - `CreateStandardFont`: Creates a standard built-in PDF font using black as the font color
 - `CreateStandardFont`: Creates a standard built-in PDF font using the normal style
 - `CreateStandardFont`: Creates a standard built-in PDF font using the normal style and black as the font color
+- `CreateStandardFont`: Creates a standard built-in PDF font. The standard fonts are referenced by name and not embedded in the PDF, so they cannot be used in PDF/A or PDF/UA documents. Create the font from a font file for these standards
 - `GetRegisteredBaseFont`: Loads a registered base font by name or alias
 - `GetRegisteredFamilies`: Gets the names of all registered font families
 - `GetRegisteredFonts`: Gets the names of all registered fonts
@@ -68,7 +68,7 @@ Represents a base font that can be used to create styled fonts
 
 ### Properties
 
-- `IsSubset`: Gets a value indicating whether the font is written to the PDF as a subset. This is configured at creation time via CreateBaseFont This setting is mainly relevant for embedded fonts loaded from font files. Standard built-in PDF fonts are not embedded
+- `IsSubset`: Gets a value indicating whether the font is written to the PDF as a subset. This is configured at creation time via CreateBaseFont. This setting is mainly relevant for embedded fonts loaded from font files. Standard built-in PDF fonts are not embedded
 
 ### Methods
 

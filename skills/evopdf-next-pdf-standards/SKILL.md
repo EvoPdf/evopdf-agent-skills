@@ -1,6 +1,6 @@
 ---
 name: evopdf-next-pdf-standards
-description: "Produce standards-compliant PDF with EvoPdf Next: all PdfStandard values including PDF/UA-1, PDF/UA-2, PDF/A-2, PDF/A-3, PDF/A-4 and the combined profiles, automatic accessibility fixes, and per-element tagging with structure roles, alternate text, actual text, language and role maps."
+description: "Produce standards-compliant PDF with EvoPdf Next: all PdfStandard values including PDF/UA-1, PDF/UA-2, Well-Tagged PDF (WTPDF 1.0), PDF/A-2, PDF/A-3, PDF/A-4 and the combined profiles, automatic accessibility fixes, and per-element tagging with structure roles, alternate text, actual text, language and role maps."
 ---
 
 # EvoPdf Next: PDF/UA and PDF/A compliance
@@ -17,7 +17,7 @@ Namespace `EvoPdf.Next`. Install one NuGet package for the target platform, for 
 - **`PdfAccessibilityProperties`**: Accessibility metadata controlling how an element is inserted into the structure tree of a tagged PDF
 - **`PdfStructureType`**: Identifies the PDF logical structure role attached to a content element when the document is tagged
 
-4 types, 48 public members. The complete member list with the shipped
+4 types, 51 public members. The complete member list with the shipped
 summaries is in `references/api.md`; do not guess member names that are not there.
 
 ## PDF/UA and PDF/A from HTML
@@ -37,6 +37,10 @@ byte[] pdf = converter.ConvertUrl(url);
 standard selected, `PdfDocumentOptions.AccessibilityOptions` adds a default alternate text to images
 that have none (`AddMissingImageAlternateText`) and a header row to tables without header cells
 (`InsertMissingTableHeaders`); both are on by default.
+
+`PdfStandard.Wtpdf1`, `Wtpdf1PdfA4` and `Wtpdf1PdfA4f` produce Well-Tagged PDF 1.0 documents, also identified as
+PDF/UA-2 and written as PDF 2.0. `PdfA4f`, `PdfUa2PdfA4f` and `Wtpdf1PdfA4f` require at least one embedded file.
+Electronic invoices (Factur-X, ZUGFeRD) are PDF/A-3 documents: see the `evopdf-next-electronic-invoices` skill.
 
 ## Create PDF/UA and PDF/A Compliant Documents
 

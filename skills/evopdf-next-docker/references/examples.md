@@ -16,45 +16,9 @@ dotnet publish -c Release -r linux-x64 -o publish/linux-x64-net10.0 EvoPdf_Next_
 dotnet publish -c Release -r linux-x64 -o publish/linux-x64-net8.0 EvoPdf_Next_AspNetDemo_Linux_net8.0.csproj
 ```
 
-### Dockerfile for Linux Debian 12 with Preinstalled ASP.NET Core Runtime 8.0
-
-```text
-FROM mcr.microsoft.com/dotnet/aspnet:8.0
-
-# Install EvoPdf dependencies
-RUN apt-get update && \
-    apt-get install -y \
-        libnss3 \
-        libatk-bridge2.0-0 \
-        libcairo2 \
-        libpango-1.0-0 && \
-    rm -rf /var/lib/apt/lists/*
-
-# Set the working directory
-WORKDIR /app
-
-# Copy the published ASP.NET Core app files from the publish folder into the image
-COPY publish/linux-x64-net8.0/ .
-
-# Ensure execute permissions for EvoPdf HTML to PDF runtime
-RUN chmod +x /app/evopdf_runtimes/linux-x64/native/evopdf_loadhtml
-
-# Ensure execute permissions for EvoPdf PDF Processor runtime
-RUN chmod +x /app/evopdf_runtimes/linux-x64/native/evopdf_pdfprocessor
-
-# Expose the port used by the app
-EXPOSE 27101
-
-# Set the ASP.NET Core application to listen on port 27101
-ENV ASPNETCORE_URLS=http://+:27101
-
-# Start the application
-ENTRYPOINT ["dotnet", "EvoPdf_Next_AspNetDemo_Linux_net8.0.dll"]
-```
-
 ### Dockerfile for Linux Ubuntu 24.04 with Preinstalled ASP.NET Core Runtime 10.0
 
-```text
+```dockerfile
 FROM mcr.microsoft.com/dotnet/aspnet:10.0
 
 # Install EvoPdf dependencies
@@ -88,10 +52,10 @@ ENV ASPNETCORE_URLS=http://+:27101
 ENTRYPOINT ["dotnet", "EvoPdf_Next_AspNetDemo_Linux_net10.0.dll"]
 ```
 
-### Dockerfile for Linux Ubuntu 22.04 with Preinstalled ASP.NET Core Runtime 8.0
+### Dockerfile for Linux Debian 12 with Preinstalled ASP.NET Core Runtime 8.0
 
-```text
-FROM mcr.microsoft.com/dotnet/aspnet:8.0-jammy
+```dockerfile
+FROM mcr.microsoft.com/dotnet/aspnet:8.0
 
 # Install EvoPdf dependencies
 RUN apt-get update && \
@@ -124,55 +88,9 @@ ENV ASPNETCORE_URLS=http://+:27101
 ENTRYPOINT ["dotnet", "EvoPdf_Next_AspNetDemo_Linux_net8.0.dll"]
 ```
 
-### Building for Linux ARM64
-
-```bash
-# .NET 10, for the Dockerfile with the ASP.NET Core Runtime 10.0 base image
-dotnet publish -c Release -r linux-arm64 -o publish/linux-arm64-net10.0 EvoPdf_Next_AspNetDemo_Linux.Arm64_net10.0.csproj
-
-# .NET 8, for the Dockerfile with the ASP.NET Core Runtime 8.0 base image
-dotnet publish -c Release -r linux-arm64 -o publish/linux-arm64-net8.0 EvoPdf_Next_AspNetDemo_Linux.Arm64_net8.0.csproj
-```
-
-### Dockerfile for Linux Debian 12 with Preinstalled ASP.NET Core Runtime 8.0
-
-```text
-FROM mcr.microsoft.com/dotnet/aspnet:8.0
-
-# Install EvoPdf dependencies
-RUN apt-get update && \
-    apt-get install -y \
-        libnss3 \
-        libatk-bridge2.0-0 \
-        libcairo2 \
-        libpango-1.0-0 && \
-    rm -rf /var/lib/apt/lists/*
-
-# Set the working directory
-WORKDIR /app
-
-# Copy the published ASP.NET Core app files from the publish folder into the image
-COPY publish/linux-arm64-net8.0/ .
-
-# Ensure execute permissions for EvoPdf HTML to PDF runtime
-RUN chmod +x /app/evopdf_runtimes/linux-arm64/native/evopdf_loadhtml
-
-# Ensure execute permissions for EvoPdf PDF Processor runtime
-RUN chmod +x /app/evopdf_runtimes/linux-arm64/native/evopdf_pdfprocessor
-
-# Expose the port used by the app
-EXPOSE 27101
-
-# Set the ASP.NET Core application to listen on port 27101
-ENV ASPNETCORE_URLS=http://+:27101
-
-# Start the application
-ENTRYPOINT ["dotnet", "EvoPdf_Next_AspNetDemo_Linux.Arm64_net8.0.dll"]
-```
-
 ### Dockerfile for Linux Ubuntu 24.04 with Preinstalled ASP.NET Core Runtime 10.0
 
-```text
+```dockerfile
 FROM mcr.microsoft.com/dotnet/aspnet:10.0
 
 # Install EvoPdf dependencies
@@ -208,7 +126,103 @@ ENTRYPOINT ["dotnet", "EvoPdf_Next_AspNetDemo_Linux.Arm64_net10.0.dll"]
 
 ### Dockerfile for Linux Ubuntu 22.04 with Preinstalled ASP.NET Core Runtime 8.0
 
+```dockerfile
+FROM mcr.microsoft.com/dotnet/aspnet:8.0-jammy
+
+# Install EvoPdf dependencies
+RUN apt-get update && \
+    apt-get install -y \
+        libnss3 \
+        libatk-bridge2.0-0 \
+        libcairo2 \
+        libpango-1.0-0 && \
+    rm -rf /var/lib/apt/lists/*
+
+# Set the working directory
+WORKDIR /app
+
+# Copy the published ASP.NET Core app files from the publish folder into the image
+COPY publish/linux-x64-net8.0/ .
+
+# Ensure execute permissions for EvoPdf HTML to PDF runtime
+RUN chmod +x /app/evopdf_runtimes/linux-x64/native/evopdf_loadhtml
+
+# Ensure execute permissions for EvoPdf PDF Processor runtime
+RUN chmod +x /app/evopdf_runtimes/linux-x64/native/evopdf_pdfprocessor
+
+# Expose the port used by the app
+EXPOSE 27101
+
+# Set the ASP.NET Core application to listen on port 27101
+ENV ASPNETCORE_URLS=http://+:27101
+
+# Start the application
+ENTRYPOINT ["dotnet", "EvoPdf_Next_AspNetDemo_Linux_net8.0.dll"]
+```
+
+### Build and Run the Container
+
+```bash
+docker build -t evopdf-next-demo-image-linux .
+```
+
+```bash
+docker run -d -p 27101:27101 --name evopdf-next-demo-app-linux evopdf-next-demo-image-linux
+```
+
 ```text
+http://localhost:27101
+```
+
+### Building for Linux ARM64
+
+```bash
+# .NET 10, for the Dockerfile with the ASP.NET Core Runtime 10.0 base image
+dotnet publish -c Release -r linux-arm64 -o publish/linux-arm64-net10.0 EvoPdf_Next_AspNetDemo_Linux.Arm64_net10.0.csproj
+
+# .NET 8, for the Dockerfile with the ASP.NET Core Runtime 8.0 base image
+dotnet publish -c Release -r linux-arm64 -o publish/linux-arm64-net8.0 EvoPdf_Next_AspNetDemo_Linux.Arm64_net8.0.csproj
+```
+
+### Dockerfile for Linux Debian 12 with Preinstalled ASP.NET Core Runtime 8.0
+
+```dockerfile
+FROM mcr.microsoft.com/dotnet/aspnet:8.0
+
+# Install EvoPdf dependencies
+RUN apt-get update && \
+    apt-get install -y \
+        libnss3 \
+        libatk-bridge2.0-0 \
+        libcairo2 \
+        libpango-1.0-0 && \
+    rm -rf /var/lib/apt/lists/*
+
+# Set the working directory
+WORKDIR /app
+
+# Copy the published ASP.NET Core app files from the publish folder into the image
+COPY publish/linux-arm64-net8.0/ .
+
+# Ensure execute permissions for EvoPdf HTML to PDF runtime
+RUN chmod +x /app/evopdf_runtimes/linux-arm64/native/evopdf_loadhtml
+
+# Ensure execute permissions for EvoPdf PDF Processor runtime
+RUN chmod +x /app/evopdf_runtimes/linux-arm64/native/evopdf_pdfprocessor
+
+# Expose the port used by the app
+EXPOSE 27101
+
+# Set the ASP.NET Core application to listen on port 27101
+ENV ASPNETCORE_URLS=http://+:27101
+
+# Start the application
+ENTRYPOINT ["dotnet", "EvoPdf_Next_AspNetDemo_Linux.Arm64_net8.0.dll"]
+```
+
+### Dockerfile for Linux Ubuntu 22.04 with Preinstalled ASP.NET Core Runtime 8.0
+
+```dockerfile
 FROM mcr.microsoft.com/dotnet/aspnet:8.0-jammy
 
 # Install EvoPdf dependencies
@@ -242,6 +256,20 @@ ENV ASPNETCORE_URLS=http://+:27101
 ENTRYPOINT ["dotnet", "EvoPdf_Next_AspNetDemo_Linux.Arm64_net8.0.dll"]
 ```
 
+### Build and Run the ARM64 Container
+
+```bash
+docker build -t evopdf-next-demo-image-linux-arm64 .
+```
+
+```bash
+docker build --platform linux/arm64 -t evopdf-next-demo-image-linux-arm64 .
+```
+
+```bash
+docker run -d --platform linux/arm64 -p 27101:27101 --name evopdf-next-demo-app-linux-arm64 evopdf-next-demo-image-linux-arm64
+```
+
 ## Publish EvoPdf Next ASP.NET Demo to Docker on Windows
 
 Topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/publish-to-docker-on-windows.htm
@@ -256,35 +284,9 @@ dotnet publish -c Release -r win-x64 -o publish/windows-x64-net10.0 EvoPdf_Next_
 dotnet publish -c Release -r win-x64 -o publish/windows-x64-net8.0 EvoPdf_Next_AspNetDemo_Windows_net8.0.csproj
 ```
 
-### Dockerfile for Windows Server LTSC 2022 with Manually Installed ASP.NET Core Runtime 8.0
-
-```text
-FROM mcr.microsoft.com/windows/server:ltsc2022
-
-# Use PowerShell as default shell
-SHELL ["powershell", "-Command"]
-
-# Install .NET 8.0 ASP.NET Core Runtime from ZIP
-RUN Invoke-WebRequest -Uri 'https://builds.dotnet.microsoft.com/dotnet/aspnetcore/Runtime/8.0.22/aspnetcore-runtime-8.0.22-win-x64.zip' -OutFile 'C:\\dotnet.zip'; \
-    Expand-Archive -Path 'C:\\dotnet.zip' -DestinationPath 'C:\\dotnet'; \
-    Remove-Item 'C:\\dotnet.zip' -Force
-
-ENV DOTNET_ROOT=C:\dotnet
-
-WORKDIR C:/app
-
-# Copy the published ASP.NET Core app files from the publish folder into the image
-COPY publish/windows-x64-net8.0/ .
-
-EXPOSE 27102
-ENV ASPNETCORE_URLS=http://+:27102
-
-ENTRYPOINT ["C:\\dotnet\\dotnet.exe", "C:\\app\\EvoPdf_Next_AspNetDemo_Windows_net8.0.dll"]
-```
-
 ### Dockerfile for Windows Server LTSC 2025 with Manually Installed ASP.NET Core Runtime 10.0
 
-```text
+```dockerfile
 FROM mcr.microsoft.com/windows/server:ltsc2025
 
 # Use PowerShell as default shell
@@ -308,6 +310,32 @@ ENV ASPNETCORE_URLS=http://+:27102
 ENTRYPOINT ["C:\\dotnet\\dotnet.exe", "C:\\app\\EvoPdf_Next_AspNetDemo_Windows_net10.0.dll"]
 ```
 
+### Dockerfile for Windows Server LTSC 2022 with Manually Installed ASP.NET Core Runtime 8.0
+
+```dockerfile
+FROM mcr.microsoft.com/windows/server:ltsc2022
+
+# Use PowerShell as default shell
+SHELL ["powershell", "-Command"]
+
+# Install .NET 8.0 ASP.NET Core Runtime from ZIP
+RUN Invoke-WebRequest -Uri 'https://builds.dotnet.microsoft.com/dotnet/aspnetcore/Runtime/8.0.22/aspnetcore-runtime-8.0.22-win-x64.zip' -OutFile 'C:\\dotnet.zip'; \
+    Expand-Archive -Path 'C:\\dotnet.zip' -DestinationPath 'C:\\dotnet'; \
+    Remove-Item 'C:\\dotnet.zip' -Force
+
+ENV DOTNET_ROOT=C:\dotnet
+
+WORKDIR C:/app
+
+# Copy the published ASP.NET Core app files from the publish folder into the image
+COPY publish/windows-x64-net8.0/ .
+
+EXPOSE 27102
+ENV ASPNETCORE_URLS=http://+:27102
+
+ENTRYPOINT ["C:\\dotnet\\dotnet.exe", "C:\\app\\EvoPdf_Next_AspNetDemo_Windows_net8.0.dll"]
+```
+
 ### Copy Fonts from Host to Local Build Context Folder
 
 ```powershell
@@ -322,9 +350,44 @@ Get-ChildItem $sourceFontsPath -Include *.ttf, *.ttc, *.otf -Recurse |
     Copy-Item -Destination $targetFontsPath -Force
 ```
 
+### Dockerfile for Windows Server Core LTSC 2025 with Pre-Installed ASP.NET Core Runtime 10.0
+
+```dockerfile
+FROM mcr.microsoft.com/dotnet/aspnet:10.0-windowsservercore-ltsc2025
+
+SHELL ["powershell", "-Command"]
+
+# Copy fonts from build context into the image Fonts folder
+COPY Fonts/ C:/Windows/Fonts/
+
+# Register fonts in container's Windows registry
+RUN $ErrorActionPreference = 'Stop'; \
+    Get-ChildItem 'C:\Windows\Fonts' -Include *.ttf, *.ttc, *.otf -Recurse | ForEach-Object { \
+        $file = $_.Name; \
+        $name = [System.IO.Path]::GetFileNameWithoutExtension($file); \
+        $regName = $name + ' (TrueType)'; \
+        New-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Fonts' -Name $regName -PropertyType String -Value $file -Force | Out-Null \
+    }
+
+# Set working directory for the app
+WORKDIR C:/app
+
+# Copy the published ASP.NET Core app files from the publish folder into the image
+COPY publish/windows-x64-net10.0/ .
+
+# Expose the application port
+EXPOSE 27102
+
+# Configure ASP.NET Core to listen on all interfaces and port 27102
+ENV ASPNETCORE_URLS=http://+:27102
+
+# Run the application
+ENTRYPOINT ["powershell", "-Command", "Start-Sleep -Seconds 3; dotnet C:\\app\\EvoPdf_Next_AspNetDemo_Windows_net10.0.dll"]
+```
+
 ### Dockerfile for Windows Server Core LTSC 2022 with Pre-Installed ASP.NET Core Runtime 8.0
 
-```text
+```dockerfile
 FROM mcr.microsoft.com/dotnet/aspnet:8.0-windowsservercore-ltsc2022
 
 SHELL ["powershell", "-Command"]
@@ -357,37 +420,16 @@ ENV ASPNETCORE_URLS=http://+:27102
 ENTRYPOINT ["dotnet", "C:\\app\\EvoPdf_Next_AspNetDemo_Windows_net8.0.dll"]
 ```
 
-### Dockerfile for Windows Server Core LTSC 2025 with Pre-Installed ASP.NET Core Runtime 10.0
+### Build and Run the Container
+
+```bash
+docker build -t evopdf-next-demo-image-windows .
+```
+
+```bash
+docker run -d -p 27102:27102 --name evopdf-next-demo-app-windows evopdf-next-demo-image-windows
+```
 
 ```text
-FROM mcr.microsoft.com/dotnet/aspnet:10.0-windowsservercore-ltsc2025
-
-SHELL ["powershell", "-Command"]
-
-# Copy fonts from build context into the image Fonts folder
-COPY Fonts/ C:/Windows/Fonts/
-
-# Register fonts in container's Windows registry
-RUN $ErrorActionPreference = 'Stop'; \
-    Get-ChildItem 'C:\Windows\Fonts' -Include *.ttf, *.ttc, *.otf -Recurse | ForEach-Object { \
-        $file = $_.Name; \
-        $name = [System.IO.Path]::GetFileNameWithoutExtension($file); \
-        $regName = $name + ' (TrueType)'; \
-        New-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Fonts' -Name $regName -PropertyType String -Value $file -Force | Out-Null \
-    }
-
-# Set working directory for the app
-WORKDIR C:/app
-
-# Copy the published ASP.NET Core app files from the publish folder into the image
-COPY publish/windows-x64-net10.0/ .
-
-# Expose the application port
-EXPOSE 27102
-
-# Configure ASP.NET Core to listen on all interfaces and port 27102
-ENV ASPNETCORE_URLS=http://+:27102
-
-# Run the application
-ENTRYPOINT ["powershell", "-Command", "Start-Sleep -Seconds 3; dotnet C:\\app\\EvoPdf_Next_AspNetDemo_Windows_net10.0.dll"]
+http://localhost:27102
 ```

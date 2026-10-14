@@ -8,12 +8,22 @@ Topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/convert-word-docx-to-
 
 ### Create the Word to PDF Converter
 
+**Create a Word to PDF Converter Instance**
+
 ```csharp
 // Create a new Word to PDF converter instance
 WordToPdfConverter wordToPdfConverter = new WordToPdfConverter();
 ```
 
 ### Configure the PDF Page Settings
+
+**Use Page Settings from Word**
+
+```csharp
+wordToPdfConverter.PdfDocumentOptions.UsePageSettingsFromWord = true;
+```
+
+**Use Custom PDF Page Settings**
 
 ```csharp
 wordToPdfConverter.PdfDocumentOptions.UsePageSettingsFromWord = false;
@@ -25,7 +35,83 @@ wordToPdfConverter.PdfDocumentOptions.TopMargin = 30;
 wordToPdfConverter.PdfDocumentOptions.BottomMargin = 30;
 ```
 
+### Table of Contents
+
+**Generate Table of Contents**
+
+```csharp
+wordToPdfConverter.PdfDocumentOptions.GenerateTableOfContents = true;
+```
+
+### Page Break Recognition
+
+**Enable Page Breaks from Word Document**
+
+```csharp
+wordToPdfConverter.ProcessPageBreakMarks = true;
+```
+
+### Convert Word to PDF
+
+**Convert Word from Memory to PDF in Memory**
+
+```csharp
+byte[] outPdfBuffer = wordToPdfConverter.ConvertToPdf(wordBytes);
+```
+
+**Convert Word File to PDF in Memory**
+
+```csharp
+byte[] outPdfBuffer = wordToPdfConverter.ConvertToPdf(wordFilePath);
+```
+
+**Write PDF Data to File**
+
+```csharp
+File.WriteAllBytes("output.pdf", outPdfBuffer);
+```
+
+**Convert Word from Memory to PDF File**
+
+```csharp
+wordToPdfConverter.ConvertToPdfFile(wordBytes, outputPdfFilePath);
+```
+
+**Convert Word File to PDF File**
+
+```csharp
+wordToPdfConverter.ConvertToPdfFile(wordFilePath, outputPdfFilePath);
+```
+
+### Asynchronous Word to PDF Methods
+
+**Asynchronously Convert Word from Memory to PDF in Memory**
+
+```csharp
+byte[] outPdfBuffer = await wordToPdfConverter.ConvertToPdfAsync(wordBytes);
+```
+
+**Asynchronously Convert Word File to PDF in Memory**
+
+```csharp
+byte[] outPdfBuffer = await wordToPdfConverter.ConvertToPdfAsync(wordFilePath);
+```
+
+**Asynchronously Convert Word from Memory to PDF File**
+
+```csharp
+await wordToPdfConverter.ConvertToPdfFileAsync(wordBytes, outputPdfFilePath);
+```
+
+**Asynchronously Convert Word File to PDF File**
+
+```csharp
+await wordToPdfConverter.ConvertToPdfFileAsync(wordFilePath, outputPdfFilePath);
+```
+
 ### Code Sample - Convert Word to PDF
+
+**Convert Word to PDF in ASP.NET Core**
 
 ```csharp
 using System;
@@ -85,7 +171,7 @@ namespace EvoPdf_Next_AspNetDemo.Controllers.Word_to_PDF
 
             if (!wordToPdfConverter.PdfDocumentOptions.UsePageSettingsFromWord)
             {
-                // Set PDF page size which can be a predefined size like A4 or a custom size in points 
+                // Set PDF page size which can be a predefined size like A4 or a custom size in points
                 // Leave it not set to have a default A4 PDF page
                 wordToPdfConverter.PdfDocumentOptions.PdfPageSize = SelectedPdfPageSize(model.PdfPageSize);
 
@@ -398,6 +484,8 @@ Topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/convert-excel-xlsx-to
 
 ### Create the Excel to PDF Converter
 
+**Create a Excel to PDF Converter Instance**
+
 ```csharp
 // Create a new Excel to PDF converter instance
 ExcelToPdfConverter excelToPdfConverter = new ExcelToPdfConverter();
@@ -405,10 +493,14 @@ ExcelToPdfConverter excelToPdfConverter = new ExcelToPdfConverter();
 
 ### Configure the PDF Page Settings
 
+**Use Page Settings from Excel**
+
 ```csharp
 excelToPdfConverter.PdfDocumentOptions.UsePageSettingsFromExcel = true;
 excelToPdfConverter.PdfDocumentOptions.UseFirstWorksheetPageSettings = true;
 ```
+
+**Use Custom PDF Page Settings**
 
 ```csharp
 excelToPdfConverter.PdfDocumentOptions.UsePageSettingsFromExcel = false;
@@ -420,14 +512,100 @@ excelToPdfConverter.PdfDocumentOptions.TopMargin = 30;
 excelToPdfConverter.PdfDocumentOptions.BottomMargin = 30;
 ```
 
+### Keep Column Widths from Excel
+
+**Keep Column Widths from Excel Document**
+
+```csharp
+excelToPdfConverter.KeepColumnWidths = true;
+```
+
+### Keep Row Heights from Excel
+
+**Keep Row Heights from Excel Document**
+
+```csharp
+excelToPdfConverter.KeepRowHeights = true;
+```
+
 ### Convert Only the First Worksheet or All Worksheets
+
+**Convert All Worksheets**
 
 ```csharp
 excelToPdfConverter.PdfDocumentOptions.ConvertOnlyFirstWorksheet = false;
 excelToPdfConverter.PdfDocumentOptions.PageBreakBetweenWorksheets = true;
 ```
 
+### Display or Hide the Worksheet Title
+
+**Display Worksheet Title**
+
+```csharp
+excelToPdfConverter.PdfDocumentOptions.DisplayWorksheetTitle = true;
+```
+
+### Convert Excel to PDF
+
+**Convert Excel from Memory to PDF in Memory**
+
+```csharp
+byte[] outPdfBuffer = excelToPdfConverter.ConvertToPdf(excelBytes);
+```
+
+**Convert Excel File to PDF in Memory**
+
+```csharp
+byte[] outPdfBuffer = excelToPdfConverter.ConvertToPdf(excelFilePath);
+```
+
+**Write PDF Data to File**
+
+```csharp
+File.WriteAllBytes("output.pdf", outPdfBuffer);
+```
+
+**Convert Excel from Memory to PDF File**
+
+```csharp
+excelToPdfConverter.ConvertToPdfFile(excelBytes, outputPdfFilePath);
+```
+
+**Convert Excel File to PDF File**
+
+```csharp
+excelToPdfConverter.ConvertToPdfFile(excelFilePath, outputPdfFilePath);
+```
+
+### Asynchronous Excel to PDF Methods
+
+**Asynchronously Convert Excel from Memory to PDF in Memory**
+
+```csharp
+byte[] outPdfBuffer = await excelToPdfConverter.ConvertToPdfAsync(excelBytes);
+```
+
+**Asynchronously Convert Excel File to PDF in Memory**
+
+```csharp
+byte[] outPdfBuffer = await excelToPdfConverter.ConvertToPdfAsync(excelFilePath);
+```
+
+**Asynchronously Convert Excel from Memory to PDF File**
+
+```csharp
+await excelToPdfConverter.ConvertToPdfFileAsync(excelBytes, outputPdfFilePath);
+```
+
+**Asynchronously Convert Excel File to PDF File**
+
+```csharp
+await excelToPdfConverter.ConvertToPdfFileAsync(excelFilePath, outputPdfFilePath);
+```
+
 ### Code Sample - Convert Excel to PDF
+
+**Convert Excel to PDF in ASP.NET Core**
 
 ```csharp
 using System;
@@ -500,7 +678,7 @@ namespace EvoPdf_Next_AspNetDemo.Controllers.Excel_to_PDF
 
             if (!excelToPdfConverter.PdfDocumentOptions.UsePageSettingsFromExcel)
             {
-                // Set PDF page size which can be a predefined size like A4 or a custom size in points 
+                // Set PDF page size which can be a predefined size like A4 or a custom size in points
                 // Leave it not set to have a default A4 PDF page
                 excelToPdfConverter.PdfDocumentOptions.PdfPageSize = SelectedPdfPageSize(model.PdfPageSize);
 
@@ -813,12 +991,16 @@ Topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/convert-rtf-to-pdf.ht
 
 ### Create the RTF to PDF Converter
 
+**Create a RTF to PDF Converter Instance**
+
 ```csharp
 // Create a new RTF to PDF converter instance
 RtfToPdfConverter rtfToPdfConverter = new RtfToPdfConverter();
 ```
 
 ### Configure the PDF Page Settings
+
+**Use Custom PDF Page Settings**
 
 ```csharp
 rtfToPdfConverter.PdfDocumentOptions.PdfPageSize = PdfPageSize.A4;
@@ -829,7 +1011,123 @@ rtfToPdfConverter.PdfDocumentOptions.TopMargin = 30;
 rtfToPdfConverter.PdfDocumentOptions.BottomMargin = 30;
 ```
 
+### Table of Contents
+
+**Generate Table of Contents**
+
+```csharp
+rtfToPdfConverter.PdfDocumentOptions.GenerateTableOfContents = true;
+```
+
+### Convert RTF to PDF
+
+**Convert RTF from Memory to PDF in Memory**
+
+```csharp
+byte[] outPdfBuffer = rtfToPdfConverter.ConvertToPdf(rtfBytes);
+```
+
+**Convert RTF Stream to PDF in Memory**
+
+```csharp
+byte[] outPdfBuffer = rtfToPdfConverter.ConvertStreamToPdf(rtfStream);
+```
+
+**Convert RTF String to PDF in Memory**
+
+```csharp
+byte[] outPdfBuffer = rtfToPdfConverter.ConvertStringToPdf(rtfString);
+```
+
+**Convert RTF File to PDF in Memory**
+
+```csharp
+byte[] outPdfBuffer = rtfToPdfConverter.ConvertFileToPdf(rtfFilePath);
+```
+
+**Write PDF Data to File**
+
+```csharp
+File.WriteAllBytes("output.pdf", outPdfBuffer);
+```
+
+**Convert RTF from Memory to PDF File**
+
+```csharp
+rtfToPdfConverter.ConvertToPdfFile(rtfBytes, outputPdfFilePath);
+```
+
+**Convert RTF from Stream to PDF File**
+
+```csharp
+rtfToPdfConverter.ConvertStreamToPdfFile(rtfStream, outputPdfFilePath);
+```
+
+**Convert RTF String to PDF File**
+
+```csharp
+rtfToPdfConverter.ConvertStringToPdfFile(rtfString, outputPdfFilePath);
+```
+
+**Convert RTF File to PDF File**
+
+```csharp
+rtfToPdfConverter.ConvertFileToPdfFile(rtfFilePath, outputPdfFilePath);
+```
+
+### Asynchronous RTF to PDF Methods
+
+**Convert RTF from Memory to PDF in Memory**
+
+```csharp
+byte[] outPdfBuffer = await rtfToPdfConverter.ConvertToPdfAsync(rtfBytes);
+```
+
+**Convert RTF Stream to PDF in Memory**
+
+```csharp
+byte[] outPdfBuffer = await rtfToPdfConverter.ConvertStreamToPdfAsync(rtfStream);
+```
+
+**Convert RTF String to PDF in Memory**
+
+```csharp
+byte[] outPdfBuffer = await rtfToPdfConverter.ConvertStringToPdfAsync(rtfString);
+```
+
+**Convert RTF File to PDF in Memory**
+
+```csharp
+byte[] outPdfBuffer = await rtfToPdfConverter.ConvertFileToPdfAsync(rtfFilePath);
+```
+
+**Convert RTF from Memory to PDF File**
+
+```csharp
+await rtfToPdfConverter.ConvertToPdfFileAsync(rtfBytes, outputPdfFilePath);
+```
+
+**Convert RTF from Stream to PDF File**
+
+```csharp
+await rtfToPdfConverter.ConvertStreamToPdfFileAsync(rtfStream, outputPdfFilePath);
+```
+
+**Convert RTF String to PDF File**
+
+```csharp
+await rtfToPdfConverter.ConvertStringToPdfFileAsync(rtfString, outputPdfFilePath);
+```
+
+**Convert RTF File to PDF File**
+
+```csharp
+await rtfToPdfConverter.ConvertFileToPdfFileAsync(rtfFilePath, outputPdfFilePath);
+```
+
 ### Code Sample - Convert RTF to PDF
+
+**Convert RTF to PDF in ASP.NET Core**
 
 ```csharp
 using System;
@@ -881,7 +1179,7 @@ namespace EvoPdf_Next_AspNetDemo.Controllers.RTF_to_PDF
             // Set whether a table of contents is automatically generated from headings
             rtfToPdfConverter.PdfDocumentOptions.GenerateTableOfContents = model.GenerateToc;
 
-            // Set PDF page size which can be a predefined size like A4 or a custom size in points 
+            // Set PDF page size which can be a predefined size like A4 or a custom size in points
             // Leave it not set to have a default A4 PDF page
             rtfToPdfConverter.PdfDocumentOptions.PdfPageSize = SelectedPdfPageSize(model.PdfPageSize);
 
@@ -1193,12 +1491,16 @@ Topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/convert-markdown-to-p
 
 ### Create the Markdown to PDF Converter
 
+**Create a Markdown to PDF Converter Instance**
+
 ```csharp
 // Create a new Markdown to PDF converter instance
 MarkdownToPdfConverter markdownToPdfConverter = new MarkdownToPdfConverter();
 ```
 
 ### Configure the PDF Page Settings
+
+**Use Custom PDF Page Settings**
 
 ```csharp
 markdownToPdfConverter.PdfDocumentOptions.PdfPageSize = PdfPageSize.A4;
@@ -1209,16 +1511,48 @@ markdownToPdfConverter.PdfDocumentOptions.TopMargin = 30;
 markdownToPdfConverter.PdfDocumentOptions.BottomMargin = 30;
 ```
 
+### Table of Contents
+
+**Generate Table of Contents**
+
+```csharp
+markdownToPdfConverter.PdfDocumentOptions.GenerateTableOfContents = true;
+```
+
 ### Apply a Custom Style Sheet
+
+**Apply Custom Style Sheet**
 
 ```csharp
 markdownToPdfConverter.PdfDocumentOptions.StyleSheet = @"
-h1 { 
+h1 {
     font-size: 24pt;
     color: #0b57d0;
 }
 ";
 ```
+
+### Convert Markdown to PDF
+
+**Convert to PDF in Memory**
+
+```csharp
+byte[] outPdfBuffer = markdownToPdfConverter.ConvertStringToPdf(markdownString, baseUrl);
+```
+
+**Write PDF Data to File**
+
+```csharp
+File.WriteAllBytes("output.pdf", outPdfBuffer);
+```
+
+**Convert to PDF File**
+
+```csharp
+markdownToPdfConverter.ConvertStringToPdfFile(markdownString, baseUrl, outputPdfFilePath);
+```
+
+**Read a Markdown String from File**
 
 ```csharp
 byte[] inputMarkdownBytes = System.IO.File.ReadAllBytes(markdownFilePath);
@@ -1226,12 +1560,30 @@ string markdownString = Encoding.UTF8.GetString(inputMarkdownBytes);
 string baseUrl = "file://" + markdownFilePath;
 ```
 
+**Read a Markdown String Using ReadAllText**
+
 ```csharp
 string markdownString = System.IO.File.ReadAllText(markdownFilePath, Encoding.UTF8);
 string baseUrl = "file://" + markdownFilePath;
 ```
 
+### Asynchronous Markdown to PDF Methods
+
+**Asynchronously Convert to PDF in Memory**
+
+```csharp
+byte[] outPdfBuffer = await markdownToPdfConverter.ConvertStringToPdfAsync(markdownString, baseUrl);
+```
+
+**Asynchronously Convert to PDF File**
+
+```csharp
+await markdownToPdfConverter.ConvertStringToPdfFileAsync(markdownString, baseUrl, outputPdfFilePath);
+```
+
 ### Code Sample - Convert Markdown to PDF
+
+**Convert Markdown to PDF in ASP.NET Core**
 
 ```csharp
 using System;
@@ -1286,7 +1638,7 @@ namespace EvoPdf_Next_AspNetDemo.Controllers.Markdown_to_PDF
             // Set whether a table of contents is automatically generated from headings
             markdownToPdfConverter.PdfDocumentOptions.GenerateTableOfContents = model.GenerateToc;
 
-            // Set PDF page size which can be a predefined size like A4 or a custom size in points 
+            // Set PDF page size which can be a predefined size like A4 or a custom size in points
             // Leave it not set to have a default A4 PDF page
             markdownToPdfConverter.PdfDocumentOptions.PdfPageSize = SelectedPdfPageSize(model.PdfPageSize);
 

@@ -34,7 +34,8 @@ dotnet add package EvoPdf.Next.Windows
 
 ## Runtime notes
 - Windows and macOS: no extra dependencies. Linux: the HTML to PDF Converter needs four system packages and execute permissions on the native runtimes; see the Linux section of this skill. Containers: follow the `evopdf-next-docker` skill (complete Dockerfiles).
-- Azure App Service (Windows and Linux) and Azure Functions are supported; Docker on Linux and Windows containers too.
+- Cloud: Azure App Service, Azure Functions, Azure Container Apps (`evopdf-next-azure`), AWS Elastic Beanstalk, Lambda and
+  Amazon ECS (`evopdf-next-aws`), Google Cloud Run (`evopdf-next-google-cloud`), AKS, EKS and GKE (`evopdf-next-kubernetes`).
 - The rendering engine ships inside the package; nothing to install on the server, xcopy deployment works.
 
 ## License key
@@ -136,7 +137,7 @@ cd publish/linux-x64-net10.0
 dotnet EvoPdf_Next_AspNetDemo_Linux_net10.0.dll
 ```
 
-All 16 samples of this topic, complete: `references/examples.md`.
+All 33 samples of this topic, complete: `references/examples.md`.
 
 Full topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/build-and-publish-demo-applications.htm
 
@@ -177,6 +178,22 @@ System.IO.File.WriteAllBytes("UrlToMemory.pdf", urlToPdfBuffer);
 ```
 
 Full topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/evopdf-next-overview.htm
+
+## Getting Started with EvoPdf Next for .NET on Linux
+
+EvoPdf Next for .NET is a library that can be integrated into any type of .NET application to create and process PDF documents.
+
+All 9 samples of this topic, complete: `references/examples.md`.
+
+Full topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/getting-started-on-linux.htm
+
+## Getting Started with EvoPdf Next for .NET on macOS
+
+EvoPdf Next for .NET is a library that can be integrated into any type of .NET application to create and process PDF documents.
+
+All 5 samples of this topic, complete: `references/examples.md`.
+
+Full topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/getting-started-on-macos.htm
 
 ## Rules that apply to every sample here
 

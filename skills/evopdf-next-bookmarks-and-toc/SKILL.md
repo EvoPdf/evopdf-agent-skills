@@ -49,7 +49,7 @@ htmlToPdfConverter.PdfDocumentOptions.TableOfContents.Title = "Table of Contents
 htmlToPdfConverter.PdfDocumentOptions.TableOfContents.CreateInline = true;
 ```
 
-All 6 samples of this topic, complete: `references/examples.md`.
+All 8 samples of this topic, complete: `references/examples.md`.
 
 Full topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/auto-create-table-of-contents.htm
 

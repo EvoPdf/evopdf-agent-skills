@@ -8,6 +8,8 @@ Topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/create-pdf-documents-
 
 ### External URL Links
 
+**URL link over rendered text**
+
 ```csharp
 PdfTextElement t = new PdfTextElement("Visit evopdf.com", linkFont) { X = 0, Y = crtYPos };
 var info = pdfDocument.AddText(t);
@@ -425,6 +427,8 @@ namespace EvoPdf_Next_AspNetDemo.Controllers.PDF_Creator
 Topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/add-link-annotations-to-existing-pdf.htm
 
 ### External URL Links
+
+**URL link over rendered text**
 
 ```csharp
 PdfTextElement t = new PdfTextElement("Visit evopdf.com", linkFont) { X = 0, Y = crtYPos };
@@ -915,6 +919,8 @@ Topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/create-pdf-documents-
 
 ### Author Identification and Initial Popup State
 
+**Reviewer comment with open popup**
+
 ```csharp
 PdfTextAnnotation ann = PdfTextAnnotation.Create(
     contents: "Please confirm the issue date before mailing.",
@@ -1203,6 +1209,8 @@ namespace EvoPdf_Next_AspNetDemo.Controllers.PDF_Creator
 Topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/add-text-annotations-to-existing-pdf.htm
 
 ### Author Identification and Initial Popup State
+
+**Reviewer comment with open popup, added to existing PDF**
 
 ```csharp
 PdfTextAnnotation ann = PdfTextAnnotation.Create(

@@ -23,7 +23,8 @@ summaries is in `references/api.md`; do not guess member names that are not ther
 ## Three kinds of font
 
 **Standard fonts** are the 14 fonts every PDF reader has. They are not embedded, so they cost
-nothing in file size.
+nothing in file size. For the same reason they cannot be used in PDF/A or PDF/UA documents; create
+the fonts of those documents from a font file.
 
 ```csharp
 PdfFont font = PdfFontManager.CreateStandardFont(PdfStandardFont.Helvetica, 12f);

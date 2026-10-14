@@ -14,8 +14,11 @@ Namespace `EvoPdf.Next`. Install one NuGet package for the target platform, for 
 
 - **`PdfEditor`**: Allows editing of existing PDF documents by adding HTML content, setting metadata, applying security options, and digital signatures. Use Save or Save...
 
-1 types, 49 public members. The complete member list with the shipped
+1 types, 52 public members. The complete member list with the shipped
 summaries is in `references/api.md`; do not guess member names that are not there.
+
+`PdfEditor` also signs existing documents, adds signature fields and long-term validation data (see
+`evopdf-next-security-signatures`) and embeds electronic invoices in PDF/A-3 documents (see `evopdf-next-electronic-invoices`).
 
 ## Add Text to Existing PDF
 

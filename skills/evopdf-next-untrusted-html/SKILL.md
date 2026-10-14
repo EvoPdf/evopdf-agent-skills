@@ -1,6 +1,6 @@
 ---
 name: evopdf-next-untrusted-html
-description: "Harden EvoPdf Next when the HTML comes from users: BlockedHosts, LocalFilesEnabled, LocalhostEnabled, UncPathEnabled, MaxJsRedirects, NavigationTimeout, PageNumberLimit, JavaScriptEnabled, and why DisableWebSecurity, DisableSiteIsolation, IgnoreCertificateErrors, AllowInsecureContent and EnableElevatedRendering must stay off. Use for SSRF and resource-limit questions."
+description: "Harden EvoPdf Next when the HTML comes from users: BlockedHosts, LocalFilesEnabled, LocalhostEnabled, UncPathEnabled, MaxJsRedirects, NavigationTimeout, PageNumberLimit, JavaScriptEnabled, why DisableWebSecurity, IgnoreCertificateErrors, AllowInsecureContent and EnableElevatedRendering must stay off, and EnableSiteIsolation. Use for SSRF and resource-limit questions."
 ---
 
 # EvoPdf Next: converting untrusted HTML safely
@@ -52,13 +52,15 @@ document access it does not need.
 | Setting | Default | What it gives up |
 | --- | --- | --- |
 | `DisableWebSecurity` | false | same-origin policy and CORS |
-| `DisableSiteIsolation` | false | process isolation between origins |
 | `IgnoreCertificateErrors` | false | TLS validation |
 | `AllowInsecureContent` | false | mixed content blocking |
 | `EnableElevatedRendering` | true | on Windows, the elevated privileges of an application running elevated |
 | `LocalFilesEnabled` | true | access to local files |
 | `LocalhostEnabled` | true | access to the machine itself |
 | `UncPathEnabled` | true | access to network shares |
+
+`EnableSiteIsolation` is false by default. Set it to true to render the frames of a page that come from different
+sites in separate processes, the isolation between sites of a browser.
 
 ## Process isolation
 

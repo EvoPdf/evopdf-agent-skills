@@ -174,6 +174,8 @@ namespace EvoPdf_Next_AspNetDemo.Controllers.HTML_to_PDF
 
 Topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/auto-create-table-of-contents.htm
 
+### Auto Create Table of Contents
+
 ```csharp
 // Create a HTML to PDF converter object with default settings
 HtmlToPdfConverter htmlToPdfConverter = new HtmlToPdfConverter();
@@ -243,6 +245,16 @@ htmlToPdfConverter.PdfDocumentOptions.TableOfContents.Title = "Table of Contents
 ```csharp
 // Set the table of contents title
 htmlToPdfConverter.PdfDocumentOptions.TableOfContents.CreateInline = true;
+```
+
+```html
+<div id="html-to-pdf-toc"></div>
+```
+
+### Table of Contents Mode
+
+```csharp
+htmlToPdfConverter.PdfDocumentOptions.TableOfContents.UseBrowserMode = true;
 ```
 
 ### Table of Contents Style
@@ -340,7 +352,7 @@ htmlToPdfConverter.PdfDocumentOptions.TableOfContents.CreateInline = true;
     color: #111111;
 }
 
-/* Style for space between entry text and page number */ 
+/* Style for space between entry text and page number */
 #html-to-pdf-toc li::after {
     flex-grow: 1;
     order: 2;
@@ -351,7 +363,7 @@ htmlToPdfConverter.PdfDocumentOptions.TableOfContents.CreateInline = true;
 }
 
 #html-to-pdf-toc ul {
-    list-style-type: none; 
+    list-style-type: none;
     padding: 0px;
 }
 
@@ -365,9 +377,9 @@ htmlToPdfConverter.PdfDocumentOptions.TableOfContents.CreateInline = true;
 
 /* Level specific style for TOC entries */
 
-#html-to-pdf-toc ul li.level-1 {    
+#html-to-pdf-toc ul li.level-1 {
     margin-bottom: 10px;
-    margin-inline-start: 0px;    
+    margin-inline-start: 0px;
 }
 
 #html-to-pdf-toc ul li.level-2 {
@@ -503,7 +515,7 @@ namespace EvoPdf_Next_AspNetDemo.Controllers.HTML_to_PDF
                     break;
 
                 default:
-                    // The PDF page width follows the browser window width and the HTML is drawn at the zoom, 1:1 at 100;
+                    // The PDF page width follows the browser window width and the HTML is drawn 1:1;
                     // the page height comes from the page size and the orientation
                     htmlToPdfConverter.PageWidthFromBrowserWindow(model.HtmlViewerWidth, singlePage: false, zoom: model.HtmlViewerZoom);
                     htmlToPdfConverter.PdfDocumentOptions.PdfPageSize = pageSize;
@@ -511,7 +523,7 @@ namespace EvoPdf_Next_AspNetDemo.Controllers.HTML_to_PDF
                     break;
             }
 
-            // Set the maximum time in seconds to wait for HTML page to be loaded 
+            // Set the maximum time in seconds to wait for HTML page to be loaded
             // Leave it not set for a default 120 seconds maximum wait time
             htmlToPdfConverter.NavigationTimeout = model.NavigationTimeout;
 

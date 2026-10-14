@@ -24,7 +24,7 @@
 |---|---|
 | [`AGENTS.md`](AGENTS.md) | Universal instructions read by Codex, Gemini CLI, Copilot coding agent, Cursor and others |
 | [`CLAUDE.md`](CLAUDE.md) | Entry point for Claude Code (points to `AGENTS.md`) |
-| [`skills/`](skills) | Sixteen **Agent Skills** (`SKILL.md` + `references/`), one per task area |
+| [`skills/`](skills) | 33 **Agent Skills** (`SKILL.md` + `references/`), one per task area |
 | [`.claude-plugin/`](.claude-plugin) | Claude Code plugin manifest; install the skills with one command |
 | [`.github/copilot-instructions.md`](.github/copilot-instructions.md) | GitHub Copilot (Chat and coding agent) |
 | [`.cursor/rules/`](.cursor/rules), [`.windsurf/rules/`](.windsurf/rules) | Cursor and Windsurf rule files |
@@ -53,13 +53,17 @@
 | **evopdf-next-pdf-forms** | Turn HTML form controls into interactive PDF form fields with EvoPdf Next PdfFormOptions |
 | **evopdf-next-fonts** | Work with fonts in EvoPdf Next PDF documents |
 | **evopdf-next-pdf-standards** | Produce standards-compliant PDF with EvoPdf Next |
+| **evopdf-next-electronic-invoices** | Create Factur-X, ZUGFeRD and XRechnung electronic invoices and Order-X electronic orders with EvoPdf Next |
 | **evopdf-next-security-signatures** | Protect and sign PDF documents with EvoPdf Next |
 | **evopdf-next-pdf-metadata** | Set the PDF document description and how viewers open the file with EvoPdf Next |
 | **evopdf-next-pdf-processor** | Extract content from existing PDF documents with the EvoPdf Next PDF Processor |
 | **evopdf-licensing** | Apply an EvoPdf Next license key in .NET, understand demo mode and the watermark, and know where the key goes in web applications and services. |
 | **evopdf-next-deployment** | Install and deploy EvoPdf Next |
 | **evopdf-next-docker** | Run EvoPdf Next in Docker containers on Linux and Windows |
-| **evopdf-next-azure** | Run EvoPdf Next on Azure App Service and Azure Functions, on both Linux and Windows plans |
+| **evopdf-next-azure** | Run EvoPdf Next on Azure |
+| **evopdf-next-aws** | Run EvoPdf Next on AWS |
+| **evopdf-next-google-cloud** | Run EvoPdf Next on Google Cloud |
+| **evopdf-next-kubernetes** | Run EvoPdf Next in Kubernetes |
 | **evopdf-next-troubleshooting** | Diagnose EvoPdf Next failures |
 | **evopdf-classic-to-next-migration** | Migrate .NET applications from EvoPdf Classic (EvoPdf namespace) to EvoPdf Next |
 | **evopdf-next-wkhtmltopdf-migration** | Replace wkhtmltopdf, DinkToPdf, Rotativa, TuesPechkin or Pechkin with EvoPdf Next in .NET |
@@ -95,7 +99,7 @@ Copy `.cursor/rules/evopdf-next.mdc` into your project's `.cursor/rules/`. The r
 Place `AGENTS.md` in your repository root (Windsurf: `.windsurf/rules/evopdf-next.md`). Tools that follow the AGENTS.md convention pick it up without configuration.
 
 ### ChatGPT, Gemini, other chats
-Paste `llms-full.txt` (or a single `SKILL.md`) as the first message or as project/custom instructions. It is plain Markdown, about 21,000 words; for a single task one `SKILL.md` is enough.
+Paste `llms-full.txt` (or a single `SKILL.md`) as the first message or as project/custom instructions. It is plain Markdown, about 24,000 words; for a single task one `SKILL.md` is enough.
 
 ## Quick check
 Ask your assistant: *"Convert this HTML string to an A4 PDF with EvoPdf Next and add a footer with page numbers."* A correct answer uses `EvoPdf.Next`, `Licensing.LicenseKey`, the A4 layout of a new converter or `FitBrowserWindowToPage(PdfPageSize.A4)` and `PdfHtmlFooter.Html` with `{page_number}` / `{total_pages}`.

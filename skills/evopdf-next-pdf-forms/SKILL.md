@@ -12,7 +12,7 @@ Namespace `EvoPdf.Next`. Install one NuGet package for the target platform, for 
 
 ## Types covered here
 
-- **`PdfFormOptions`**: Specifies options for converting HTML form controls into interactive PDF form fields These options control field naming, button action generation, sub...
+- **`PdfFormOptions`**: Specifies options for converting HTML form controls into interactive PDF form fields. These options control field naming, button action generation, su...
 - **`PdfFieldNamingMode`**: Specifies how PDF field names are generated from HTML form controls
 - **`PdfSubmitBehavior`**: Specifies how submit actions are generated for PDF buttons
 - **`PdfSubmitFormat`**: Specifies the format used when a PDF form is submitted

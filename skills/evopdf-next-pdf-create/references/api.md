@@ -27,6 +27,7 @@ Represents a new PDF document being constructed in memory
 
 - `AddArc`: Adds an elliptical arc to the current PDF page
 - `AddCircle`: Adds a circle defined by center and radius to the current PDF page
+- `AddElectronicInvoice`: Embeds a Factur-X / ZUGFeRD electronic invoice in the PDF document: the invoice XML is attached under the file name the standard prescribes, with the relationship of its profile, and the Factur-X identification metadata is written in the XMP metadata. The document must be created as PDF/A-3 (PdfA3b, PdfA3u, PdfA3a or PdfUa1PdfA3a for an accessible invoice). A document carries one electronic invoice
 - `AddEllipse`: Adds an ellipse inscribed in a bounding rectangle to the current PDF page
 - `AddFileAttachment`: Adds a file to the document's attachments. The attachment appears in the Attachments panel of PDF viewers but has no visible icon on any page. To also display a clickable icon on a specific page, use AddFileAttachmentAnnotation
 - `AddFileAttachmentAnnotation`: Adds a file attachment displayed as a clickable icon on a specific page. Clicking the icon opens or extracts the attached file. The file is also added to the Attachments panel alongside any other attachments
@@ -48,6 +49,7 @@ Represents a new PDF document being constructed in memory
 - `AddPolyline`: Adds an open polyline through a sequence of points to the current PDF page
 - `AddRectangle`: Adds a rectangle shape to the current page
 - `AddRoundedRectangle`: Adds a rectangle with rounded corners to the current PDF page
+- `AddSignatureField`: Adds an empty signature field to a page of the document. The field is signed later by a digital signature with the same field name, which is placed on the field's page and in its rectangle. A form with a field for each signer is prepared this way. The field name must be unique in the document
 - `AddText`: Adds a text element to the current PDF page. If the text exceeds the current page, it can continue on subsequent pages depending on the value of the ContinueOnNextPage property. Supports placeholder variables such as {page_number} and {total_pages}, which are replaced with their actual values in the rendered PDF. When {total_pages} is used, the text element is rendered after the document is closed. Therefore, the PdfDocument instance cannot be used inside the OnPageRendered callback.
 - `AddTextAnnotation`: Adds a sticky-note text annotation displayed as a clickable icon on a specific page. Clicking the icon opens a popup with the note text. The annotation also appears in the viewer's Comments panel
 - `Dispose`: Releases all resources used by this instance

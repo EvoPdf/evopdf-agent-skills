@@ -8,10 +8,14 @@ Topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/create-pdf-documents.
 
 ### Create, Render Elements and Save PDF Documents
 
+**Create a PDF Document with Default Settings**
+
 ```csharp
 // Create a new PDF document with the default settings
 using PdfDocument pdfDocument = new PdfDocument();
 ```
+
+**Create a PDF Document with Custom Settings**
 
 ```csharp
 PdfDocumentCreateSettings pdfCreateSettings = new PdfDocumentCreateSettings()
@@ -27,10 +31,14 @@ using PdfDocument pdfDocument = new PdfDocument(pdfCreateSettings);
 
 ### Add New PDF Pages
 
+**Add a New PDF Page**
+
 ```csharp
 // Add a new PDF page with current settings
 pdfDocument.AddPage();
 ```
+
+**Add a New PDF Page with Updated Settings**
 
 ```csharp
 // Set the next page to landscape A4
@@ -45,6 +53,8 @@ pdfDocument.AddPage();
 
 ### Save the PDF Document
 
+**Save the PDF Document to a File**
+
 ```csharp
 string outputPath = Path.Combine(outputDir, "GeneratedDocument.pdf");
 
@@ -52,17 +62,35 @@ string outputPath = Path.Combine(outputDir, "GeneratedDocument.pdf");
 pdfDocument.SaveToFile(outputPath);
 ```
 
+**Save the PDF Document to Memory**
+
 ```csharp
 // Save the document to a memory buffer
 byte[] pdfBytes = pdfDocument.Save();
 ```
 
+**Asynchronously Save the PDF Document to a File**
+
+```csharp
+await pdfDocument.SaveToFileAsync(outputPath);
+```
+
+**Asynchronously Save the PDF Document to Memory**
+
+```csharp
+byte[] pdfBytes = await pdfDocument.SaveAsync();
+```
+
 ### Dispose the PdfDocument
+
+**Save and Dispose Automatically**
 
 ```csharp
 // Save will dispose the document automatically
 byte[] buffer = pdfDocument.Save();
 ```
+
+**Manual Dispose**
 
 ```csharp
 PdfDocument pdfDocument = new PdfDocument();
@@ -324,6 +352,8 @@ Topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/create-pdf-documents-
 
 ### Create a PDF Font
 
+**Create a standard PDF font**
+
 ```csharp
 // Bold italic green Courier at 16 points
 PdfFont fontCourier = PdfFontManager.CreateStandardFont(
@@ -331,6 +361,8 @@ PdfFont fontCourier = PdfFontManager.CreateStandardFont(
     PdfFontStyle.Bold | PdfFontStyle.Italic,
     PdfColor.Green);
 ```
+
+**Create a Unicode TrueType PDF font (two-step)**
 
 ```csharp
 string fontFilePath = Path.Combine(fontsPath, "DejaVuSerif.ttf");
@@ -346,6 +378,8 @@ PdfFont trueTypeFont = PdfFontManager.CreateFont(
 
 ### Create the Text Element
 
+**Create a text element at a specific position**
+
 ```csharp
 PdfTextElement pdfText = new PdfTextElement("The text element string", fontCourier)
 {
@@ -355,6 +389,8 @@ PdfTextElement pdfText = new PdfTextElement("The text element string", fontCouri
 ```
 
 ### Background Highlight
+
+**Yellow highlight band**
 
 ```csharp
 PdfTextElement highlighted = new PdfTextElement(text, bodyFont)
@@ -368,6 +404,8 @@ pdfDocument.AddText(highlighted);
 
 ### Render the Text Element
 
+**Render text and update the layout cursor**
+
 ```csharp
 PdfTextRenderInfo textRenderInfo = pdfDocument.AddText(pdfText);
 
@@ -376,6 +414,8 @@ crtYPos = (int)textRenderInfo.LastPageRectangle.Bounds.Bottom + ySeparator;
 ```
 
 ### Continue Rendering on the Next Page
+
+**Continue text on the next page and draw a border per page**
 
 ```csharp
 PdfTextElement pdfText1 = new PdfTextElement(alfabetString, trueTypeFont)
@@ -403,6 +443,8 @@ pdfDocument.AddText(pdfText1);
 ```
 
 ### Text Direction
+
+**Render right-to-left Arabic text**
 
 ```csharp
 string rtlFontFilePath = Path.Combine(fontsPath, "NotoSansArabic-Regular.ttf");
@@ -748,6 +790,8 @@ Topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/create-pdf-documents-
 
 ### Create the Image Element
 
+**Create an image element**
+
 ```csharp
 PdfImageElement pdfImage = new PdfImageElement(imagePath)
 {
@@ -757,6 +801,8 @@ PdfImageElement pdfImage = new PdfImageElement(imagePath)
 ```
 
 ### Positioning and Scaling
+
+**PNG with a custom width**
 
 ```csharp
 string imagesPath = GetDemoImagesPath();
@@ -772,6 +818,8 @@ PdfImageElement pdfPngImage = new PdfImageElement(
 ```
 
 ### Render the Image Element
+
+**Render the image and update the layout cursor**
 
 ```csharp
 PdfImageRenderInfo imageRenderInfo = pdfDocument.AddImage(pdfPngImage);
@@ -1401,6 +1449,8 @@ namespace EvoPdf_Next_AspNetDemo.Controllers.PDF_Creator
 Topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/create-pdf-documents-with-paths-and-polygons.htm
 
 ### Arbitrary Paths
+
+**Heart shape with two cubic Beziers**
 
 ```csharp
 PdfPathElement heart = new PdfPathElement

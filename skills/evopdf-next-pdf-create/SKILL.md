@@ -48,8 +48,15 @@ Namespace `EvoPdf.Next`. Install one NuGet package for the target platform, for 
 - **`PdfImageRenderInfo`**: Contains metadata about how and where an image was rendered on a PDF page. Exposes both the axis-aligned bounding box and the rotated four-corner outl...
 - **`PdfRenderedRectangle`**: Represents a single occurrence of an element on a PDF page. Carries the axis-aligned bounding rectangle, the rotated four-corner outline and the page ...
 
-35 types, 446 public members. The complete member list with the shipped
+35 types, 448 public members. The complete member list with the shipped
 summaries is in `references/api.md`; do not guess member names that are not there.
+
+The Core PDF API alone is installed with `EvoPdf.Next.Core.Windows` (x64 and ARM64), `EvoPdf.Next.Core.Linux` (x64 and
+ARM64), `EvoPdf.Next.Core.MacOS` or the `EvoPdf.Next.Core` metapackage for all three; the full packages include it.
+Core Component Overview: https://www.evopdf.com/help/evopdf-next-dotnet/html/core-component.htm
+
+`PdfDocument.DigitalSignature`, `PdfDocument.AddSignatureField` and `PdfDocument.AddElectronicInvoice` are described in
+`evopdf-next-security-signatures` and `evopdf-next-electronic-invoices`.
 
 ## Create PDF Documents
 
@@ -90,7 +97,7 @@ pdfDocument.Margins = new PdfMargins(100, 100, 100, 100);
 pdfDocument.AddPage();
 ```
 
-All 9 samples of this topic, complete: `references/examples.md`.
+All 11 samples of this topic, complete: `references/examples.md`.
 
 Full topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/create-pdf-documents.htm
 

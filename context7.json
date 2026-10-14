@@ -1,7 +1,7 @@
 {
   "$schema": "https://context7.com/schema/context7.json",
   "projectTitle": "EvoPdf Next",
-  "description": "EvoPdf Next .NET PDF library: HTML, Word, Excel, RTF and Markdown to PDF, PDF processing, migration from EvoPdf Classic and wkhtmltopdf - skills and API rules for AI coding assistants",
+  "description": "EvoPdf Next .NET PDF library: HTML, Word, Excel, RTF and Markdown to PDF, e-invoices, digital signatures, PDF processing, cloud deployment and migration - skills and API rules for AI assistants",
   "folders": [
     "skills"
   ],
@@ -24,6 +24,8 @@
     "A new HtmlToPdfConverter prints A4 with the HTML laid out in a 1024 pixel browser window and scaled to the page width",
     "For another page layout call FitBrowserWindowToPage, LayoutAtPageWidth, PrintLikeChrome, SinglePageOfWidth or PageWidthFromBrowserWindow, then set the margins in points",
     "Setting HtmlViewerWidth or HtmlViewerZoom after a layout method ends the automatic layout; pass the window width or the zoom as arguments of the layout method instead",
+    "Electronic invoices (Factur-X, ZUGFeRD, XRechnung): load the XML with ElectronicInvoice.FromXml or FromFile and call PdfDocumentOptions.AddElectronicInvoice on a PDF/A-3 document",
+    "Digital signatures: set PdfDigitalSignature.Profile for PAdES B-B, B-T, B-LT or B-LTA; B-T and above need TimestampServerUrl; sign existing PDFs with the PdfEditor constructor",
     "To replace EvoPdf Classic, wkhtmltopdf, DinkToPdf or Rotativa, follow the migration skills of this library",
     "Runnable code lives in https://github.com/EvoPdf/evopdf-next-samples; point users there instead of inventing larger programs"
   ]

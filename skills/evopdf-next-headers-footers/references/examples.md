@@ -741,7 +741,7 @@ namespace EvoPdf_Next_AspNetDemo.Controllers.HTML_to_PDF
                 {
                     string headerUrl = model.HeaderUrlTextBox;
 
-                    pdfHeaderTemplate = pdfMerge.AddHtmlTemplate(0, 0, headerSize.Width, headerSize.Height, 
+                    pdfHeaderTemplate = pdfMerge.AddHtmlTemplate(0, 0, headerSize.Width, headerSize.Height,
                             PdfTemplateHorizontalAlign.Left, PdfTemplateVerticalAlign.Top, headerUrl);
                 }
                 else
@@ -749,7 +749,7 @@ namespace EvoPdf_Next_AspNetDemo.Controllers.HTML_to_PDF
                     string headerHtml = model.HeaderHtmlTextBox;
                     string headerHtmlBaseUrl = model.HeaderHtmlBaseUrlTextBox;
 
-                    pdfHeaderTemplate = pdfMerge.AddHtmlTemplate(0, 0, headerSize.Width, headerSize.Height, 
+                    pdfHeaderTemplate = pdfMerge.AddHtmlTemplate(0, 0, headerSize.Width, headerSize.Height,
                             PdfTemplateHorizontalAlign.Left, PdfTemplateVerticalAlign.Top, headerHtml, headerHtmlBaseUrl);
                 }
 
@@ -798,7 +798,7 @@ namespace EvoPdf_Next_AspNetDemo.Controllers.HTML_to_PDF
                 if (footerHtmlFromUrl)
                 {
                     string footerUrl = model.FooterUrlTextBox;
-                    pdfFooterTemplate = pdfMerge.AddHtmlTemplate(0, 0, footerSize.Width, footerSize.Height, 
+                    pdfFooterTemplate = pdfMerge.AddHtmlTemplate(0, 0, footerSize.Width, footerSize.Height,
                             PdfTemplateHorizontalAlign.Left, PdfTemplateVerticalAlign.Bottom, footerUrl);
                 }
                 else
@@ -806,7 +806,7 @@ namespace EvoPdf_Next_AspNetDemo.Controllers.HTML_to_PDF
                     string footerHtml = model.FooterHtmlTextBox;
                     string footerHtmlBaseUrl = model.FooterHtmlBaseUrlTextBox;
 
-                    pdfFooterTemplate = pdfMerge.AddHtmlTemplate(0, 0, footerSize.Width, footerSize.Height, 
+                    pdfFooterTemplate = pdfMerge.AddHtmlTemplate(0, 0, footerSize.Width, footerSize.Height,
                             PdfTemplateHorizontalAlign.Left, PdfTemplateVerticalAlign.Bottom, footerHtml, footerHtmlBaseUrl);
                 }
 
@@ -937,6 +937,8 @@ namespace EvoPdf_Next_AspNetDemo.Controllers.HTML_to_PDF
 ## Add HTML Stamp with Page Numbering to Generated PDF
 
 Topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/add-html-stamp-to-generated-pdf.htm
+
+### Add HTML Stamp with Page Numbering to Generated PDF
 
 ```html
 <!-- Use background-color: rgba(r, g, b, a) to apply background opacity (a = 0 transparent, 1 opaque) -->
@@ -1174,12 +1176,16 @@ namespace EvoPdf_Next_AspNetDemo.Controllers.HTML_to_PDF
 
 Topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/add-html-stamp-to-existing-pdf.htm
 
+### Add HTML Stamp with Page Numbering to Existing PDF
+
 ```html
 <!-- Use background-color: rgba(r, g, b, a) to apply background opacity (a = 0 transparent, 1 opaque) -->
 <body style="background-color: rgba(255, 255, 255, 0.75)">
 ```
 
 ### Save the Modified PDF Document
+
+**Save the PDF Document to a File**
 
 ```csharp
 string outputPath = Path.Combine(outputDir, "ModifiedDocument.pdf");
@@ -1188,9 +1194,23 @@ string outputPath = Path.Combine(outputDir, "ModifiedDocument.pdf");
 pdfEditor.SaveToFile(outputPath);
 ```
 
+**Save the PDF Document to Memory**
+
 ```csharp
 // Save the document to a memory buffer
 byte[] pdfBytes = pdfEditor.Save();
+```
+
+**Asynchronously Save the PDF Document to a File**
+
+```csharp
+await pdfEditor.SaveToFileAsync(outputPath);
+```
+
+**Asynchronously Save the PDF Document to Memory**
+
+```csharp
+byte[] pdfBytes = await pdfEditor.SaveAsync();
 ```
 
 ### Code Sample - Add HTML Stamp with Page Numbers to an Existing PDF

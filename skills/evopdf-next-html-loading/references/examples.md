@@ -13,7 +13,7 @@ Topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/convert-html-pages-wi
 HtmlToPdfConverter htmlToPdfConverter = new HtmlToPdfConverter();
 // Set authentication options
 htmlToPdfConverter.AuthenticationOptions.Username = username;
-htmlToPdfConverter.AuthenticationOptions.Password = password;            
+htmlToPdfConverter.AuthenticationOptions.Password = password;
 
 // Create the HTML to Image converter
 HtmlToImageConverter htmlToImageConverter = new HtmlToImageConverter();
@@ -144,7 +144,7 @@ namespace EvoPdf_Next_AspNetDemo.Controllers.HTML_to_PDF
             // Create a HTML to PDF converter object with default settings
             HtmlToPdfConverter htmlToPdfConverter = new HtmlToPdfConverter();
 
-            // Set the persistent HTTP Headers option to control the inclusion of headers 
+            // Set the persistent HTTP Headers option to control the inclusion of headers
             // for each requested resource in the HTML document
             htmlToPdfConverter.PersistentHttpRequestHeaders = model.PersistentHttpHeaders;
 
@@ -189,7 +189,7 @@ Topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/access-html-pages-wit
 using System;
 using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Mvc;
-using EvoPdf_Next_AspNetDemo.Models; 
+using EvoPdf_Next_AspNetDemo.Models;
 using EvoPdf_Next_AspNetDemo.Models.HTML_to_PDF;
 
 // Use EVO PDF Namespace
