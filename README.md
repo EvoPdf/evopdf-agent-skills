@@ -14,7 +14,7 @@
   <a href="https://www.evopdf.com/help/evopdf-next-dotnet/"><img src="https://img.shields.io/badge/docs-evopdf.com-1E6FB8" alt="Documentation"></a>
   <img src="https://img.shields.io/badge/platforms-Windows%20%7C%20Linux%20%7C%20macOS-555" alt="Platforms">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-green" alt="MIT"></a>
-  <a href="https://deepwiki.com/EvoPdf/evopdf-agent-skills"><img src="https://deepwiki.com/badge.svg" alt="Ask DeepWiki"></a>
+  <a href="https://deepwiki.com/EvoPdf/evopdf-agent-skills"><img src="https://img.shields.io/badge/Ask-DeepWiki-blue" alt="Ask DeepWiki"></a>
 </p>
 
 ---
