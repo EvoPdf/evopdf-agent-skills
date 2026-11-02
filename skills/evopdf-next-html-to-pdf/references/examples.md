@@ -114,6 +114,17 @@ namespace EvoPdf_Next_AspNetDemo.Controllers.HTML_to_PDF
             // Leave as None to generate a plain PDF without an accessibility structure tree or archival metadata
             htmlToPdfConverter.PdfDocumentOptions.PdfStandard = model.PdfStandard;
 
+            // The page size declared by the CSS @page rule of the document replaces the page size set above
+            htmlToPdfConverter.PdfDocumentOptions.PreferCssPageSize = model.PreferCssPageSize;
+
+            // The maximum number of pages generated from the HTML document, or 0 for all the pages
+            htmlToPdfConverter.PdfDocumentOptions.PageNumberLimit = model.PageNumberLimit;
+
+            // The sources the converter can load: files of the local disk, pages of the local host and files of the local network
+            htmlToPdfConverter.LocalFilesEnabled = model.LocalFilesEnabled;
+            htmlToPdfConverter.LocalhostEnabled = model.LocalhostEnabled;
+            htmlToPdfConverter.UncPathEnabled = model.UncPathEnabled;
+
             // Set the maximum time, in seconds, to wait for the HTML page to load
             // The default value is 120 seconds
             htmlToPdfConverter.NavigationTimeout = model.NavigationTimeout;
@@ -232,6 +243,17 @@ namespace EvoPdf_Next_AspNetDemo.Controllers.HTML_to_PDF
 
 Topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/html-to-pdf-converter-options.htm
 
+### Set the Browser Window Growth, the Page Limit and the Allowed Sources
+
+```csharp
+htmlToPdfConverter.AutoResizeHtmlViewerWidth = true;
+htmlToPdfConverter.AutoResizeHtmlViewerHeight = true;
+htmlToPdfConverter.MaxHtmlViewerHeight = 32000;
+htmlToPdfConverter.PdfDocumentOptions.PreferCssPageSize = false;
+htmlToPdfConverter.PdfDocumentOptions.PageNumberLimit = 10;
+htmlToPdfConverter.LocalFilesEnabled = false;
+```
+
 ### Code Sample - HTML Content Destination and Scaling in PDF
 
 ```csharp
@@ -339,6 +361,17 @@ namespace EvoPdf_Next_AspNetDemo.Controllers.HTML_to_PDF
             // Sets the PDF standard for the generated document
             // Leave as None to generate a plain PDF without an accessibility structure tree or archival metadata
             htmlToPdfConverter.PdfDocumentOptions.PdfStandard = model.PdfStandard;
+
+            // The page size declared by the CSS @page rule of the document replaces the page size set above
+            htmlToPdfConverter.PdfDocumentOptions.PreferCssPageSize = model.PreferCssPageSize;
+
+            // The maximum number of pages generated from the HTML document, or 0 for all the pages
+            htmlToPdfConverter.PdfDocumentOptions.PageNumberLimit = model.PageNumberLimit;
+
+            // The sources the converter can load: files of the local disk, pages of the local host and files of the local network
+            htmlToPdfConverter.LocalFilesEnabled = model.LocalFilesEnabled;
+            htmlToPdfConverter.LocalhostEnabled = model.LocalhostEnabled;
+            htmlToPdfConverter.UncPathEnabled = model.UncPathEnabled;
 
             // Set the maximum time, in seconds, to wait for the HTML page to load
             // The default value is 120 seconds
@@ -564,7 +597,7 @@ namespace EvoPdf_Next_AspNetDemo.Controllers.HTML_to_PDF
 
 Topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/select-conversion-triggering-mode.htm
 
-### Select Conversion Triggering Mode
+### 
 
 ```csharp
 // Create the PDF converter
@@ -574,9 +607,9 @@ htmlToPdfConverter.TriggeringMode = TriggeringMode.Auto;
 ```
 
 ```csharp
-// Create the PDF converter
-HtmlToPdfConverter htmlToPdfConverter = new HtmlToPdfConverter();
-// Set the triggering mode
+            // Create the PDF converter
+            HtmlToPdfConverter htmlToPdfConverter = new HtmlToPdfConverter();
+            // Set a conversion delay in seconds
 htmlToPdfConverter.ConversionDelay = 3;
 ```
 
@@ -585,6 +618,15 @@ htmlToPdfConverter.ConversionDelay = 3;
 HtmlToPdfConverter htmlToPdfConverter = new HtmlToPdfConverter();
 // Set the triggering mode
 htmlToPdfConverter.TriggeringMode = TriggeringMode.Manual;
+```
+
+### Execute a Script after the Page Is Loaded
+
+```csharp
+htmlToPdfConverter.ScriptToExecuteAfterLoad =
+    "await new Promise(resolve => setTimeout(resolve, 2000));" +
+    "document.body.insertAdjacentHTML('beforeend', '<p>Added by the script executed after load</p>');";
+htmlToPdfConverter.WaitForAfterLoadScript = true;
 ```
 
 ### Code Sample - Select Conversion Triggering Mode
@@ -652,6 +694,17 @@ namespace EvoPdf_Next_AspNetDemo.Controllers.HTML_to_PDF
                 htmlToPdfConverter.TriggeringMode = TriggeringMode.Manual;
             }
 
+            if (model.ExecuteScriptAfterLoad && !string.IsNullOrWhiteSpace(model.AfterLoadScript))
+            {
+                // A script executed in the page after it was loaded, before the conversion starts; it can fill fields,
+                // click buttons or add content. The conversion waits for the script to finish when the flag is set, so
+                // the script can await asynchronous operations; otherwise the conversion continues while the script runs
+                htmlToPdfConverter.ScriptToExecuteAfterLoad = model.WaitForAfterLoadScript
+                    ? model.AfterLoadScript
+                    : "(async () => { " + model.AfterLoadScript + " })();";
+                htmlToPdfConverter.WaitForAfterLoadScript = model.WaitForAfterLoadScript;
+            }
+
             byte[] outPdfBuffer = null;
 
             if (model.HtmlPageSource == "Html")
@@ -712,6 +765,7 @@ namespace EvoPdf_Next_AspNetDemo.Controllers.HTML_to_PDF
 <html>
 <head>
     <title>Conversion Triggering Modes</title>
+    <link href="styles/webfonts.css" type="text/css" rel="stylesheet">
     <script type="text/javascript">
         var counter = 0;
         function count() {
@@ -734,7 +788,7 @@ namespace EvoPdf_Next_AspNetDemo.Controllers.HTML_to_PDF
         }
     </script>
 </head>
-<body onload="count()" style="font-family: 'Times New Roman'; font-size: 14px">
+<body onload="count()" style="font-family: Verdana, sans-serif; font-size: 14px ">
     The <span style="color: green"><b>count()</b></span> function is called immediately after the HTML page was loaded as a handler of the <span style="color: blue"><b>onload event</b></span> of the body element. The
     <span style="color: green"><b>count()</b></span> function increments the counter and schedules a new call to the same function to occur after 1 second if the counter did not reach the value 5 yet.<br />
     <ul>
@@ -819,6 +873,176 @@ namespace EvoPdf_Next_AspNetDemo.Controllers.HTML_to_PDF
             var model = new SVG_to_PDF_ViewModel();
             return model;
         }
+    }
+}
+```
+
+## Retrieve HTML to PDF Conversion Information
+
+Topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/retrieve-html-to-pdf-conversion-information.htm
+
+### Read the Conversion Information
+
+```csharp
+byte[] outPdfBuffer = htmlToPdfConverter.ConvertUrl(url);
+
+HtmlToPdfConversionInfo conversionInfo = htmlToPdfConverter.ConversionInfo;
+Console.WriteLine("Pages from HTML: {0}", conversionInfo.PagesFromHtml);
+Console.WriteLine("Pages inserted before: {0}, after: {1}", conversionInfo.TotalPagesInsertedBefore, conversionInfo.ExternalPagesInsertedAfter);
+Console.WriteLine("Total pages: {0}, zoom: {1}%", conversionInfo.TotalPages, conversionInfo.PrintZoom);
+```
+
+### Code Sample - Retrieve HTML to PDF Conversion Information
+
+```csharp
+using System;
+using System.IO;
+using System.Text;
+using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using EvoPdf_Next_AspNetDemo.Models;
+using EvoPdf_Next_AspNetDemo.Models.HTML_to_PDF;
+
+// Use EVO PDF Namespace
+using EvoPdf.Next;
+
+namespace EvoPdf_Next_AspNetDemo.Controllers.HTML_to_PDF
+{
+    public class Retrieve_Conversion_InfoController : Controller
+    {
+        private readonly IWebHostEnvironment m_hostingEnvironment;
+        public Retrieve_Conversion_InfoController(IWebHostEnvironment hostingEnvironment)
+        {
+            m_hostingEnvironment = hostingEnvironment;
+        }
+
+        public ActionResult Index()
+        {
+            var model = SetViewModel();
+
+            return View(model);
+        }
+
+        [HttpPost]
+        public ActionResult ConvertHtmlToPdf(Retrieve_Conversion_Info_ViewModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                var errorMessage = ModelStateHelper.GetModelErrors(ModelState);
+                throw new ValidationException(errorMessage);
+            }
+
+            // Set the license key received after purchase to use the library in licensed mode; leave it commented for demo mode
+            // Licensing.LicenseKey = "your-license-key";
+
+            // Create a HTML to PDF converter object with default settings
+            HtmlToPdfConverter htmlToPdfConverter = new HtmlToPdfConverter();
+
+            // The pages of the table of contents are counted separately in the conversion information
+            htmlToPdfConverter.PdfDocumentOptions.GenerateTableOfContents = model.GenerateTableOfContents;
+
+            if (model.AddStartPdf)
+            {
+                // The pages of a PDF document added before the HTML content
+                htmlToPdfConverter.PdfDocumentOptions.AddStartPdf(Path.Combine(GetDemoFilesPath(), "PDF_Files", "Letterhead.pdf"));
+            }
+
+            if (model.AddEndPdf)
+            {
+                // The pages of a PDF document added after the HTML content
+                htmlToPdfConverter.PdfDocumentOptions.AddEndPdf(Path.Combine(GetDemoFilesPath(), "PDF_Files", "PDF_Form.pdf"));
+            }
+
+            // The buffer to receive the generated PDF document
+            byte[] outPdfBuffer = null;
+
+            if (model.HtmlPageSource == "Url")
+            {
+                string url = model.Url;
+
+                // Convert the HTML page given by an URL to a PDF document in a memory buffer
+                outPdfBuffer = htmlToPdfConverter.ConvertUrl(url);
+            }
+            else
+            {
+                string htmlString = model.HtmlStringTextBox;
+                string baseUrl = model.BaseUrlTextBox;
+
+                // Convert a HTML string with a base URL to a PDF document in a memory buffer
+                outPdfBuffer = htmlToPdfConverter.ConvertHtml(htmlString, baseUrl);
+            }
+
+            // The information is available after the conversion; it is written in a page of the generated document
+            HtmlToPdfConversionInfo conversionInfo = htmlToPdfConverter.ConversionInfo;
+
+            StringBuilder infoText = new StringBuilder();
+            infoText.Append("Pages generated from the HTML content: ").Append(conversionInfo.PagesFromHtml).Append('\n');
+            infoText.Append("Pages of the table of contents inserted before the HTML content: ").Append(conversionInfo.TocPagesInsertedBefore).Append('\n');
+            infoText.Append("Pages of external PDF documents inserted before the HTML content: ").Append(conversionInfo.ExternalPagesInsertedBefore).Append('\n');
+            infoText.Append("Total pages inserted before the HTML content: ").Append(conversionInfo.TotalPagesInsertedBefore).Append('\n');
+            infoText.Append("Pages inserted after the HTML content: ").Append(conversionInfo.ExternalPagesInsertedAfter).Append('\n');
+            infoText.Append("Total pages of the generated document: ").Append(conversionInfo.TotalPages).Append('\n');
+            infoText.Append("Zoom at which the HTML content was drawn: ").Append(conversionInfo.PrintZoom.ToString("0.##")).Append('%').Append('\n');
+
+            if (model.InfoPagePosition != "None")
+            {
+                using PdfEditor pdfEditor = new PdfEditor(outPdfBuffer, null);
+
+                int infoPageNumber = model.InfoPagePosition == "Start"
+                    ? pdfEditor.InsertPage(1, PdfPageSize.A4, PdfPageOrientation.Portrait)
+                    : pdfEditor.AddPage(PdfPageSize.A4, PdfPageOrientation.Portrait);
+
+                PdfBaseFont baseFont = PdfFontManager.CreateBaseFont(Path.Combine(GetDemoFontsPath(), "DejaVuSerif.ttf"));
+                PdfFont titleFont = PdfFontManager.CreateFont(baseFont, 14f, PdfFontStyle.Bold, PdfColor.DarkBlue);
+                PdfFont textFont = PdfFontManager.CreateFont(baseFont, 10f, PdfFontStyle.Normal, PdfColor.Black);
+
+                pdfEditor.AddText(infoPageNumber, new PdfTextElement("HTML to PDF Conversion Information", titleFont) { X = 40, Y = 40 });
+                pdfEditor.AddText(infoPageNumber, new PdfTextElement(infoText.ToString(), textFont) { X = 40, Y = 70, Width = 515 });
+                pdfEditor.AddText(infoPageNumber, new PdfTextElement("This page was added to the generated document after the conversion and is not counted above.", textFont)
+                {
+                    X = 40,
+                    Y = 200,
+                    Width = 515
+                });
+
+                outPdfBuffer = pdfEditor.Save();
+            }
+
+            // Send the PDF file to browser
+            FileResult fileResult = new FileContentResult(outPdfBuffer, "application/pdf");
+            fileResult.FileDownloadName = "Retrieve_Conversion_Info.pdf";
+
+            return fileResult;
+        }
+
+        private Retrieve_Conversion_Info_ViewModel SetViewModel()
+        {
+            var model = new Retrieve_Conversion_Info_ViewModel();
+
+            var contentRootPath = Path.Combine(m_hostingEnvironment.ContentRootPath, "wwwroot");
+
+            HttpRequest request = ControllerContext.HttpContext.Request;
+            UriBuilder uriBuilder = new UriBuilder();
+            uriBuilder.Scheme = request.Scheme;
+            uriBuilder.Host = request.Host.Host;
+            if (request.Host.Port != null)
+                uriBuilder.Port = (int)request.Host.Port;
+            uriBuilder.Path = request.PathBase.ToString() + request.Path.ToString();
+            uriBuilder.Query = request.QueryString.ToString();
+
+            string currentPageUrl = uriBuilder.Uri.AbsoluteUri;
+            string rootUrl = currentPageUrl.Substring(0, currentPageUrl.Length - "Retrieve_Conversion_Info".Length);
+
+            model.HtmlStringTextBox = System.IO.File.ReadAllText(Path.Combine(contentRootPath, "DemoAppFiles/Input/HTML_Files/Table_of_Contents.html"));
+            model.BaseUrlTextBox = rootUrl + "DemoAppFiles/Input/HTML_Files/";
+
+            return model;
+        }
+
+        private string GetDemoFilesPath() => m_hostingEnvironment.ContentRootPath + "/wwwroot" + "/DemoAppFiles/Input/";
+        private string GetDemoFontsPath() => Path.Combine(GetDemoFilesPath(), "Font_Files");
     }
 }
 ```

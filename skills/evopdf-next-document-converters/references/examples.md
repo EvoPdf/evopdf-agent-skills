@@ -6,24 +6,20 @@ Every code sample of the documentation topics behind this skill, complete and in
 
 Topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/convert-word-docx-to-pdf.htm
 
-### Create the Word to PDF Converter
-
-**Create a Word to PDF Converter Instance**
+### Create a Word to PDF Converter Instance
 
 ```csharp
 // Create a new Word to PDF converter instance
 WordToPdfConverter wordToPdfConverter = new WordToPdfConverter();
 ```
 
-### Configure the PDF Page Settings
-
-**Use Page Settings from Word**
+### Use Page Settings from Word
 
 ```csharp
 wordToPdfConverter.PdfDocumentOptions.UsePageSettingsFromWord = true;
 ```
 
-**Use Custom PDF Page Settings**
+### Use Custom PDF Page Settings
 
 ```csharp
 wordToPdfConverter.PdfDocumentOptions.UsePageSettingsFromWord = false;
@@ -35,83 +31,88 @@ wordToPdfConverter.PdfDocumentOptions.TopMargin = 30;
 wordToPdfConverter.PdfDocumentOptions.BottomMargin = 30;
 ```
 
-### Table of Contents
-
-**Generate Table of Contents**
+### Generate Table of Contents
 
 ```csharp
 wordToPdfConverter.PdfDocumentOptions.GenerateTableOfContents = true;
 ```
 
-### Page Break Recognition
+### Fit Wide Content to Page
 
-**Enable Page Breaks from Word Document**
+```csharp
+wordToPdfConverter.PdfDocumentOptions.FitWideContentToPage = true;
+```
+
+### Enable Page Breaks from Word Document
 
 ```csharp
 wordToPdfConverter.ProcessPageBreakMarks = true;
 ```
 
-### Convert Word to PDF
-
-**Convert Word from Memory to PDF in Memory**
+### Convert Word from Memory to PDF in Memory
 
 ```csharp
 byte[] outPdfBuffer = wordToPdfConverter.ConvertToPdf(wordBytes);
 ```
 
-**Convert Word File to PDF in Memory**
+### Convert Word File to PDF in Memory
 
 ```csharp
 byte[] outPdfBuffer = wordToPdfConverter.ConvertToPdf(wordFilePath);
 ```
 
-**Write PDF Data to File**
+### Write PDF Data to File
 
 ```csharp
 File.WriteAllBytes("output.pdf", outPdfBuffer);
 ```
 
-**Convert Word from Memory to PDF File**
+### Convert Word from Memory to PDF File
 
 ```csharp
 wordToPdfConverter.ConvertToPdfFile(wordBytes, outputPdfFilePath);
 ```
 
-**Convert Word File to PDF File**
+### Convert Word File to PDF File
 
 ```csharp
 wordToPdfConverter.ConvertToPdfFile(wordFilePath, outputPdfFilePath);
 ```
 
-### Asynchronous Word to PDF Methods
-
-**Asynchronously Convert Word from Memory to PDF in Memory**
+### Asynchronously Convert Word from Memory to PDF in Memory
 
 ```csharp
 byte[] outPdfBuffer = await wordToPdfConverter.ConvertToPdfAsync(wordBytes);
 ```
 
-**Asynchronously Convert Word File to PDF in Memory**
+### Asynchronously Convert Word File to PDF in Memory
 
 ```csharp
 byte[] outPdfBuffer = await wordToPdfConverter.ConvertToPdfAsync(wordFilePath);
 ```
 
-**Asynchronously Convert Word from Memory to PDF File**
+### Asynchronously Convert Word from Memory to PDF File
 
 ```csharp
 await wordToPdfConverter.ConvertToPdfFileAsync(wordBytes, outputPdfFilePath);
 ```
 
-**Asynchronously Convert Word File to PDF File**
+### Asynchronously Convert Word File to PDF File
 
 ```csharp
 await wordToPdfConverter.ConvertToPdfFileAsync(wordFilePath, outputPdfFilePath);
 ```
 
-### Code Sample - Convert Word to PDF
+### Read the Conversion Information
 
-**Convert Word to PDF in ASP.NET Core**
+```csharp
+byte[] outPdfBuffer = wordToPdfConverter.ConvertToPdf(inputBytes);
+
+Console.WriteLine("Pages from the document: {0}", wordToPdfConverter.ConversionInfo.PagesFromDocument);
+Console.WriteLine("Total pages: {0}", wordToPdfConverter.ConversionInfo.TotalPages);
+```
+
+### Convert Word to PDF in ASP.NET Core
 
 ```csharp
 using System;
@@ -162,6 +163,10 @@ namespace EvoPdf_Next_AspNetDemo.Controllers.Word_to_PDF
 
             // Set whether a table of contents is automatically generated from headings
             wordToPdfConverter.PdfDocumentOptions.GenerateTableOfContents = model.GenerateToc;
+
+            // Set whether the whole content is scaled down to show entirely an element wider than the page that cannot be
+            // reduced on its own, such as a table whose columns cannot be wrapped; by default the content is not scaled down
+            wordToPdfConverter.PdfDocumentOptions.FitWideContentToPage = model.FitWideContentToPage;
 
             //  Set whether to use page settings (size, margins) from the Word document or the custom settings
             wordToPdfConverter.PdfDocumentOptions.UsePageSettingsFromWord = model.PdfPageSettingsMode == "FromWordDocument";
@@ -237,6 +242,28 @@ namespace EvoPdf_Next_AspNetDemo.Controllers.Word_to_PDF
 
             // The buffer to receive the generated PDF document
             byte[] outPdfBuffer = wordToPdfConverter.ConvertToPdf(inputWordBytes);
+
+            if (model.AddConversionInfoPage)
+            {
+                // The information about the conversion is available after it completes: the pages generated from the
+                // document, the pages of the table of contents and of the external PDF documents inserted before and
+                // after it and the total number of pages. It is written in a page added at the end of the document
+                var conversionInfo = wordToPdfConverter.ConversionInfo;
+                string infoText = "Pages generated from the Word document: " + conversionInfo.PagesFromDocument + "\n" +
+                    "Pages of the table of contents inserted before the content: " + conversionInfo.TocPagesInsertedBefore + "\n" +
+                    "Pages of external PDF documents inserted before the content: " + conversionInfo.ExternalPagesInsertedBefore + "\n" +
+                    "Total pages inserted before the content: " + conversionInfo.TotalPagesInsertedBefore + "\n" +
+                    "Pages inserted after the content: " + conversionInfo.ExternalPagesInsertedAfter + "\n" +
+                    "Total pages of the generated document: " + conversionInfo.TotalPages;
+
+                using PdfEditor pdfEditor = new PdfEditor(outPdfBuffer, null);
+                int infoPageNumber = pdfEditor.AddPage(PdfPageSize.A4, PdfPageOrientation.Portrait);
+                string fontFilePath = System.IO.Path.Combine(m_hostingEnvironment.ContentRootPath, "wwwroot", "DemoAppFiles", "Input", "Font_Files", "DejaVuSerif.ttf");
+                PdfFont infoFont = PdfFontManager.CreateFont(fontFilePath, 10f, PdfFontStyle.Normal, PdfColor.Black);
+                pdfEditor.AddText(infoPageNumber, new PdfTextElement("Conversion Information", PdfFontManager.CreateFont(fontFilePath, 14f, PdfFontStyle.Bold, PdfColor.DarkBlue)) { X = 40, Y = 40 });
+                pdfEditor.AddText(infoPageNumber, new PdfTextElement(infoText, infoFont) { X = 40, Y = 70, Width = 515 });
+                outPdfBuffer = pdfEditor.Save();
+            }
 
             // Send the PDF file to browser
             FileResult fileResult = new FileContentResult(outPdfBuffer, "application/pdf");
@@ -482,25 +509,21 @@ namespace EvoPdf_Next_AspNetDemo.Controllers.Word_to_PDF
 
 Topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/convert-excel-xlsx-to-pdf.htm
 
-### Create the Excel to PDF Converter
-
-**Create a Excel to PDF Converter Instance**
+### Create a Excel to PDF Converter Instance
 
 ```csharp
 // Create a new Excel to PDF converter instance
 ExcelToPdfConverter excelToPdfConverter = new ExcelToPdfConverter();
 ```
 
-### Configure the PDF Page Settings
-
-**Use Page Settings from Excel**
+### Use Page Settings from Excel
 
 ```csharp
 excelToPdfConverter.PdfDocumentOptions.UsePageSettingsFromExcel = true;
 excelToPdfConverter.PdfDocumentOptions.UseFirstWorksheetPageSettings = true;
 ```
 
-**Use Custom PDF Page Settings**
+### Use Custom PDF Page Settings
 
 ```csharp
 excelToPdfConverter.PdfDocumentOptions.UsePageSettingsFromExcel = false;
@@ -512,100 +535,101 @@ excelToPdfConverter.PdfDocumentOptions.TopMargin = 30;
 excelToPdfConverter.PdfDocumentOptions.BottomMargin = 30;
 ```
 
-### Keep Column Widths from Excel
-
-**Keep Column Widths from Excel Document**
+### Keep Column Widths from Excel Document
 
 ```csharp
 excelToPdfConverter.KeepColumnWidths = true;
 ```
 
-### Keep Row Heights from Excel
-
-**Keep Row Heights from Excel Document**
+### Keep Row Heights from Excel Document
 
 ```csharp
 excelToPdfConverter.KeepRowHeights = true;
 ```
 
-### Convert Only the First Worksheet or All Worksheets
-
-**Convert All Worksheets**
+### Convert All Worksheets
 
 ```csharp
 excelToPdfConverter.PdfDocumentOptions.ConvertOnlyFirstWorksheet = false;
 excelToPdfConverter.PdfDocumentOptions.PageBreakBetweenWorksheets = true;
 ```
 
-### Display or Hide the Worksheet Title
-
-**Display Worksheet Title**
+### Display Worksheet Title
 
 ```csharp
 excelToPdfConverter.PdfDocumentOptions.DisplayWorksheetTitle = true;
 ```
 
-### Convert Excel to PDF
+### Keep the Content Size
 
-**Convert Excel from Memory to PDF in Memory**
+```csharp
+excelToPdfConverter.PdfDocumentOptions.FitWideContentToPage = false;
+```
+
+### Convert Excel from Memory to PDF in Memory
 
 ```csharp
 byte[] outPdfBuffer = excelToPdfConverter.ConvertToPdf(excelBytes);
 ```
 
-**Convert Excel File to PDF in Memory**
+### Convert Excel File to PDF in Memory
 
 ```csharp
 byte[] outPdfBuffer = excelToPdfConverter.ConvertToPdf(excelFilePath);
 ```
 
-**Write PDF Data to File**
+### Write PDF Data to File
 
 ```csharp
 File.WriteAllBytes("output.pdf", outPdfBuffer);
 ```
 
-**Convert Excel from Memory to PDF File**
+### Convert Excel from Memory to PDF File
 
 ```csharp
 excelToPdfConverter.ConvertToPdfFile(excelBytes, outputPdfFilePath);
 ```
 
-**Convert Excel File to PDF File**
+### Convert Excel File to PDF File
 
 ```csharp
 excelToPdfConverter.ConvertToPdfFile(excelFilePath, outputPdfFilePath);
 ```
 
-### Asynchronous Excel to PDF Methods
-
-**Asynchronously Convert Excel from Memory to PDF in Memory**
+### Asynchronously Convert Excel from Memory to PDF in Memory
 
 ```csharp
 byte[] outPdfBuffer = await excelToPdfConverter.ConvertToPdfAsync(excelBytes);
 ```
 
-**Asynchronously Convert Excel File to PDF in Memory**
+### Asynchronously Convert Excel File to PDF in Memory
 
 ```csharp
 byte[] outPdfBuffer = await excelToPdfConverter.ConvertToPdfAsync(excelFilePath);
 ```
 
-**Asynchronously Convert Excel from Memory to PDF File**
+### Asynchronously Convert Excel from Memory to PDF File
 
 ```csharp
 await excelToPdfConverter.ConvertToPdfFileAsync(excelBytes, outputPdfFilePath);
 ```
 
-**Asynchronously Convert Excel File to PDF File**
+### Asynchronously Convert Excel File to PDF File
 
 ```csharp
 await excelToPdfConverter.ConvertToPdfFileAsync(excelFilePath, outputPdfFilePath);
 ```
 
-### Code Sample - Convert Excel to PDF
+### Read the Conversion Information
 
-**Convert Excel to PDF in ASP.NET Core**
+```csharp
+byte[] outPdfBuffer = excelToPdfConverter.ConvertToPdf(inputBytes);
+
+Console.WriteLine("Pages from the document: {0}", excelToPdfConverter.ConversionInfo.PagesFromDocument);
+Console.WriteLine("Total pages: {0}", excelToPdfConverter.ConversionInfo.TotalPages);
+```
+
+### Convert Excel to PDF in ASP.NET Core
 
 ```csharp
 using System;
@@ -676,6 +700,9 @@ namespace EvoPdf_Next_AspNetDemo.Controllers.Excel_to_PDF
             // Set whether the worksheet title is displayed at the top of each worksheet in the PDF document
             excelToPdfConverter.PdfDocumentOptions.DisplayWorksheetTitle = model.DisplayWorksheetTitle;
 
+            // Set whether an element wider than the page, such as a picture, is scaled down to the width of the page or the content keeps its size
+            excelToPdfConverter.PdfDocumentOptions.FitWideContentToPage = model.FitWideContentToPage;
+
             if (!excelToPdfConverter.PdfDocumentOptions.UsePageSettingsFromExcel)
             {
                 // Set PDF page size which can be a predefined size like A4 or a custom size in points
@@ -744,6 +771,28 @@ namespace EvoPdf_Next_AspNetDemo.Controllers.Excel_to_PDF
 
             // The buffer to receive the generated PDF document
             byte[] outPdfBuffer = excelToPdfConverter.ConvertToPdf(inputExcelBytes);
+
+            if (model.AddConversionInfoPage)
+            {
+                // The information about the conversion is available after it completes: the pages generated from the
+                // document, the pages of the table of contents and of the external PDF documents inserted before and
+                // after it and the total number of pages. It is written in a page added at the end of the document
+                var conversionInfo = excelToPdfConverter.ConversionInfo;
+                string infoText = "Pages generated from the Excel document: " + conversionInfo.PagesFromDocument + "\n" +
+                    "Pages of the table of contents inserted before the content: " + conversionInfo.TocPagesInsertedBefore + "\n" +
+                    "Pages of external PDF documents inserted before the content: " + conversionInfo.ExternalPagesInsertedBefore + "\n" +
+                    "Total pages inserted before the content: " + conversionInfo.TotalPagesInsertedBefore + "\n" +
+                    "Pages inserted after the content: " + conversionInfo.ExternalPagesInsertedAfter + "\n" +
+                    "Total pages of the generated document: " + conversionInfo.TotalPages;
+
+                using PdfEditor pdfEditor = new PdfEditor(outPdfBuffer, null);
+                int infoPageNumber = pdfEditor.AddPage(PdfPageSize.A4, PdfPageOrientation.Portrait);
+                string fontFilePath = System.IO.Path.Combine(m_hostingEnvironment.ContentRootPath, "wwwroot", "DemoAppFiles", "Input", "Font_Files", "DejaVuSerif.ttf");
+                PdfFont infoFont = PdfFontManager.CreateFont(fontFilePath, 10f, PdfFontStyle.Normal, PdfColor.Black);
+                pdfEditor.AddText(infoPageNumber, new PdfTextElement("Conversion Information", PdfFontManager.CreateFont(fontFilePath, 14f, PdfFontStyle.Bold, PdfColor.DarkBlue)) { X = 40, Y = 40 });
+                pdfEditor.AddText(infoPageNumber, new PdfTextElement(infoText, infoFont) { X = 40, Y = 70, Width = 515 });
+                outPdfBuffer = pdfEditor.Save();
+            }
 
             // Send the PDF file to browser
             FileResult fileResult = new FileContentResult(outPdfBuffer, "application/pdf");
@@ -989,20 +1038,17 @@ namespace EvoPdf_Next_AspNetDemo.Controllers.Excel_to_PDF
 
 Topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/convert-rtf-to-pdf.htm
 
-### Create the RTF to PDF Converter
-
-**Create a RTF to PDF Converter Instance**
+### Create a RTF to PDF Converter Instance
 
 ```csharp
 // Create a new RTF to PDF converter instance
 RtfToPdfConverter rtfToPdfConverter = new RtfToPdfConverter();
 ```
 
-### Configure the PDF Page Settings
-
-**Use Custom PDF Page Settings**
+### Use Custom PDF Page Settings
 
 ```csharp
+rtfToPdfConverter.PdfDocumentOptions.UsePageSettingsFromRtf = false;
 rtfToPdfConverter.PdfDocumentOptions.PdfPageSize = PdfPageSize.A4;
 rtfToPdfConverter.PdfDocumentOptions.PdfPageOrientation = PdfPageOrientation.Landscape;
 rtfToPdfConverter.PdfDocumentOptions.LeftMargin = 20;
@@ -1011,123 +1057,138 @@ rtfToPdfConverter.PdfDocumentOptions.TopMargin = 30;
 rtfToPdfConverter.PdfDocumentOptions.BottomMargin = 30;
 ```
 
-### Table of Contents
-
-**Generate Table of Contents**
+### Generate Table of Contents
 
 ```csharp
 rtfToPdfConverter.PdfDocumentOptions.GenerateTableOfContents = true;
 ```
 
-### Convert RTF to PDF
+### Fit Wide Content to Page
 
-**Convert RTF from Memory to PDF in Memory**
+```csharp
+rtfToPdfConverter.PdfDocumentOptions.FitWideContentToPage = true;
+```
+
+### Convert RTF from Memory to PDF in Memory
 
 ```csharp
 byte[] outPdfBuffer = rtfToPdfConverter.ConvertToPdf(rtfBytes);
 ```
 
-**Convert RTF Stream to PDF in Memory**
+### Convert RTF Stream to PDF in Memory
 
 ```csharp
 byte[] outPdfBuffer = rtfToPdfConverter.ConvertStreamToPdf(rtfStream);
 ```
 
-**Convert RTF String to PDF in Memory**
+### Convert RTF String to PDF in Memory
 
 ```csharp
 byte[] outPdfBuffer = rtfToPdfConverter.ConvertStringToPdf(rtfString);
 ```
 
-**Convert RTF File to PDF in Memory**
+### Convert RTF File to PDF in Memory
 
 ```csharp
 byte[] outPdfBuffer = rtfToPdfConverter.ConvertFileToPdf(rtfFilePath);
 ```
 
-**Write PDF Data to File**
+### Write PDF Data to File
 
 ```csharp
 File.WriteAllBytes("output.pdf", outPdfBuffer);
 ```
 
-**Convert RTF from Memory to PDF File**
+### Convert RTF from Memory to PDF File
 
 ```csharp
 rtfToPdfConverter.ConvertToPdfFile(rtfBytes, outputPdfFilePath);
 ```
 
-**Convert RTF from Stream to PDF File**
+### Convert RTF from Stream to PDF File
 
 ```csharp
 rtfToPdfConverter.ConvertStreamToPdfFile(rtfStream, outputPdfFilePath);
 ```
 
-**Convert RTF String to PDF File**
+### Convert RTF String to PDF File
 
 ```csharp
 rtfToPdfConverter.ConvertStringToPdfFile(rtfString, outputPdfFilePath);
 ```
 
-**Convert RTF File to PDF File**
+### Convert RTF File to PDF File
 
 ```csharp
 rtfToPdfConverter.ConvertFileToPdfFile(rtfFilePath, outputPdfFilePath);
 ```
 
-### Asynchronous RTF to PDF Methods
-
-**Convert RTF from Memory to PDF in Memory**
+### Convert RTF from Memory to PDF in Memory
 
 ```csharp
 byte[] outPdfBuffer = await rtfToPdfConverter.ConvertToPdfAsync(rtfBytes);
 ```
 
-**Convert RTF Stream to PDF in Memory**
+### Convert RTF Stream to PDF in Memory
 
 ```csharp
 byte[] outPdfBuffer = await rtfToPdfConverter.ConvertStreamToPdfAsync(rtfStream);
 ```
 
-**Convert RTF String to PDF in Memory**
+### Convert RTF String to PDF in Memory
 
 ```csharp
 byte[] outPdfBuffer = await rtfToPdfConverter.ConvertStringToPdfAsync(rtfString);
 ```
 
-**Convert RTF File to PDF in Memory**
+### Convert RTF File to PDF in Memory
 
 ```csharp
 byte[] outPdfBuffer = await rtfToPdfConverter.ConvertFileToPdfAsync(rtfFilePath);
 ```
 
-**Convert RTF from Memory to PDF File**
+### Convert RTF from Memory to PDF File
 
 ```csharp
 await rtfToPdfConverter.ConvertToPdfFileAsync(rtfBytes, outputPdfFilePath);
 ```
 
-**Convert RTF from Stream to PDF File**
+### Convert RTF from Stream to PDF File
 
 ```csharp
 await rtfToPdfConverter.ConvertStreamToPdfFileAsync(rtfStream, outputPdfFilePath);
 ```
 
-**Convert RTF String to PDF File**
+### Convert RTF String to PDF File
 
 ```csharp
 await rtfToPdfConverter.ConvertStringToPdfFileAsync(rtfString, outputPdfFilePath);
 ```
 
-**Convert RTF File to PDF File**
+### Convert RTF File to PDF File
 
 ```csharp
 await rtfToPdfConverter.ConvertFileToPdfFileAsync(rtfFilePath, outputPdfFilePath);
 ```
 
-### Code Sample - Convert RTF to PDF
+### Use Custom Page Settings
 
-**Convert RTF to PDF in ASP.NET Core**
+```csharp
+rtfToPdfConverter.PdfDocumentOptions.UsePageSettingsFromRtf = false;
+rtfToPdfConverter.PdfDocumentOptions.PdfPageSize = PdfPageSize.A4;
+rtfToPdfConverter.PdfDocumentOptions.PdfPageOrientation = PdfPageOrientation.Landscape;
+```
+
+### Read the Conversion Information
+
+```csharp
+byte[] outPdfBuffer = rtfToPdfConverter.ConvertToPdf(inputBytes);
+
+Console.WriteLine("Pages from the document: {0}", rtfToPdfConverter.ConversionInfo.PagesFromDocument);
+Console.WriteLine("Total pages: {0}", rtfToPdfConverter.ConversionInfo.TotalPages);
+```
+
+### Convert RTF to PDF in ASP.NET Core
 
 ```csharp
 using System;
@@ -1179,22 +1240,32 @@ namespace EvoPdf_Next_AspNetDemo.Controllers.RTF_to_PDF
             // Set whether a table of contents is automatically generated from headings
             rtfToPdfConverter.PdfDocumentOptions.GenerateTableOfContents = model.GenerateToc;
 
-            // Set PDF page size which can be a predefined size like A4 or a custom size in points
-            // Leave it not set to have a default A4 PDF page
-            rtfToPdfConverter.PdfDocumentOptions.PdfPageSize = SelectedPdfPageSize(model.PdfPageSize);
+            // Set whether the whole content is scaled down to show entirely an element wider than the page that cannot be
+            // reduced on its own, such as a table whose columns cannot be wrapped; by default the content is not scaled down
+            rtfToPdfConverter.PdfDocumentOptions.FitWideContentToPage = model.FitWideContentToPage;
 
-            // Set PDF page orientation to Portrait or Landscape
-            // Leave it not set to have a default Portrait orientation for PDF page
-            rtfToPdfConverter.PdfDocumentOptions.PdfPageOrientation = SelectedPdfPageOrientation(model.PdfPageOrientation);
+            // Set whether to use the page settings (size, orientation, margins) of the RTF document or the custom settings
+            rtfToPdfConverter.PdfDocumentOptions.UsePageSettingsFromRtf = model.PdfPageSettingsMode == "FromRtfDocument";
 
-            // Set PDF page margins in points or leave them not set to have a PDF page without margins
-            rtfToPdfConverter.PdfDocumentOptions.LeftMargin = model.LeftMargin;
-            rtfToPdfConverter.PdfDocumentOptions.RightMargin = model.RightMargin;
-            rtfToPdfConverter.PdfDocumentOptions.TopMargin = model.TopMargin;
-            rtfToPdfConverter.PdfDocumentOptions.BottomMargin = model.BottomMargin;
+            if (!rtfToPdfConverter.PdfDocumentOptions.UsePageSettingsFromRtf)
+            {
+                // Set PDF page size which can be a predefined size like A4 or a custom size in points
+                // Leave it not set to have a default A4 PDF page
+                rtfToPdfConverter.PdfDocumentOptions.PdfPageSize = SelectedPdfPageSize(model.PdfPageSize);
 
-            // Set the RTF viewer zoom percentage
-            rtfToPdfConverter.PdfDocumentOptions.Zoom = model.RtfViewerZoom;
+                // Set PDF page orientation to Portrait or Landscape
+                // Leave it not set to have a default Portrait orientation for PDF page
+                rtfToPdfConverter.PdfDocumentOptions.PdfPageOrientation = SelectedPdfPageOrientation(model.PdfPageOrientation);
+
+                // Set PDF page margins in points or leave them not set to have a PDF page without margins
+                rtfToPdfConverter.PdfDocumentOptions.LeftMargin = model.LeftMargin;
+                rtfToPdfConverter.PdfDocumentOptions.RightMargin = model.RightMargin;
+                rtfToPdfConverter.PdfDocumentOptions.TopMargin = model.TopMargin;
+                rtfToPdfConverter.PdfDocumentOptions.BottomMargin = model.BottomMargin;
+
+                // Set the RTF viewer zoom percentage
+                rtfToPdfConverter.PdfDocumentOptions.Zoom = model.RtfViewerZoom;
+            }
 
             // Set PDF header and footer
             SetHeader(rtfToPdfConverter, model);
@@ -1244,6 +1315,28 @@ namespace EvoPdf_Next_AspNetDemo.Controllers.RTF_to_PDF
 
             // The buffer to receive the generated PDF document
             byte[] outPdfBuffer = rtfToPdfConverter.ConvertToPdf(inputRtfBytes);
+
+            if (model.AddConversionInfoPage)
+            {
+                // The information about the conversion is available after it completes: the pages generated from the
+                // document, the pages of the table of contents and of the external PDF documents inserted before and
+                // after it and the total number of pages. It is written in a page added at the end of the document
+                var conversionInfo = rtfToPdfConverter.ConversionInfo;
+                string infoText = "Pages generated from the RTF document: " + conversionInfo.PagesFromDocument + "\n" +
+                    "Pages of the table of contents inserted before the content: " + conversionInfo.TocPagesInsertedBefore + "\n" +
+                    "Pages of external PDF documents inserted before the content: " + conversionInfo.ExternalPagesInsertedBefore + "\n" +
+                    "Total pages inserted before the content: " + conversionInfo.TotalPagesInsertedBefore + "\n" +
+                    "Pages inserted after the content: " + conversionInfo.ExternalPagesInsertedAfter + "\n" +
+                    "Total pages of the generated document: " + conversionInfo.TotalPages;
+
+                using PdfEditor pdfEditor = new PdfEditor(outPdfBuffer, null);
+                int infoPageNumber = pdfEditor.AddPage(PdfPageSize.A4, PdfPageOrientation.Portrait);
+                string fontFilePath = System.IO.Path.Combine(m_hostingEnvironment.ContentRootPath, "wwwroot", "DemoAppFiles", "Input", "Font_Files", "DejaVuSerif.ttf");
+                PdfFont infoFont = PdfFontManager.CreateFont(fontFilePath, 10f, PdfFontStyle.Normal, PdfColor.Black);
+                pdfEditor.AddText(infoPageNumber, new PdfTextElement("Conversion Information", PdfFontManager.CreateFont(fontFilePath, 14f, PdfFontStyle.Bold, PdfColor.DarkBlue)) { X = 40, Y = 40 });
+                pdfEditor.AddText(infoPageNumber, new PdfTextElement(infoText, infoFont) { X = 40, Y = 70, Width = 515 });
+                outPdfBuffer = pdfEditor.Save();
+            }
 
             // Send the PDF file to browser
             FileResult fileResult = new FileContentResult(outPdfBuffer, "application/pdf");
@@ -1489,18 +1582,14 @@ namespace EvoPdf_Next_AspNetDemo.Controllers.RTF_to_PDF
 
 Topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/convert-markdown-to-pdf.htm
 
-### Create the Markdown to PDF Converter
-
-**Create a Markdown to PDF Converter Instance**
+### Create a Markdown to PDF Converter Instance
 
 ```csharp
 // Create a new Markdown to PDF converter instance
 MarkdownToPdfConverter markdownToPdfConverter = new MarkdownToPdfConverter();
 ```
 
-### Configure the PDF Page Settings
-
-**Use Custom PDF Page Settings**
+### Use Custom PDF Page Settings
 
 ```csharp
 markdownToPdfConverter.PdfDocumentOptions.PdfPageSize = PdfPageSize.A4;
@@ -1511,17 +1600,19 @@ markdownToPdfConverter.PdfDocumentOptions.TopMargin = 30;
 markdownToPdfConverter.PdfDocumentOptions.BottomMargin = 30;
 ```
 
-### Table of Contents
-
-**Generate Table of Contents**
+### Generate Table of Contents
 
 ```csharp
 markdownToPdfConverter.PdfDocumentOptions.GenerateTableOfContents = true;
 ```
 
-### Apply a Custom Style Sheet
+### Fit Wide Content to Page
 
-**Apply Custom Style Sheet**
+```csharp
+markdownToPdfConverter.PdfDocumentOptions.FitWideContentToPage = true;
+```
+
+### Apply Custom Style Sheet
 
 ```csharp
 markdownToPdfConverter.PdfDocumentOptions.StyleSheet = @"
@@ -1532,27 +1623,25 @@ h1 {
 ";
 ```
 
-### Convert Markdown to PDF
-
-**Convert to PDF in Memory**
+### Convert to PDF in Memory
 
 ```csharp
 byte[] outPdfBuffer = markdownToPdfConverter.ConvertStringToPdf(markdownString, baseUrl);
 ```
 
-**Write PDF Data to File**
+### Write PDF Data to File
 
 ```csharp
 File.WriteAllBytes("output.pdf", outPdfBuffer);
 ```
 
-**Convert to PDF File**
+### Convert to PDF File
 
 ```csharp
 markdownToPdfConverter.ConvertStringToPdfFile(markdownString, baseUrl, outputPdfFilePath);
 ```
 
-**Read a Markdown String from File**
+### Read a Markdown String from File
 
 ```csharp
 byte[] inputMarkdownBytes = System.IO.File.ReadAllBytes(markdownFilePath);
@@ -1560,30 +1649,35 @@ string markdownString = Encoding.UTF8.GetString(inputMarkdownBytes);
 string baseUrl = "file://" + markdownFilePath;
 ```
 
-**Read a Markdown String Using ReadAllText**
+### Read a Markdown String Using ReadAllText
 
 ```csharp
 string markdownString = System.IO.File.ReadAllText(markdownFilePath, Encoding.UTF8);
 string baseUrl = "file://" + markdownFilePath;
 ```
 
-### Asynchronous Markdown to PDF Methods
-
-**Asynchronously Convert to PDF in Memory**
+### Asynchronously Convert to PDF in Memory
 
 ```csharp
 byte[] outPdfBuffer = await markdownToPdfConverter.ConvertStringToPdfAsync(markdownString, baseUrl);
 ```
 
-**Asynchronously Convert to PDF File**
+### Asynchronously Convert to PDF File
 
 ```csharp
 await markdownToPdfConverter.ConvertStringToPdfFileAsync(markdownString, baseUrl, outputPdfFilePath);
 ```
 
-### Code Sample - Convert Markdown to PDF
+### Read the Conversion Information
 
-**Convert Markdown to PDF in ASP.NET Core**
+```csharp
+byte[] outPdfBuffer = markdownToPdfConverter.ConvertStringToPdf(markdownString, baseUrl);
+
+Console.WriteLine("Pages from the document: {0}", markdownToPdfConverter.ConversionInfo.PagesFromDocument);
+Console.WriteLine("Total pages: {0}", markdownToPdfConverter.ConversionInfo.TotalPages);
+```
+
+### Convert Markdown to PDF in ASP.NET Core
 
 ```csharp
 using System;
@@ -1637,6 +1731,10 @@ namespace EvoPdf_Next_AspNetDemo.Controllers.Markdown_to_PDF
 
             // Set whether a table of contents is automatically generated from headings
             markdownToPdfConverter.PdfDocumentOptions.GenerateTableOfContents = model.GenerateToc;
+
+            // Set whether the whole content is scaled down to show entirely an element wider than the page that cannot be
+            // reduced on its own, such as a table whose columns cannot be wrapped; by default the content is not scaled down
+            markdownToPdfConverter.PdfDocumentOptions.FitWideContentToPage = model.FitWideContentToPage;
 
             // Set PDF page size which can be a predefined size like A4 or a custom size in points
             // Leave it not set to have a default A4 PDF page
@@ -1701,6 +1799,28 @@ namespace EvoPdf_Next_AspNetDemo.Controllers.Markdown_to_PDF
 
             // Convert the Markdown string to a PDF document in a memory buffer
             byte[] outPdfBuffer = markdownToPdfConverter.ConvertStringToPdf(markdownString, baseUrl);
+
+            if (model.AddConversionInfoPage)
+            {
+                // The information about the conversion is available after it completes: the pages generated from the
+                // document, the pages of the table of contents and of the external PDF documents inserted before and
+                // after it and the total number of pages. It is written in a page added at the end of the document
+                var conversionInfo = markdownToPdfConverter.ConversionInfo;
+                string infoText = "Pages generated from the Markdown document: " + conversionInfo.PagesFromDocument + "\n" +
+                    "Pages of the table of contents inserted before the content: " + conversionInfo.TocPagesInsertedBefore + "\n" +
+                    "Pages of external PDF documents inserted before the content: " + conversionInfo.ExternalPagesInsertedBefore + "\n" +
+                    "Total pages inserted before the content: " + conversionInfo.TotalPagesInsertedBefore + "\n" +
+                    "Pages inserted after the content: " + conversionInfo.ExternalPagesInsertedAfter + "\n" +
+                    "Total pages of the generated document: " + conversionInfo.TotalPages;
+
+                using PdfEditor pdfEditor = new PdfEditor(outPdfBuffer, null);
+                int infoPageNumber = pdfEditor.AddPage(PdfPageSize.A4, PdfPageOrientation.Portrait);
+                string fontFilePath = System.IO.Path.Combine(m_hostingEnvironment.ContentRootPath, "wwwroot", "DemoAppFiles", "Input", "Font_Files", "DejaVuSerif.ttf");
+                PdfFont infoFont = PdfFontManager.CreateFont(fontFilePath, 10f, PdfFontStyle.Normal, PdfColor.Black);
+                pdfEditor.AddText(infoPageNumber, new PdfTextElement("Conversion Information", PdfFontManager.CreateFont(fontFilePath, 14f, PdfFontStyle.Bold, PdfColor.DarkBlue)) { X = 40, Y = 40 });
+                pdfEditor.AddText(infoPageNumber, new PdfTextElement(infoText, infoFont) { X = 40, Y = 70, Width = 515 });
+                outPdfBuffer = pdfEditor.Save();
+            }
 
             // Send the PDF file to browser
             FileResult fileResult = new FileContentResult(outPdfBuffer, "application/pdf");
@@ -1942,5 +2062,778 @@ namespace EvoPdf_Next_AspNetDemo.Controllers.Markdown_to_PDF
             return model;
         }
     }
+}
+```
+
+## Add Word Documents to PDF Documents
+
+Topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/add-word-documents-to-pdf-documents.htm
+
+### Add a Word Document to the Current Page
+
+```csharp
+PdfWordElement wordElement = new PdfWordElement(inputWordBytes)
+{
+    X = 0,
+    Y = crtYPos,
+    // 0 extends the content to the right margin of the page
+    Width = 0,
+    Zoom = 100,
+    GenerateDocumentOutline = true
+};
+
+PdfContentRenderInfo wordRenderInfo = pdfDocument.AddWord(wordElement);
+```
+
+### Add Elements after the Word Content
+
+```csharp
+// The rendered area reported for the last page places the elements after the content
+crtYPos = wordRenderInfo.LastPageRectangle.Bounds.Bottom + 15;
+
+PdfTextElement closingElement = new PdfTextElement("This text was added after the Word content", textFont)
+{
+    X = 0,
+    Y = crtYPos,
+    Width = pdfDocument.ContentWidth
+};
+pdfDocument.AddText(closingElement);
+```
+
+### Code Sample - Add Word Documents to PDF Documents
+
+```csharp
+// Use EVO PDF Namespace
+using EvoPdf.Next;
+
+public byte[] AddWordToPdfDocument(byte[] inputWordBytes, string fontFilePath)
+{
+    // Set the license key received after purchase to use the library in licensed mode; leave it commented for demo mode
+    // Licensing.LicenseKey = "your-license-key";
+
+    PdfDocumentCreateSettings pdfCreateSettings = new PdfDocumentCreateSettings()
+    {
+        PageSize = PdfPageSize.A4,
+        PageOrientation = PdfPageOrientation.Portrait,
+        Margins = new PdfMargins(36, 36, 36, 36),
+        Language = "en-US"
+    };
+
+    using PdfDocument pdfDocument = new PdfDocument(pdfCreateSettings);
+    pdfDocument.PdfDocumentInfo.Title = "Word Content in a PDF Document";
+
+    PdfBaseFont baseFont = PdfFontManager.CreateBaseFont(fontFilePath);
+    PdfFont titleFont = PdfFontManager.CreateFont(baseFont, 16f, PdfFontStyle.Bold, PdfColor.DarkBlue);
+    PdfFont textFont = PdfFontManager.CreateFont(baseFont, 10f, PdfFontStyle.Normal, PdfColor.Black);
+
+    // Elements created with the PDF creator before the document content
+    PdfTextElement titleElement = new PdfTextElement("Word Content in a PDF Document", titleFont)
+    {
+        X = 0,
+        Y = 0,
+        Width = pdfDocument.ContentWidth,
+        Alignment = PdfTextAlignment.Center
+    };
+    titleElement.Accessibility.StructureType = PdfStructureType.Heading1;
+    float crtYPos = pdfDocument.AddText(titleElement).LastPageRectangle.Bounds.Bottom + 10;
+
+    PdfTextElement introElement = new PdfTextElement(
+        "The text above and this paragraph are text elements of the PDF document. The content of the Word " +
+        "document starts below them and continues on new pages when it does not fit in this one. " +
+        "The elements added after the Word content go to its last page, below it.", textFont)
+    {
+        X = 0,
+        Y = crtYPos,
+        Width = pdfDocument.ContentWidth
+    };
+    crtYPos = pdfDocument.AddText(introElement).LastPageRectangle.Bounds.Bottom + 15;
+
+    // The Word document rendered in the PDF document, from the given position of the current
+    // page and inside the page margins. The X position is kept on the next pages
+    PdfWordElement wordElement = new PdfWordElement(inputWordBytes)
+    {
+        X = 0,
+        Y = crtYPos,
+        // 0 extends the content to the right margin of the page
+        Width = 0,
+        Zoom = 100,
+        // The headings of the Word document join the outline of the PDF document
+        GenerateDocumentOutline = true,
+        // The fonts stored in the Word document are used; FontFiles and FallbackFontFiles can give
+        // more fonts to the element, as for the converter
+        UseEmbeddedFonts = true
+    };
+
+    PdfContentRenderInfo wordRenderInfo = pdfDocument.AddWord(wordElement);
+
+    // The rendered area reported for the last page places the elements after the content
+    crtYPos = wordRenderInfo.LastPageRectangle.Bounds.Bottom + 15;
+
+    PdfRectangleElement separator = new PdfRectangleElement(0, crtYPos, pdfDocument.ContentWidth, 1)
+    {
+        FillColor = PdfColor.DarkBlue,
+        BorderColor = null
+    };
+    pdfDocument.AddRectangle(separator);
+
+    PdfTextElement closingElement = new PdfTextElement(
+        string.Format("The Word content was rendered on {0} page(s), from page {1} to page {2}. This text was added after it.",
+            wordRenderInfo.PagesCount, wordRenderInfo.FirstPageNumber, wordRenderInfo.LastPageNumber), textFont)
+    {
+        X = 0,
+        Y = crtYPos + 8,
+        Width = pdfDocument.ContentWidth
+    };
+    pdfDocument.AddText(closingElement);
+
+    // The buffer to receive the generated PDF document
+    byte[] outPdfBuffer = pdfDocument.Save();
+
+    return outPdfBuffer;
+}
+```
+
+## Add Excel Workbooks to PDF Documents
+
+Topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/add-excel-workbooks-to-pdf-documents.htm
+
+### Add an Excel Workbook to the Current Page
+
+```csharp
+PdfExcelElement excelElement = new PdfExcelElement(inputExcelBytes)
+{
+    X = 0,
+    Y = crtYPos,
+    // 0 extends the content to the right margin of the page
+    Width = 0,
+    Zoom = 100
+};
+
+PdfContentRenderInfo excelRenderInfo = pdfDocument.AddExcel(excelElement);
+```
+
+### Code Sample - Add Excel Workbooks to PDF Documents
+
+```csharp
+// Use EVO PDF Namespace
+using EvoPdf.Next;
+
+public byte[] AddExcelToPdfDocument(byte[] inputExcelBytes, string fontFilePath)
+{
+    // Set the license key received after purchase to use the library in licensed mode; leave it commented for demo mode
+    // Licensing.LicenseKey = "your-license-key";
+
+    PdfDocumentCreateSettings pdfCreateSettings = new PdfDocumentCreateSettings()
+    {
+        PageSize = PdfPageSize.A4,
+        PageOrientation = PdfPageOrientation.Portrait,
+        Margins = new PdfMargins(36, 36, 36, 36),
+        Language = "en-US"
+    };
+
+    using PdfDocument pdfDocument = new PdfDocument(pdfCreateSettings);
+    pdfDocument.PdfDocumentInfo.Title = "Excel Content in a PDF Document";
+
+    PdfBaseFont baseFont = PdfFontManager.CreateBaseFont(fontFilePath);
+    PdfFont titleFont = PdfFontManager.CreateFont(baseFont, 16f, PdfFontStyle.Bold, PdfColor.DarkBlue);
+    PdfFont textFont = PdfFontManager.CreateFont(baseFont, 10f, PdfFontStyle.Normal, PdfColor.Black);
+
+    // Elements created with the PDF creator before the document content
+    PdfTextElement titleElement = new PdfTextElement("Excel Content in a PDF Document", titleFont)
+    {
+        X = 0,
+        Y = 0,
+        Width = pdfDocument.ContentWidth,
+        Alignment = PdfTextAlignment.Center
+    };
+    titleElement.Accessibility.StructureType = PdfStructureType.Heading1;
+    float crtYPos = pdfDocument.AddText(titleElement).LastPageRectangle.Bounds.Bottom + 10;
+
+    PdfTextElement introElement = new PdfTextElement(
+        "The text above and this paragraph are text elements of the PDF document. The worksheets of the Excel " +
+        "workbook start below them and continue on new pages when they do not fit in this one. " +
+        "The elements added after the Excel content go to its last page, below it.", textFont)
+    {
+        X = 0,
+        Y = crtYPos,
+        Width = pdfDocument.ContentWidth
+    };
+    crtYPos = pdfDocument.AddText(introElement).LastPageRectangle.Bounds.Bottom + 15;
+
+    // The Excel workbook rendered in the PDF document, from the given position of the current
+    // page and inside the page margins. The X position is kept on the next pages
+    PdfExcelElement excelElement = new PdfExcelElement(inputExcelBytes)
+    {
+        X = 0,
+        Y = crtYPos,
+        // 0 extends the content to the right margin of the page
+        Width = 0,
+        Zoom = 100,
+        // The column widths and the row heights of the worksheets are kept, or the cells take
+        // the size of their content
+        KeepColumnWidths = true,
+        KeepRowHeights = true,
+        // The worksheets to render and how they are separated
+        ConvertOnlyFirstWorksheet = false,
+        PageBreakBetweenWorksheets = true,
+        DisplayWorksheetTitle = true
+    };
+
+    PdfContentRenderInfo excelRenderInfo = pdfDocument.AddExcel(excelElement);
+
+    // The rendered area reported for the last page places the elements after the content
+    crtYPos = excelRenderInfo.LastPageRectangle.Bounds.Bottom + 15;
+
+    PdfRectangleElement separator = new PdfRectangleElement(0, crtYPos, pdfDocument.ContentWidth, 1)
+    {
+        FillColor = PdfColor.DarkBlue,
+        BorderColor = null
+    };
+    pdfDocument.AddRectangle(separator);
+
+    PdfTextElement closingElement = new PdfTextElement(
+        string.Format("The Excel content was rendered on {0} page(s), from page {1} to page {2}. This text was added after it.",
+            excelRenderInfo.PagesCount, excelRenderInfo.FirstPageNumber, excelRenderInfo.LastPageNumber), textFont)
+    {
+        X = 0,
+        Y = crtYPos + 8,
+        Width = pdfDocument.ContentWidth
+    };
+    pdfDocument.AddText(closingElement);
+
+    // The buffer to receive the generated PDF document
+    byte[] outPdfBuffer = pdfDocument.Save();
+
+    return outPdfBuffer;
+}
+```
+
+## Add RTF Documents to PDF Documents
+
+Topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/add-rtf-documents-to-pdf-documents.htm
+
+### Create the RTF Element
+
+```csharp
+// A RTF string is given to the element as it is
+PdfRtfElement rtfElement = new PdfRtfElement(rtfString);
+
+// The content of a RTF file
+PdfRtfElement rtfFileElement = new PdfRtfElement(inputRtfBytes);
+```
+
+### Add the RTF Content to the Current Page
+
+```csharp
+rtfElement.X = 0;
+rtfElement.Y = crtYPos;
+// 0 extends the content to the right margin of the page
+rtfElement.Width = 0;
+rtfElement.Zoom = 100;
+// The headings of the RTF document join the outline of the PDF document
+rtfElement.GenerateDocumentOutline = true;
+
+PdfContentRenderInfo rtfRenderInfo = pdfDocument.AddRtf(rtfElement);
+```
+
+### Code Sample - Add RTF Documents to PDF Documents
+
+```csharp
+// Use EVO PDF Namespace
+using EvoPdf.Next;
+
+public byte[] AddRtfToPdfDocument(byte[] inputRtfBytes, string fontFilePath)
+{
+    // Set the license key received after purchase to use the library in licensed mode; leave it commented for demo mode
+    // Licensing.LicenseKey = "your-license-key";
+
+    // The RTF content from a file read into memory; a RTF string can also be given to the element
+    PdfRtfElement rtfElement = new PdfRtfElement(inputRtfBytes);
+
+    PdfDocumentCreateSettings pdfCreateSettings = new PdfDocumentCreateSettings()
+    {
+        PageSize = PdfPageSize.A4,
+        PageOrientation = PdfPageOrientation.Portrait,
+        Margins = new PdfMargins(36, 36, 36, 36),
+        Language = "en-US"
+    };
+
+    using PdfDocument pdfDocument = new PdfDocument(pdfCreateSettings);
+    pdfDocument.PdfDocumentInfo.Title = "RTF Content in a PDF Document";
+
+    PdfBaseFont baseFont = PdfFontManager.CreateBaseFont(fontFilePath);
+    PdfFont titleFont = PdfFontManager.CreateFont(baseFont, 16f, PdfFontStyle.Bold, PdfColor.DarkBlue);
+    PdfFont textFont = PdfFontManager.CreateFont(baseFont, 10f, PdfFontStyle.Normal, PdfColor.Black);
+
+    // Elements created with the PDF creator before the document content
+    PdfTextElement titleElement = new PdfTextElement("RTF Content in a PDF Document", titleFont)
+    {
+        X = 0,
+        Y = 0,
+        Width = pdfDocument.ContentWidth,
+        Alignment = PdfTextAlignment.Center
+    };
+    titleElement.Accessibility.StructureType = PdfStructureType.Heading1;
+    float crtYPos = pdfDocument.AddText(titleElement).LastPageRectangle.Bounds.Bottom + 10;
+
+    PdfTextElement introElement = new PdfTextElement(
+        "The text above and this paragraph are text elements of the PDF document. The RTF content " +
+        "starts below them and continues on new pages when it does not fit in this one. " +
+        "The elements added after the RTF content go to its last page, below it.", textFont)
+    {
+        X = 0,
+        Y = crtYPos,
+        Width = pdfDocument.ContentWidth
+    };
+    crtYPos = pdfDocument.AddText(introElement).LastPageRectangle.Bounds.Bottom + 15;
+
+    // The RTF content is rendered in the PDF document from the given position of the current
+    // page and inside the page margins. The X position is kept on the next pages
+    rtfElement.X = 0;
+    rtfElement.Y = crtYPos;
+    // 0 extends the content to the right margin of the page
+    rtfElement.Width = 0;
+    rtfElement.Zoom = 100;
+    // The headings of the RTF document join the outline of the PDF document
+    rtfElement.GenerateDocumentOutline = true;
+
+    PdfContentRenderInfo rtfRenderInfo = pdfDocument.AddRtf(rtfElement);
+
+    // The rendered area reported for the last page places the elements after the content
+    crtYPos = rtfRenderInfo.LastPageRectangle.Bounds.Bottom + 15;
+
+    PdfRectangleElement separator = new PdfRectangleElement(0, crtYPos, pdfDocument.ContentWidth, 1)
+    {
+        FillColor = PdfColor.DarkBlue,
+        BorderColor = null
+    };
+    pdfDocument.AddRectangle(separator);
+
+    PdfTextElement closingElement = new PdfTextElement(
+        string.Format("The RTF content was rendered on {0} page(s), from page {1} to page {2}. This text was added after it.",
+            rtfRenderInfo.PagesCount, rtfRenderInfo.FirstPageNumber, rtfRenderInfo.LastPageNumber), textFont)
+    {
+        X = 0,
+        Y = crtYPos + 8,
+        Width = pdfDocument.ContentWidth
+    };
+    pdfDocument.AddText(closingElement);
+
+    // The buffer to receive the generated PDF document
+    byte[] outPdfBuffer = pdfDocument.Save();
+
+    return outPdfBuffer;
+}
+```
+
+## Add Markdown Content to PDF Documents
+
+Topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/add-markdown-content-to-pdf-documents.htm
+
+### Create the Markdown Element
+
+```csharp
+// A Markdown string with a base URL for its relative links and images
+PdfMarkdownElement markdownElement = new PdfMarkdownElement(markdownString, baseUrl);
+
+// A Markdown file
+PdfMarkdownElement markdownFileElement = new PdfMarkdownElement(markdownFilePath);
+```
+
+### Add the Markdown Content to the Current Page
+
+```csharp
+markdownElement.X = 0;
+markdownElement.Y = crtYPos;
+// 0 extends the content to the right margin of the page
+markdownElement.Width = 0;
+markdownElement.Zoom = 100;
+// The CSS applied to the rendered Markdown content
+markdownElement.StyleSheet = styleSheet;
+// The headings of the Markdown content join the outline of the PDF document
+markdownElement.GenerateDocumentOutline = true;
+
+PdfContentRenderInfo markdownRenderInfo = pdfDocument.AddMarkdown(markdownElement);
+```
+
+### Code Sample - Add Markdown Content to PDF Documents
+
+```csharp
+// Use EVO PDF Namespace
+using EvoPdf.Next;
+
+public byte[] AddMarkdownToPdfDocument(string markdownString, string baseUrl, string styleSheet, string fontFilePath)
+{
+    // Set the license key received after purchase to use the library in licensed mode; leave it commented for demo mode
+    // Licensing.LicenseKey = "your-license-key";
+
+    // The Markdown content: a string with a base URL for its relative links and images.
+    // The element can also be created from the path of a Markdown file
+    PdfMarkdownElement markdownElement = new PdfMarkdownElement(markdownString, baseUrl);
+
+    PdfDocumentCreateSettings pdfCreateSettings = new PdfDocumentCreateSettings()
+    {
+        PageSize = PdfPageSize.A4,
+        PageOrientation = PdfPageOrientation.Portrait,
+        Margins = new PdfMargins(36, 36, 36, 36),
+        Language = "en-US"
+    };
+
+    using PdfDocument pdfDocument = new PdfDocument(pdfCreateSettings);
+    pdfDocument.PdfDocumentInfo.Title = "Markdown Content in a PDF Document";
+
+    PdfBaseFont baseFont = PdfFontManager.CreateBaseFont(fontFilePath);
+    PdfFont titleFont = PdfFontManager.CreateFont(baseFont, 16f, PdfFontStyle.Bold, PdfColor.DarkBlue);
+    PdfFont textFont = PdfFontManager.CreateFont(baseFont, 10f, PdfFontStyle.Normal, PdfColor.Black);
+
+    // Elements created with the PDF creator before the document content
+    PdfTextElement titleElement = new PdfTextElement("Markdown Content in a PDF Document", titleFont)
+    {
+        X = 0,
+        Y = 0,
+        Width = pdfDocument.ContentWidth,
+        Alignment = PdfTextAlignment.Center
+    };
+    titleElement.Accessibility.StructureType = PdfStructureType.Heading1;
+    float crtYPos = pdfDocument.AddText(titleElement).LastPageRectangle.Bounds.Bottom + 10;
+
+    PdfTextElement introElement = new PdfTextElement(
+        "The text above and this paragraph are text elements of the PDF document. The Markdown content " +
+        "starts below them and continues on new pages when it does not fit in this one. " +
+        "The elements added after the Markdown content go to its last page, below it.", textFont)
+    {
+        X = 0,
+        Y = crtYPos,
+        Width = pdfDocument.ContentWidth
+    };
+    crtYPos = pdfDocument.AddText(introElement).LastPageRectangle.Bounds.Bottom + 15;
+
+    // The Markdown content is rendered in the PDF document from the given position of the
+    // current page and inside the page margins. The X position is kept on the next pages
+    markdownElement.X = 0;
+    markdownElement.Y = crtYPos;
+    // 0 extends the content to the right margin of the page
+    markdownElement.Width = 0;
+    markdownElement.Zoom = 100;
+    // The CSS applied to the rendered Markdown content
+    markdownElement.StyleSheet = styleSheet;
+    // The raw markup embedded in the Markdown content is rendered, or ignored when disabled
+    markdownElement.DisableRawHtml = false;
+    // The headings of the Markdown content join the outline of the PDF document
+    markdownElement.GenerateDocumentOutline = true;
+
+    PdfContentRenderInfo markdownRenderInfo = pdfDocument.AddMarkdown(markdownElement);
+
+    // The rendered area reported for the last page places the elements after the content
+    crtYPos = markdownRenderInfo.LastPageRectangle.Bounds.Bottom + 15;
+
+    PdfRectangleElement separator = new PdfRectangleElement(0, crtYPos, pdfDocument.ContentWidth, 1)
+    {
+        FillColor = PdfColor.DarkBlue,
+        BorderColor = null
+    };
+    pdfDocument.AddRectangle(separator);
+
+    PdfTextElement closingElement = new PdfTextElement(
+        string.Format("The Markdown content was rendered on {0} page(s), from page {1} to page {2}. This text was added after it.",
+            markdownRenderInfo.PagesCount, markdownRenderInfo.FirstPageNumber, markdownRenderInfo.LastPageNumber), textFont)
+    {
+        X = 0,
+        Y = crtYPos + 8,
+        Width = pdfDocument.ContentWidth
+    };
+    pdfDocument.AddText(closingElement);
+
+    // The buffer to receive the generated PDF document
+    byte[] outPdfBuffer = pdfDocument.Save();
+
+    return outPdfBuffer;
+}
+```
+
+## Convert Word to PDF with Document Fonts
+
+Topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/convert-word-to-pdf-with-document-fonts.htm
+
+### Use the Fonts Stored in the Word Document
+
+```csharp
+wordToPdfConverter.UseEmbeddedFonts = true;
+```
+
+### Add a Font File
+
+```csharp
+wordToPdfConverter.FontFiles.Add(Path.Combine(fontsPath, "DejaVuSerif.ttf"));
+```
+
+### Add a Fallback Font File
+
+```csharp
+wordToPdfConverter.FallbackFontFiles.Add(Path.Combine(fontsPath, "NotoSansArabic-Regular.ttf"));
+```
+
+### Code Sample - Convert Word to PDF with Document Fonts
+
+```csharp
+using System.IO;
+
+// Use EVO PDF Namespace
+using EvoPdf.Next;
+
+public byte[] ConvertWordToPdfWithFonts(byte[] inputWordBytes, string fontsPath)
+{
+    // Set the license key received after purchase to use the library in licensed mode; leave it commented for demo mode
+    // Licensing.LicenseKey = "your-license-key";
+
+    // Create a Word to PDF converter object with default settings
+    WordToPdfConverter wordToPdfConverter = new WordToPdfConverter();
+
+    // Use the fonts stored in the Word document. Word embeds the fonts of a document when the
+    // option to embed fonts is on when the document is saved, so the text keeps its look where
+    // the fonts are not installed. When this option is off the stored fonts are ignored and the
+    // text is rendered with the installed fonts
+    wordToPdfConverter.UseEmbeddedFonts = true;
+
+    // A font file given to the converter is used for the text set in its font family, in
+    // place of an installed font with the same family name or when that font is not installed
+    wordToPdfConverter.FontFiles.Add(Path.Combine(fontsPath, "DejaVuSerif.ttf"));
+
+    // A fallback font file is used for the characters that no font of the document covers,
+    // such as the Arabic text of the sample document
+    wordToPdfConverter.FallbackFontFiles.Add(Path.Combine(fontsPath, "NotoSansArabic-Regular.ttf"));
+
+    // The buffer to receive the generated PDF document
+    byte[] outPdfBuffer = wordToPdfConverter.ConvertToPdf(inputWordBytes);
+
+    return outPdfBuffer;
+}
+```
+
+## Convert Word to PDF with Document Headers and Footers
+
+Topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/convert-word-to-pdf-with-document-headers-and-footers.htm
+
+### Use the Header and Footer of the Word Document
+
+```csharp
+wordToPdfConverter.PdfDocumentOptions.UseHeaderFooterFromWord = true;
+```
+
+### Replace the Document Footer
+
+```csharp
+wordToPdfConverter.PdfDocumentOptions.PdfHtmlFooter.Html = footerHtml;
+wordToPdfConverter.PdfDocumentOptions.PdfHtmlFooter.HtmlBaseUrl = footerHtmlBaseUrl;
+wordToPdfConverter.PdfDocumentOptions.PdfHtmlFooter.AutoSizeContentHeight = true;
+```
+
+### Code Sample - Convert Word to PDF with Document Headers and Footers
+
+```csharp
+// Use EVO PDF Namespace
+using EvoPdf.Next;
+
+public byte[] ConvertWordToPdfWithDocumentHeaders(byte[] inputWordBytes, bool useHeaderFooterFromWord,
+    string headerHtml, string footerHtml, string htmlBaseUrl)
+{
+    // Set the license key received after purchase to use the library in licensed mode; leave it commented for demo mode
+    // Licensing.LicenseKey = "your-license-key";
+
+    // Create a Word to PDF converter object with default settings
+    WordToPdfConverter wordToPdfConverter = new WordToPdfConverter();
+
+    // Render the header and the footer of the Word document on the PDF pages, with the page
+    // number and page count fields they contain and with a different first page when the
+    // document has one. A HTML header or footer set in the converter takes the place of the
+    // document one
+    wordToPdfConverter.PdfDocumentOptions.UseHeaderFooterFromWord = useHeaderFooterFromWord;
+
+    if (!string.IsNullOrEmpty(headerHtml))
+    {
+        // A HTML header set in the converter takes the place of the document header
+        wordToPdfConverter.PdfDocumentOptions.PdfHtmlHeader.Html = headerHtml;
+        wordToPdfConverter.PdfDocumentOptions.PdfHtmlHeader.HtmlBaseUrl = htmlBaseUrl;
+        wordToPdfConverter.PdfDocumentOptions.PdfHtmlHeader.AutoSizeContentHeight = true;
+    }
+
+    if (!string.IsNullOrEmpty(footerHtml))
+    {
+        // A HTML footer set in the converter takes the place of the document footer
+        wordToPdfConverter.PdfDocumentOptions.PdfHtmlFooter.Html = footerHtml;
+        wordToPdfConverter.PdfDocumentOptions.PdfHtmlFooter.HtmlBaseUrl = htmlBaseUrl;
+        wordToPdfConverter.PdfDocumentOptions.PdfHtmlFooter.AutoSizeContentHeight = true;
+    }
+
+    // The buffer to receive the generated PDF document
+    byte[] outPdfBuffer = wordToPdfConverter.ConvertToPdf(inputWordBytes);
+
+    return outPdfBuffer;
+}
+```
+
+## Convert Word to PDF with Outline, Open Action and Attachments
+
+Topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/convert-word-to-pdf-with-outline-open-action-and-attachments.htm
+
+### Create the Outline from the Document Headings
+
+```csharp
+wordToPdfConverter.PdfDocumentOptions.GenerateDocumentOutline = true;
+```
+
+### Add Custom Bookmarks
+
+```csharp
+// Bookmarks added to the outline after the ones created from the headings: a bookmark to
+// a page location with a child bookmark and a bookmark opening a web address
+PdfBookmark contentBookmark = wordToPdfConverter.PdfDocumentOptions.Bookmarks.Add(
+    "Converted Word document", firstContentPage, PdfLinkPageLocation.FitWidth(0));
+contentBookmark.Bold = true;
+contentBookmark.Color = PdfColor.DarkBlue;
+contentBookmark.Children.Add("Top of the first page, zoomed", firstContentPage, PdfLinkPageLocation.AtCoordinates(0, 0, 1.5f));
+
+wordToPdfConverter.PdfDocumentOptions.Bookmarks.AddUrl("Library web site", "https://www.evopdf.com");
+```
+
+### Set the Open Action
+
+```csharp
+// The action executed when the document is opened: go to the first page of the
+// converted content, fit to the page width
+wordToPdfConverter.PdfDocumentOptions.OpenAction = new PdfGoToPageAction(firstContentPage, PdfLinkPageLocation.FitWidth(0));
+```
+
+### Attach the Source Word Document
+
+```csharp
+// Attach the source Word document to the generated PDF. The attachment appears in the
+// Attachments panel of the PDF viewer
+PdfFileAttachment attachment = PdfFileAttachment.FromBytes(inputWordBytes, "Source_Document.docx");
+attachment.Description = "The Word document the PDF was generated from";
+wordToPdfConverter.PdfDocumentOptions.AddFileAttachment(attachment);
+
+// The panel shown by the viewer when the document is opened
+wordToPdfConverter.PdfViewerPreferences.PageMode = ViewerPageMode.UseAttachments;
+```
+
+### Code Sample - Convert Word to PDF with Outline, Open Action and Attachments
+
+```csharp
+// Use EVO PDF Namespace
+using EvoPdf.Next;
+
+public byte[] ConvertWordToPdfWithOutlineAndAttachments(byte[] inputWordBytes, string startPdfPath)
+{
+    // Set the license key received after purchase to use the library in licensed mode; leave it commented for demo mode
+    // Licensing.LicenseKey = "your-license-key";
+
+    // Create a Word to PDF converter object with default settings
+    WordToPdfConverter wordToPdfConverter = new WordToPdfConverter();
+
+    // The same bookmarks, open action and attachments options are available in the Excel, RTF
+    // and Markdown to PDF converters
+
+    // Create the outline of the PDF document from the headings of the Word document, with a
+    // bookmark for each heading, nested by the heading level
+    wordToPdfConverter.PdfDocumentOptions.GenerateDocumentOutline = true;
+
+    // The pages of an existing PDF document are placed before the converted content. The
+    // page numbers of the bookmarks and of the open action count these pages
+    wordToPdfConverter.PdfDocumentOptions.AddStartPdf(startPdfPath);
+
+    int firstContentPage = 1;
+    using (PdfSplit startPdf = new PdfSplit(startPdfPath))
+        firstContentPage += startPdf.PageCount;
+
+    // Bookmarks added to the outline after the ones created from the headings: a bookmark to
+    // a page location with a child bookmark and a bookmark opening a web address
+    PdfBookmark contentBookmark = wordToPdfConverter.PdfDocumentOptions.Bookmarks.Add(
+        "Converted Word document", firstContentPage, PdfLinkPageLocation.FitWidth(0));
+    contentBookmark.Bold = true;
+    contentBookmark.Color = PdfColor.DarkBlue;
+    contentBookmark.Children.Add("Top of the first page, zoomed", firstContentPage, PdfLinkPageLocation.AtCoordinates(0, 0, 1.5f));
+
+    wordToPdfConverter.PdfDocumentOptions.Bookmarks.AddUrl("Library web site", "https://www.evopdf.com");
+
+    // The action executed when the document is opened: go to the first page of the
+    // converted content, fit to the page width
+    wordToPdfConverter.PdfDocumentOptions.OpenAction = new PdfGoToPageAction(firstContentPage, PdfLinkPageLocation.FitWidth(0));
+
+    // Attach the source Word document to the generated PDF. The attachment appears in the
+    // Attachments panel of the PDF viewer
+    PdfFileAttachment attachment = PdfFileAttachment.FromBytes(inputWordBytes, "Source_Document.docx");
+    attachment.Description = "The Word document the PDF was generated from";
+    wordToPdfConverter.PdfDocumentOptions.AddFileAttachment(attachment);
+
+    // The panel shown by the viewer when the document is opened: the outline or the attachments
+    wordToPdfConverter.PdfViewerPreferences.PageMode = ViewerPageMode.UseOutlines;
+
+    // The buffer to receive the generated PDF document
+    byte[] outPdfBuffer = wordToPdfConverter.ConvertToPdf(inputWordBytes);
+
+    return outPdfBuffer;
+}
+```
+
+## Convert RTF to PDF with Document Headers and Footers
+
+Topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/convert-rtf-to-pdf-with-document-headers-and-footers.htm
+
+### Use the Header and Footer of the RTF Document
+
+```csharp
+rtfToPdfConverter.PdfDocumentOptions.UseHeaderFooterFromRtf = true;
+```
+
+### Replace the Document Footer
+
+```csharp
+rtfToPdfConverter.PdfDocumentOptions.PdfHtmlFooter.Html = footerHtml;
+rtfToPdfConverter.PdfDocumentOptions.PdfHtmlFooter.HtmlBaseUrl = footerHtmlBaseUrl;
+rtfToPdfConverter.PdfDocumentOptions.PdfHtmlFooter.AutoSizeContentHeight = true;
+```
+
+### Code Sample - Convert RTF to PDF with Document Headers and Footers
+
+```csharp
+// Use EVO PDF Namespace
+using EvoPdf.Next;
+
+public byte[] ConvertRtfToPdfWithDocumentHeaders(byte[] inputRtfBytes, bool useHeaderFooterFromRtf,
+    string headerHtml, string footerHtml, string htmlBaseUrl)
+{
+    // Set the license key received after purchase to use the library in licensed mode; leave it commented for demo mode
+    // Licensing.LicenseKey = "your-license-key";
+
+    // Create a RTF to PDF converter object with default settings
+    RtfToPdfConverter rtfToPdfConverter = new RtfToPdfConverter();
+
+    // Render the header and the footer of the RTF document on the PDF pages, with the page
+    // number and page count fields they contain and with a different first page when the
+    // document has one. A HTML header or footer set in the converter takes the place of the
+    // document one
+    rtfToPdfConverter.PdfDocumentOptions.UseHeaderFooterFromRtf = useHeaderFooterFromRtf;
+
+    if (!string.IsNullOrEmpty(headerHtml))
+    {
+        // A HTML header set in the converter takes the place of the document header
+        rtfToPdfConverter.PdfDocumentOptions.PdfHtmlHeader.Html = headerHtml;
+        rtfToPdfConverter.PdfDocumentOptions.PdfHtmlHeader.HtmlBaseUrl = htmlBaseUrl;
+        rtfToPdfConverter.PdfDocumentOptions.PdfHtmlHeader.AutoSizeContentHeight = true;
+    }
+
+    if (!string.IsNullOrEmpty(footerHtml))
+    {
+        // A HTML footer set in the converter takes the place of the document footer
+        rtfToPdfConverter.PdfDocumentOptions.PdfHtmlFooter.Html = footerHtml;
+        rtfToPdfConverter.PdfDocumentOptions.PdfHtmlFooter.HtmlBaseUrl = htmlBaseUrl;
+        rtfToPdfConverter.PdfDocumentOptions.PdfHtmlFooter.AutoSizeContentHeight = true;
+    }
+
+    // The buffer to receive the generated PDF document
+    byte[] outPdfBuffer = rtfToPdfConverter.ConvertToPdf(inputRtfBytes);
+
+    return outPdfBuffer;
 }
 ```

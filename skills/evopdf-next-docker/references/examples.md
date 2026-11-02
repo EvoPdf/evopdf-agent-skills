@@ -88,42 +88,6 @@ ENV ASPNETCORE_URLS=http://+:27101
 ENTRYPOINT ["dotnet", "EvoPdf_Next_AspNetDemo_Linux_net8.0.dll"]
 ```
 
-### Dockerfile for Linux Ubuntu 24.04 with Preinstalled ASP.NET Core Runtime 10.0
-
-```dockerfile
-FROM mcr.microsoft.com/dotnet/aspnet:10.0
-
-# Install EvoPdf dependencies
-RUN apt-get update && \
-    apt-get install -y \
-        libnss3 \
-        libatk-bridge2.0-0 \
-        libcairo2 \
-        libpango-1.0-0 && \
-    rm -rf /var/lib/apt/lists/*
-
-# Set the working directory
-WORKDIR /app
-
-# Copy the published ASP.NET Core app files from the publish folder into the image
-COPY publish/linux-arm64-net10.0/ .
-
-# Ensure execute permissions for EvoPdf HTML to PDF runtime
-RUN chmod +x /app/evopdf_runtimes/linux-arm64/native/evopdf_loadhtml
-
-# Ensure execute permissions for EvoPdf PDF Processor runtime
-RUN chmod +x /app/evopdf_runtimes/linux-arm64/native/evopdf_pdfprocessor
-
-# Expose the port used by the app
-EXPOSE 27101
-
-# Set the ASP.NET Core application to listen on port 27101
-ENV ASPNETCORE_URLS=http://+:27101
-
-# Start the application
-ENTRYPOINT ["dotnet", "EvoPdf_Next_AspNetDemo_Linux.Arm64_net10.0.dll"]
-```
-
 ### Dockerfile for Linux Ubuntu 22.04 with Preinstalled ASP.NET Core Runtime 8.0
 
 ```dockerfile
@@ -182,6 +146,42 @@ dotnet publish -c Release -r linux-arm64 -o publish/linux-arm64-net10.0 EvoPdf_N
 
 # .NET 8, for the Dockerfile with the ASP.NET Core Runtime 8.0 base image
 dotnet publish -c Release -r linux-arm64 -o publish/linux-arm64-net8.0 EvoPdf_Next_AspNetDemo_Linux.Arm64_net8.0.csproj
+```
+
+### Dockerfile for Linux Ubuntu 24.04 with Preinstalled ASP.NET Core Runtime 10.0
+
+```dockerfile
+FROM mcr.microsoft.com/dotnet/aspnet:10.0
+
+# Install EvoPdf dependencies
+RUN apt-get update && \
+    apt-get install -y \
+        libnss3 \
+        libatk-bridge2.0-0 \
+        libcairo2 \
+        libpango-1.0-0 && \
+    rm -rf /var/lib/apt/lists/*
+
+# Set the working directory
+WORKDIR /app
+
+# Copy the published ASP.NET Core app files from the publish folder into the image
+COPY publish/linux-arm64-net10.0/ .
+
+# Ensure execute permissions for EvoPdf HTML to PDF runtime
+RUN chmod +x /app/evopdf_runtimes/linux-arm64/native/evopdf_loadhtml
+
+# Ensure execute permissions for EvoPdf PDF Processor runtime
+RUN chmod +x /app/evopdf_runtimes/linux-arm64/native/evopdf_pdfprocessor
+
+# Expose the port used by the app
+EXPOSE 27101
+
+# Set the ASP.NET Core application to listen on port 27101
+ENV ASPNETCORE_URLS=http://+:27101
+
+# Start the application
+ENTRYPOINT ["dotnet", "EvoPdf_Next_AspNetDemo_Linux.Arm64_net10.0.dll"]
 ```
 
 ### Dockerfile for Linux Debian 12 with Preinstalled ASP.NET Core Runtime 8.0

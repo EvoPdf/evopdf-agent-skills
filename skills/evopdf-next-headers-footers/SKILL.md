@@ -20,8 +20,11 @@ Namespace `EvoPdf.Next`. Install one NuGet package for the target platform, for 
 - **`PdfTemplateHorizontalAlign`**: Specifies the horizontal alignment of a PDF template on a PDF page
 - **`PdfTemplateVerticalAlign`**: Specifies the vertical alignment of a PDF template on a PDF page
 
-7 types, 137 public members. The complete member list with the shipped
+7 types, 139 public members. The complete member list with the shipped
 summaries is in `references/api.md`; do not guess member names that are not there.
+
+An HTML template is drawn over the page content; `PdfHtmlTemplate.RenderUnderContent = true` draws it under the
+content, as a background or a watermark. `DestinationSize` and `RenderedSize` are `PdfSizeF` values in points.
 
 ## Add HTML in Header and Footer with Page Numbers
 
@@ -32,8 +35,9 @@ summaries is in `references/api.md`; do not guess member names that are not ther
 <html>
 <head>
     <title>Header HTML with Page Numbers</title>
+    <link href="styles/webfonts.css" type="text/css" rel="stylesheet">
 </head>
-<body style="font-family: 'Times New Roman'; font-size: 16px">
+<body style="font-family: Verdana, sans-serif; font-size: 16px">
     <table style="width: 100%">
         <tr>
             <td style=" font-size:18px; font-weight: bold; color: navy">Header HTML with Page Numbers</td>
@@ -61,8 +65,9 @@ summaries is in `references/api.md`; do not guess member names that are not ther
 <html>
 <head>
     <title>Footer HTML with Page Numbers</title>
+    <link href="styles/webfonts.css" type="text/css" rel="stylesheet">
 </head>
-<body style="font-family: 'Times New Roman'; font-size: 16px">
+<body style="font-family: Verdana, sans-serif; font-size: 16px">
     <table style="width: 100%">
         <tr>
             <td style=" font-size:18px; font-weight: bold; color: navy">Footer HTML with Page Numbers</td>
@@ -83,7 +88,7 @@ summaries is in `references/api.md`; do not guess member names that are not ther
 </html>
 ```
 
-All 3 samples of this topic, complete: `references/examples.md`.
+All 5 samples of this topic, complete: `references/examples.md`.
 
 Full topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/html-header-and-footer-with-page-numbers.htm
 
@@ -98,8 +103,9 @@ EVO HTML to PDF Converter allows you to include any valid HTML markup and elemen
 <html>
 <head>
     <title>Header HTML Template</title>
+    <link href="styles/webfonts.css" type="text/css" rel="stylesheet">
 </head>
-<body style="font-family: 'Times New Roman'; font-size: 14px">
+<body style="font-family: Verdana, sans-serif; font-size: 14px">
     <table style="width: 100%">
         <tr>
             <td style=" font-size:16px; font-weight: bold; color: navy">Header HTML with Page Numbers</td>
@@ -127,8 +133,9 @@ EVO HTML to PDF Converter allows you to include any valid HTML markup and elemen
 <html>
 <head>
     <title>Footer HTML Template</title>
+    <link href="styles/webfonts.css" type="text/css" rel="stylesheet">
 </head>
-<body style="font-family: 'Times New Roman'; font-size: 14px">
+<body style="font-family: Verdana, sans-serif; font-size: 14px">
     <table style="width: 100%">
         <tr>
             <td style=" font-size:16px; font-weight: bold; color: navy"><span class="url"></span></td>
@@ -164,8 +171,9 @@ The EvoPdf Next library offers extensive control over headers and footers. You c
 <html>
 <head>
     <title>Header HTML with Page Numbers</title>
+    <link href="styles/webfonts.css" type="text/css" rel="stylesheet">
 </head>
-<body style="font-family: 'Times New Roman'; font-size: 16px">
+<body style="font-family: Verdana, sans-serif; font-size: 16px">
     <table style="width: 100%">
         <tr>
             <td style=" font-size:18px; font-weight: bold; color: navy">Header HTML with Page Numbers</td>
@@ -193,8 +201,9 @@ The EvoPdf Next library offers extensive control over headers and footers. You c
 <html>
 <head>
     <title>Footer HTML with Page Numbers</title>
+    <link href="styles/webfonts.css" type="text/css" rel="stylesheet">
 </head>
-<body style="font-family: 'Times New Roman'; font-size: 16px">
+<body style="font-family: Verdana, sans-serif; font-size: 16px">
     <table style="width: 100%">
         <tr>
             <td style=" font-size:18px; font-weight: bold; color: navy">Footer HTML with Page Numbers</td>
@@ -235,9 +244,10 @@ EVO HTML to PDF Converter allows you to add stamps to the generated PDF document
 <html>
 <head>
     <title>HTML Stamp with Page Numbers</title>
+    <link href="styles/webfonts.css" type="text/css" rel="stylesheet">
 </head>
 <!-- Use background-color: rgba(r, g, b, a) to apply background opacity (a = 0 transparent, 1 opaque) -->
-<body style="background-color: rgba(255, 255, 255, 0.9); font-family: 'Times New Roman'; font-size: 16px; margin: 5px">
+<body style="background-color: rgba(255, 255, 255, 0.9); font-family: Verdana, sans-serif; font-size: 16px; margin: 5px">
     <table style="width: 100%; border: 3px solid royalblue">
         <tr>
             <td>
@@ -248,7 +258,7 @@ EVO HTML to PDF Converter allows you to add stamps to the generated PDF document
             <td>
                 <table>
                     <tr>
-                        <td style="font-size: 30px; font-weight: bold; color: #BE1200">
+                        <td style="font-size: 24px; font-weight: bold; color: #BE1200">
                             HTML Stamp with Page Numbers
                         </td>
                     </tr>
@@ -265,7 +275,7 @@ EVO HTML to PDF Converter allows you to add stamps to the generated PDF document
 </html>
 ```
 
-All 3 samples of this topic, complete: `references/examples.md`.
+All 4 samples of this topic, complete: `references/examples.md`.
 
 Full topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/add-html-stamp-to-generated-pdf.htm
 
@@ -299,9 +309,10 @@ byte[] pdfBytes = pdfEditor.Save();
 <html>
 <head>
     <title>HTML Stamp with Page Numbers</title>
+    <link href="styles/webfonts.css" type="text/css" rel="stylesheet">
 </head>
 <!-- Use background-color: rgba(r, g, b, a) to apply background opacity (a = 0 transparent, 1 opaque) -->
-<body style="background-color: rgba(255, 255, 255, 0.9); font-family: 'Times New Roman'; font-size: 16px; margin: 5px">
+<body style="background-color: rgba(255, 255, 255, 0.9); font-family: Verdana, sans-serif; font-size: 16px; margin: 5px">
     <table style="width: 100%; border: 3px solid royalblue">
         <tr>
             <td>
@@ -312,7 +323,7 @@ byte[] pdfBytes = pdfEditor.Save();
             <td>
                 <table>
                     <tr>
-                        <td style="font-size: 30px; font-weight: bold; color: #BE1200">
+                        <td style="font-size: 24px; font-weight: bold; color: #BE1200">
                             HTML Stamp with Page Numbers
                         </td>
                     </tr>
@@ -329,7 +340,7 @@ byte[] pdfBytes = pdfEditor.Save();
 </html>
 ```
 
-All 7 samples of this topic, complete: `references/examples.md`.
+All 8 samples of this topic, complete: `references/examples.md`.
 
 Full topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/add-html-stamp-to-existing-pdf.htm
 

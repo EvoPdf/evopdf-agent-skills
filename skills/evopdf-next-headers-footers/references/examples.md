@@ -6,6 +6,24 @@ Every code sample of the documentation topics behind this skill, complete and in
 
 Topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/html-header-and-footer-with-page-numbers.htm
 
+### Set the Page Numbering Options
+
+```csharp
+PdfHtmlHeaderFooter footer = htmlToPdfConverter.PdfDocumentOptions.PdfHtmlFooter;
+footer.PageNumberOffset = 10;
+footer.TotalPagesOffset = 10;
+footer.PageCounterFontScale = 1.2f;
+footer.PageNumbersFont = PdfFontManager.CreateBaseFont(fontFilePath);
+footer.ShowOnlyInHtmlToPdfPages = false;
+```
+
+### Skip Pages with the Callback
+
+```csharp
+// The footer is skipped in the third page
+footer.OnPageRendering = placement => placement.DocumentPageNumber != 3;
+```
+
 ### Code Sample - Add HTML with Page Numbers in Header and Footer
 
 ```csharp
@@ -175,6 +193,57 @@ namespace EvoPdf_Next_AspNetDemo.Controllers.HTML_to_PDF
                     htmlToPdfConverter.PdfDocumentOptions.PdfHtmlFooter.ConversionDelay = model.FooterConversionDelay.Value;
             }
 
+            // The page numbering options apply to the header and to the footer
+            PdfHtmlTemplate[] templates = { htmlToPdfConverter.PdfDocumentOptions.PdfHtmlHeader, htmlToPdfConverter.PdfDocumentOptions.PdfHtmlFooter };
+            foreach (PdfHtmlTemplate template in templates)
+            {
+                // Offsets added to the page number and to the total number of pages written in place of the
+                // {page_number} and {total_pages} placeholders
+                template.PageNumberOffset = model.PageNumberOffset;
+                template.TotalPagesOffset = model.TotalPagesOffset;
+
+                // A zoom applied to the font of the page number placeholders, from 0.1 to 2
+                template.PageCounterFontScale = model.PageCounterFontScale;
+
+                if (model.UsePageNumbersFont)
+                {
+                    // The font of the text written in place of the placeholders; the bold, italic and bold italic
+                    // variants can be given separately and default to this font
+                    template.PageNumbersFont = PdfFontManager.CreateBaseFont(Path.Combine(m_hostingEnvironment.ContentRootPath,
+                        "wwwroot", "DemoAppFiles", "Input", "Font_Files", "DejaVuSerif.ttf"));
+                }
+
+                // The template is rendered only in the pages generated from HTML or in all the pages of the document,
+                // including the table of contents and the PDF documents inserted before and after the HTML content
+                template.ShowOnlyInHtmlToPdfPages = model.ShowOnlyInHtmlToPdfPages;
+
+                // The pages inserted before and after the HTML content are counted in the page numbers
+                template.CountStartPages = model.CountStartPages;
+                template.CountEndPages = model.CountEndPages;
+                template.CountTocPages = model.CountTocPages;
+
+                if (model.SkipPagesWithCallback)
+                {
+                    // The callback decides for each page if the template is rendered; it receives the placement of the
+                    // template in the page. The template is skipped in the third page here
+                    template.OnPageRendering = placement => placement.DocumentPageNumber != 3;
+                }
+            }
+
+            if (model.AddStartAndEndPdf)
+            {
+                // PDF documents inserted before and after the HTML content
+                string pdfFilesPath = Path.Combine(m_hostingEnvironment.ContentRootPath, "wwwroot", "DemoAppFiles", "Input", "PDF_Files");
+                htmlToPdfConverter.PdfDocumentOptions.AddStartPdf(Path.Combine(pdfFilesPath, "Letterhead.pdf"));
+                htmlToPdfConverter.PdfDocumentOptions.AddEndPdf(Path.Combine(pdfFilesPath, "Letterhead.pdf"));
+            }
+
+            if (model.AddTableOfContents)
+            {
+                // A table of contents inserted before the HTML content
+                htmlToPdfConverter.PdfDocumentOptions.GenerateTableOfContents = true;
+            }
+
             // Convert the HTML page to a PDF document in a memory buffer
             byte[] outPdfBuffer = htmlToPdfConverter.ConvertUrl(model.Url);
 
@@ -223,8 +292,9 @@ namespace EvoPdf_Next_AspNetDemo.Controllers.HTML_to_PDF
 <html>
 <head>
     <title>Header HTML with Page Numbers</title>
+    <link href="styles/webfonts.css" type="text/css" rel="stylesheet">
 </head>
-<body style="font-family: 'Times New Roman'; font-size: 16px">
+<body style="font-family: Verdana, sans-serif; font-size: 16px">
     <table style="width: 100%">
         <tr>
             <td style=" font-size:18px; font-weight: bold; color: navy">Header HTML with Page Numbers</td>
@@ -252,8 +322,9 @@ namespace EvoPdf_Next_AspNetDemo.Controllers.HTML_to_PDF
 <html>
 <head>
     <title>Footer HTML with Page Numbers</title>
+    <link href="styles/webfonts.css" type="text/css" rel="stylesheet">
 </head>
-<body style="font-family: 'Times New Roman'; font-size: 16px">
+<body style="font-family: Verdana, sans-serif; font-size: 16px">
     <table style="width: 100%">
         <tr>
             <td style=" font-size:18px; font-weight: bold; color: navy">Footer HTML with Page Numbers</td>
@@ -392,8 +463,9 @@ namespace EvoPdf_Next_AspNetDemo.Controllers.HTML_to_PDF
 <html>
 <head>
     <title>Header HTML Template</title>
+    <link href="styles/webfonts.css" type="text/css" rel="stylesheet">
 </head>
-<body style="font-family: 'Times New Roman'; font-size: 14px">
+<body style="font-family: Verdana, sans-serif; font-size: 14px">
     <table style="width: 100%">
         <tr>
             <td style=" font-size:16px; font-weight: bold; color: navy">Header HTML with Page Numbers</td>
@@ -421,8 +493,9 @@ namespace EvoPdf_Next_AspNetDemo.Controllers.HTML_to_PDF
 <html>
 <head>
     <title>Footer HTML Template</title>
+    <link href="styles/webfonts.css" type="text/css" rel="stylesheet">
 </head>
-<body style="font-family: 'Times New Roman'; font-size: 14px">
+<body style="font-family: Verdana, sans-serif; font-size: 14px">
     <table style="width: 100%">
         <tr>
             <td style=" font-size:16px; font-weight: bold; color: navy"><span class="url"></span></td>
@@ -447,7 +520,7 @@ namespace EvoPdf_Next_AspNetDemo.Controllers.HTML_to_PDF
 
 Topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/header-and-footer-on-pdf-from-multiple-html.htm
 
-### Code Sample - Add Header and Footer to PDF Merged from Multiple HTML
+### Code Sample - Add Header and Footer to PDF from Multiple HTML
 
 ```csharp
 using System;
@@ -467,6 +540,7 @@ namespace EvoPdf_Next_AspNetDemo.Controllers.HTML_to_PDF
     public class Header_Footer_on_PDF_from_Multiple_HTMLController : Controller
     {
         private readonly IWebHostEnvironment m_hostingEnvironment;
+
         public Header_Footer_on_PDF_from_Multiple_HTMLController(IWebHostEnvironment hostingEnvironment)
         {
             m_hostingEnvironment = hostingEnvironment;
@@ -475,7 +549,6 @@ namespace EvoPdf_Next_AspNetDemo.Controllers.HTML_to_PDF
         public IActionResult Index()
         {
             var model = SetViewModel();
-
             return View(model);
         }
 
@@ -491,358 +564,124 @@ namespace EvoPdf_Next_AspNetDemo.Controllers.HTML_to_PDF
             // Set the license key received after purchase to use the library in licensed mode; leave it commented for demo mode
             // Licensing.LicenseKey = "your-license-key";
 
-            // Create the first HTML to PDF converter instance
-            HtmlToPdfConverter firstHtmlToPdfConverter = new HtmlToPdfConverter();
+            // The PDF document that receives the HTML documents. The top and bottom margins reserve the space of the
+            // header and of the footer on every page
+            int topMargin = model.HeaderEnabled ? model.HeaderHeight : 0;
+            int bottomMargin = model.FooterEnabled ? model.FooterHeight : 0;
+            PdfDocumentCreateSettings pdfCreateSettings = new PdfDocumentCreateSettings()
+            {
+                PageSize = PdfPageSize.A4,
+                PageOrientation = PdfPageOrientation.Portrait,
+                Margins = new PdfMargins(0, 0, topMargin, bottomMargin)
+            };
 
-            // Delay header and footer rendering until the merged PDF is saved
-            firstHtmlToPdfConverter.PdfDocumentOptions.PdfHtmlHeader.DelayContentRendering = true;
-            firstHtmlToPdfConverter.PdfDocumentOptions.PdfHtmlFooter.DelayContentRendering = true;
+            using PdfDocument pdfDocument = new PdfDocument(pdfCreateSettings);
 
-            // Set header and footer visibility for the first converter
-            SetHeaderFooterVisibility(firstHtmlToPdfConverter, 0, model);
+            // The header and the footer are HTML templates of the document, drawn on every page of it when it is saved,
+            // with the page numbers of the whole document
+            int pageWidth = pdfDocument.PageSize.Width;
 
-            // Set common options for the first converter
-            SetHtmlToPdfConverterOptions(firstHtmlToPdfConverter, model);
+            PdfHtmlTemplate headerTemplate = null;
+            PdfHtmlTemplate footerTemplate = null;
 
-            // Convert the first HTML to PDF
-            byte[] firstPdfBytes = firstHtmlToPdfConverter.ConvertUrl(model.FirstUrl);
+            if (model.HeaderEnabled)
+            {
+                headerTemplate = model.HeaderHtmlSource == "Url"
+                    ? pdfDocument.AddHtmlTemplate(0, 0, pageWidth, model.HeaderHeight, model.HeaderUrlTextBox)
+                    : pdfDocument.AddHtmlTemplate(0, 0, pageWidth, model.HeaderHeight, model.HeaderHtmlTextBox, model.HeaderHtmlBaseUrlTextBox);
+                headerTemplate.VerticalAlign = PdfTemplateVerticalAlign.Top;
+                SetTemplateOptions(headerTemplate, model.FitHeaderHeight, model.HeaderZoom, model.SkipHeaderVariablesParsing, model.HeaderConversionDelay,
+                    model.ShowHeaderInFirstPage, model.ShowHeaderInOddPages, model.ShowHeaderInEvenPages);
+            }
 
-            // Get header and footer size based on their rendered HTML content
-            System.Drawing.Size headerSize = firstHtmlToPdfConverter.PdfDocumentOptions.PdfHtmlHeader.DestinationSize;
-            System.Drawing.Size footerSize = firstHtmlToPdfConverter.PdfDocumentOptions.PdfHtmlFooter.DestinationSize;
+            if (model.FooterEnabled)
+            {
+                footerTemplate = model.FooterHtmlSource == "Url"
+                    ? pdfDocument.AddHtmlTemplate(0, 0, pageWidth, model.FooterHeight, model.FooterUrlTextBox)
+                    : pdfDocument.AddHtmlTemplate(0, 0, pageWidth, model.FooterHeight, model.FooterHtmlTextBox, model.FooterHtmlBaseUrlTextBox);
+                footerTemplate.VerticalAlign = PdfTemplateVerticalAlign.Bottom;
+                SetTemplateOptions(footerTemplate, model.FitFooterHeight, model.FooterZoom, model.SkipFooterVariablesParsing, model.FooterConversionDelay,
+                    model.ShowFooterInFirstPage, model.ShowFooterInOddPages, model.ShowFooterInEvenPages);
+            }
 
-            // Create the PDF merger
-            using PdfMerge pdfMerge = new PdfMerge();
+            bool startOnNewPage = model.SecondDocumentStart == "NewPage";
 
-            // Set merge options including header and footer dimensions
-            SetPdfMergeOptions(pdfMerge, headerSize, footerSize, firstHtmlToPdfConverter.HtmlViewerZoom, model);
-
-            // Add the first PDF to the merger
-            int firstPdfPageCount = pdfMerge.AddPdf(firstPdfBytes);
-
-            // Prepare the list of additional URLs to convert and merge
+            // Create the list of URLs to convert
             List<string> urlsToConvert = new List<string>() {
+                model.FirstUrl,
                 model.SecondUrl
             };
 
-            foreach (string url in urlsToConvert)
+            // The position where the next HTML document starts in the current page
+            float crtYPos = 0;
+
+            for (int i = 0; i < urlsToConvert.Count; i++)
             {
-                // Create a new converter for each HTML source
-                HtmlToPdfConverter htmlToPdfConverter = new HtmlToPdfConverter();
+                if (i > 0 && (startOnNewPage || crtYPos >= pdfDocument.ContentHeight))
+                {
+                    // The next HTML document starts at the top of a new page, as asked or because the previous
+                    // one ended at the bottom of its last page
+                    pdfDocument.AddPage();
+                    crtYPos = 0;
+                }
 
-                // Delay header and footer rendering until merge is saved
-                htmlToPdfConverter.PdfDocumentOptions.PdfHtmlHeader.DelayContentRendering = true;
-                htmlToPdfConverter.PdfDocumentOptions.PdfHtmlFooter.DelayContentRendering = true;
+                // The HTML document starts at the current position and continues on as many new pages as it needs,
+                // inside the margins of the document, below the header and above the footer
+                PdfHtmlElement htmlElement = new PdfHtmlElement(urlsToConvert[i]);
+                htmlElement.Y = crtYPos;
 
-                // Calculate current page count to determine visibility logic
-                int totalPdfPageCount = pdfMerge.PdfMergeInfo.TotalPagesProduced;
+                // Render the HTML document in the PDF document
+                PdfHtmlRenderInfo renderInfo = pdfDocument.AddHtml(htmlElement);
 
-                // Set header and footer visibility based on current position
-                SetHeaderFooterVisibility(htmlToPdfConverter, totalPdfPageCount, model);
+                if (i == 0 && model.TemplateZoomFromDocuments)
+                {
+                    // The header and the footer are drawn at the zoom of the HTML documents, available after the first
+                    // document was rendered, so the fonts have the same sizes in the templates and in the documents
+                    double documentsZoom = Math.Max(10, Math.Min(200, htmlElement.Converter.ConversionInfo.PrintZoom));
+                    if (headerTemplate != null)
+                        headerTemplate.Zoom = documentsZoom;
+                    if (footerTemplate != null)
+                        footerTemplate.Zoom = documentsZoom;
+                }
 
-                // Apply general converter options
-                SetHtmlToPdfConverterOptions(htmlToPdfConverter, model);
-
-                // Convert the HTML to PDF
-                byte[] pdfBytes = htmlToPdfConverter.ConvertUrl(url);
-
-                // Add the result to the merger
-                int pdfPageCount = pdfMerge.AddPdf(pdfBytes);
+                // The next HTML document starts below the rendered content of the last page
+                crtYPos = renderInfo.LastPageRectangle.Bounds.Bottom;
             }
 
-            // Merge all PDFs into a single document, applying the header and footer
-            byte[] mergedPdf = pdfMerge.Save();
+            // Save the PDF document in a memory buffer. The header and the footer are rendered now, with the final page numbers
+            byte[] outPdfBuffer = pdfDocument.Save();
 
-            // Send the resulting PDF to the browser
-            FileResult fileResult = new FileContentResult(mergedPdf, "application/pdf");
+            // Send the PDF file to browser
+            FileResult fileResult = new FileContentResult(outPdfBuffer, "application/pdf");
             fileResult.FileDownloadName = "Header_Footer_on_PDF_from_Multiple_HTML.pdf";
-
             return fileResult;
         }
 
-        private void SetHeaderFooterVisibility(HtmlToPdfConverter htmlToPdfConverter, int totalPagesBefore, Header_Footer_on_PDF_from_Multiple_HTML_ViewModel model)
+        private void SetTemplateOptions(PdfHtmlTemplate template, bool fitHeight, double zoom, bool skipVariablesParsing, int? conversionDelay,
+            bool showInFirstPage, bool showInOddPages, bool showInEvenPages)
         {
-            // Set header visibility
-            SetHeaderFooterVisibility(htmlToPdfConverter, totalPagesBefore, true, model);
+            // The content keeps its own height up to the height of the template; when it is taller it is scaled down
+            // to fit the template if FitHeight is true, or cut at the height of the template otherwise
+            template.AutoSizeContentHeight = true;
+            template.FitHeight = fitHeight;
+            if (!fitHeight)
+                template.MaxContentHeight = template.Height;
 
-            // Set footer visibility
-            SetHeaderFooterVisibility(htmlToPdfConverter, totalPagesBefore, false, model);
-        }
+            // The zoom at which the template HTML is laid out and drawn, at the same template width; replaced by the zoom
+            // of the HTML documents when TemplateZoomFromDocuments is set
+            template.Zoom = zoom;
 
-        private void SetHeaderFooterVisibility(HtmlToPdfConverter htmlToPdfConverter, int totalPagesBefore, bool isHeader, Header_Footer_on_PDF_from_Multiple_HTML_ViewModel model)
-        {
-            PdfHtmlHeaderFooter pdfHtmlTemplate = null;
+            // Set the template visibility on specific PDF pages: first page, odd-numbered pages and even-numbered pages
+            template.ShowInFirstPage = showInFirstPage;
+            template.ShowInOddPages = showInOddPages;
+            template.ShowInEvenPages = showInEvenPages;
 
-            bool showInFirstPage, showInEvenPages, showInOddPages;
+            // Optimize the template rendering time by providing a hint if the HTML template contains variables such as {page_number} or {total_pages}
+            template.SkipVariablesParsing = skipVariablesParsing;
 
-            if (isHeader)
-            {
-                pdfHtmlTemplate = htmlToPdfConverter.PdfDocumentOptions.PdfHtmlHeader;
-
-                showInFirstPage = model.ShowHeaderInFirstPage;
-                showInOddPages = model.ShowHeaderInOddPages;
-                showInEvenPages = model.ShowHeaderInEvenPages;
-            }
-            else
-            {
-                pdfHtmlTemplate = htmlToPdfConverter.PdfDocumentOptions.PdfHtmlFooter;
-
-                showInFirstPage = model.ShowFooterInFirstPage;
-                showInOddPages = model.ShowFooterInOddPages;
-                showInEvenPages = model.ShowFooterInEvenPages;
-            }
-
-            pdfHtmlTemplate.ShowInFirstPage = showInFirstPage;
-            pdfHtmlTemplate.ShowInEvenPages = showInEvenPages;
-            pdfHtmlTemplate.ShowInOddPages = showInOddPages;
-
-            if (totalPagesBefore > 0)
-            {
-                if (totalPagesBefore % 2 == 1)
-                {
-                    // First page is even in whole document
-                    pdfHtmlTemplate.ShowInFirstPage = showInEvenPages;
-                    pdfHtmlTemplate.ShowInOddPages = showInEvenPages;
-                    pdfHtmlTemplate.ShowInEvenPages = showInOddPages;
-                }
-                else
-                {
-                    // First page is odd in whole document
-                    pdfHtmlTemplate.ShowInFirstPage = showInOddPages;
-                    pdfHtmlTemplate.ShowInOddPages = showInOddPages;
-                    pdfHtmlTemplate.ShowInEvenPages = showInEvenPages;
-                }
-            }
-        }
-
-        private void SetHtmlToPdfConverterOptions(HtmlToPdfConverter htmlToPdfConverter, Header_Footer_on_PDF_from_Multiple_HTML_ViewModel model)
-        {
-            bool headerEnabled = model.HeaderEnabled;
-            if (headerEnabled)
-            {
-                // Set the header HTML from a URL or from an HTML string
-                bool headerHtmlFromUrl = model.HeaderHtmlSource == "Url";
-                if (headerHtmlFromUrl)
-                {
-                    string headerUrl = model.HeaderUrlTextBox;
-
-                    htmlToPdfConverter.PdfDocumentOptions.PdfHtmlHeader.HtmlSourceUrl = headerUrl;
-                }
-                else
-                {
-                    string headerHtml = model.HeaderHtmlTextBox;
-                    string headerHtmlBaseUrl = model.HeaderHtmlBaseUrlTextBox;
-
-                    htmlToPdfConverter.PdfDocumentOptions.PdfHtmlHeader.Html = headerHtml;
-                    htmlToPdfConverter.PdfDocumentOptions.PdfHtmlHeader.HtmlBaseUrl = headerHtmlBaseUrl;
-                }
-
-                // Enable automatic height adjustment based on header HTML content
-                bool autoSizeHeaderContentHeight = model.AutoSizeHeaderContentHeight;
-                htmlToPdfConverter.PdfDocumentOptions.PdfHtmlHeader.AutoSizeContentHeight = autoSizeHeaderContentHeight;
-
-                // Set minimum and maximum content height when AutoSizeContentHeight is enabled
-                htmlToPdfConverter.PdfDocumentOptions.PdfHtmlHeader.MinContentHeight = model.HeaderMinContentHeight;
-                htmlToPdfConverter.PdfDocumentOptions.PdfHtmlHeader.MaxContentHeight = model.HeaderMaxContentHeight;
-
-                // Set a fixed header height when AutoResizeHeight is disabled
-                if (model.HeaderHeight.HasValue)
-                {
-                    int headerHeight = model.HeaderHeight.Value;
-                    htmlToPdfConverter.PdfDocumentOptions.PdfHtmlHeader.Height = headerHeight;
-                }
-
-                // If AutoResizeHeight and FitHeight are enabled, the content may be scaled down to fit the specified height
-                bool fitHeaderHeight = model.FitHeaderHeight;
-                htmlToPdfConverter.PdfDocumentOptions.PdfHtmlHeader.FitHeight = fitHeaderHeight;
-
-                // Automatically adjust the top page margin based on the header height
-                bool autoResizeTopMargin = model.AutoResizeTopMargin;
-                htmlToPdfConverter.PdfDocumentOptions.PdfHtmlHeader.AutoResizePdfMargins = autoResizeTopMargin;
-
-                // Reserve space for the header on all pages, regardless of visibility
-                // If false, print styles are used instead of screen styles
-                htmlToPdfConverter.PdfDocumentOptions.PdfHtmlHeader.ReserveSpaceAlways = model.ReserveHeaderSpace;
-
-                // Optimize the header rendering time by providing a hint if the HTML template contains variables such as { page_number} or { total_pages}
-                htmlToPdfConverter.PdfDocumentOptions.PdfHtmlHeader.SkipVariablesParsing = model.SkipHeaderVariablesParsing;
-
-                // Optionally set additional time to wait for the asynchronous header HTML content before rendering
-                if (model.HeaderConversionDelay.HasValue)
-                    htmlToPdfConverter.PdfDocumentOptions.PdfHtmlHeader.ConversionDelay = model.HeaderConversionDelay.Value;
-            }
-
-            bool footerEnabled = model.FooterEnabled;
-            if (footerEnabled)
-            {
-                // Set the footer HTML from a URL or from an HTML string
-                bool footerHtmlFromUrl = model.FooterHtmlSource == "Url";
-                if (footerHtmlFromUrl)
-                {
-                    string footerUrl = model.FooterUrlTextBox;
-
-                    htmlToPdfConverter.PdfDocumentOptions.PdfHtmlFooter.HtmlSourceUrl = footerUrl;
-                }
-                else
-                {
-                    string footerHtml = model.FooterHtmlTextBox;
-                    string footerHtmlBaseUrl = model.FooterHtmlBaseUrlTextBox;
-
-                    htmlToPdfConverter.PdfDocumentOptions.PdfHtmlFooter.Html = footerHtml;
-                    htmlToPdfConverter.PdfDocumentOptions.PdfHtmlFooter.HtmlBaseUrl = footerHtmlBaseUrl;
-                }
-
-                // Enable automatic height adjustment based on footer HTML content
-                bool autoSizeFooterContentHeight = model.AutoSizeFooterContentHeight;
-                htmlToPdfConverter.PdfDocumentOptions.PdfHtmlFooter.AutoSizeContentHeight = autoSizeFooterContentHeight;
-
-                // Set minimum and maximum content height when AutoSizeContentHeight is enabled
-                htmlToPdfConverter.PdfDocumentOptions.PdfHtmlFooter.MinContentHeight = model.FooterMinContentHeight;
-                htmlToPdfConverter.PdfDocumentOptions.PdfHtmlFooter.MaxContentHeight = model.FooterMaxContentHeight;
-
-                // Set a fixed footer height when AutoResizeHeight is disabled
-                if (model.FooterHeight.HasValue)
-                {
-                    int footerHeight = model.FooterHeight.Value;
-                    htmlToPdfConverter.PdfDocumentOptions.PdfHtmlFooter.Height = footerHeight;
-                }
-
-                // If AutoResizeHeight and FitHeight are enabled, the content may be scaled down to fit the specified height
-                bool fitFooterHeight = model.FitFooterHeight;
-                htmlToPdfConverter.PdfDocumentOptions.PdfHtmlFooter.FitHeight = fitFooterHeight;
-
-                // Automatically adjust the bottom page margin based on the footer height
-                bool autoResizeBottomMargin = model.AutoResizeBottomMargin;
-                htmlToPdfConverter.PdfDocumentOptions.PdfHtmlFooter.AutoResizePdfMargins = autoResizeBottomMargin;
-
-                // Reserve space for the footer on all pages, regardless of visibility
-                // If false, print styles are used instead of screen styles
-                htmlToPdfConverter.PdfDocumentOptions.PdfHtmlFooter.ReserveSpaceAlways = model.ReserveFooterSpace;
-
-                // Optimize the footer rendering time by providing a hint if the HTML template contains variables such as { page_number} or { total_pages}
-                htmlToPdfConverter.PdfDocumentOptions.PdfHtmlFooter.SkipVariablesParsing = model.SkipFooterVariablesParsing;
-
-                // Optionally set additional time to wait for the asynchronous footer HTML content before rendering
-                if (model.FooterConversionDelay.HasValue)
-                    htmlToPdfConverter.PdfDocumentOptions.PdfHtmlFooter.ConversionDelay = model.FooterConversionDelay.Value;
-            }
-        }
-
-        private void SetPdfMergeOptions(PdfMerge pdfMerge, System.Drawing.Size headerSize, System.Drawing.Size footerSize, double documentZoom, Header_Footer_on_PDF_from_Multiple_HTML_ViewModel model)
-        {
-            bool headerEnabled = model.HeaderEnabled;
-            if (headerEnabled)
-            {
-                PdfHtmlTemplate pdfHeaderTemplate = null;
-
-                // Set the header HTML from a URL or from an HTML string
-                bool headerHtmlFromUrl = model.HeaderHtmlSource == "Url";
-                if (headerHtmlFromUrl)
-                {
-                    string headerUrl = model.HeaderUrlTextBox;
-
-                    pdfHeaderTemplate = pdfMerge.AddHtmlTemplate(0, 0, headerSize.Width, headerSize.Height,
-                            PdfTemplateHorizontalAlign.Left, PdfTemplateVerticalAlign.Top, headerUrl);
-                }
-                else
-                {
-                    string headerHtml = model.HeaderHtmlTextBox;
-                    string headerHtmlBaseUrl = model.HeaderHtmlBaseUrlTextBox;
-
-                    pdfHeaderTemplate = pdfMerge.AddHtmlTemplate(0, 0, headerSize.Width, headerSize.Height,
-                            PdfTemplateHorizontalAlign.Left, PdfTemplateVerticalAlign.Top, headerHtml, headerHtmlBaseUrl);
-                }
-
-                // Enable automatic height adjustment based on header HTML content
-                bool autoSizeHeaderContentHeight = model.AutoSizeHeaderContentHeight;
-                pdfHeaderTemplate.AutoSizeContentHeight = autoSizeHeaderContentHeight;
-
-                // Set minimum and maximum content height when AutoSizeContentHeight is enabled
-                pdfHeaderTemplate.MinContentHeight = model.HeaderMinContentHeight;
-                pdfHeaderTemplate.MaxContentHeight = model.HeaderMaxContentHeight;
-
-                // The template is drawn at the zoom of the merged pages, like the header of the first document
-                pdfHeaderTemplate.Zoom = documentZoom;
-
-                // Set a fixed header height when AutoResizeHeight is disabled
-                if (model.HeaderHeight.HasValue)
-                {
-                    int headerHeight = model.HeaderHeight.Value;
-                    pdfHeaderTemplate.Height = headerHeight;
-                }
-
-                // If AutoResizeHeight and FitHeight are enabled, the content may be scaled down to fit the specified height
-                bool fitHeaderHeight = model.FitHeaderHeight;
-                pdfHeaderTemplate.FitHeight = fitHeaderHeight;
-
-                // Set header visibility on specific PDF pages: first page, odd-numbered pages and even-numbered pages
-                pdfHeaderTemplate.ShowInFirstPage = model.ShowHeaderInFirstPage;
-                pdfHeaderTemplate.ShowInOddPages = model.ShowHeaderInOddPages;
-                pdfHeaderTemplate.ShowInEvenPages = model.ShowHeaderInEvenPages;
-
-                // Optimize the header rendering time by providing a hint if the HTML template contains variables such as { page_number} or { total_pages}
-                pdfHeaderTemplate.SkipVariablesParsing = model.SkipHeaderVariablesParsing;
-
-                // Optionally set additional time to wait for the asynchronous header HTML content before rendering
-                if (model.HeaderConversionDelay.HasValue)
-                    pdfHeaderTemplate.ConversionDelay = model.HeaderConversionDelay.Value;
-            }
-
-            bool footerEnabled = model.FooterEnabled;
-            if (footerEnabled)
-            {
-                PdfHtmlTemplate pdfFooterTemplate = null;
-
-                // Set the footer HTML from a URL or from an HTML string
-                bool footerHtmlFromUrl = model.FooterHtmlSource == "Url";
-                if (footerHtmlFromUrl)
-                {
-                    string footerUrl = model.FooterUrlTextBox;
-                    pdfFooterTemplate = pdfMerge.AddHtmlTemplate(0, 0, footerSize.Width, footerSize.Height,
-                            PdfTemplateHorizontalAlign.Left, PdfTemplateVerticalAlign.Bottom, footerUrl);
-                }
-                else
-                {
-                    string footerHtml = model.FooterHtmlTextBox;
-                    string footerHtmlBaseUrl = model.FooterHtmlBaseUrlTextBox;
-
-                    pdfFooterTemplate = pdfMerge.AddHtmlTemplate(0, 0, footerSize.Width, footerSize.Height,
-                            PdfTemplateHorizontalAlign.Left, PdfTemplateVerticalAlign.Bottom, footerHtml, footerHtmlBaseUrl);
-                }
-
-                // Enable automatic height adjustment based on footer HTML content
-                bool autoSizeFooterContentHeight = model.AutoSizeFooterContentHeight;
-                pdfFooterTemplate.AutoSizeContentHeight = autoSizeFooterContentHeight;
-
-                // Set minimum and maximum content height when AutoSizeContentHeight is enabled
-                pdfFooterTemplate.MinContentHeight = model.FooterMinContentHeight;
-                pdfFooterTemplate.MaxContentHeight = model.FooterMaxContentHeight;
-
-                pdfFooterTemplate.Zoom = documentZoom;
-
-                // Set a fixed footer height when AutoResizeHeight is disabled
-                if (model.FooterHeight.HasValue)
-                {
-                    int footerHeight = model.FooterHeight.Value;
-                    pdfFooterTemplate.Height = footerHeight;
-                }
-
-                // If AutoResizeHeight and FitHeight are enabled, the content may be scaled down to fit the specified height
-                bool fitFooterHeight = model.FitFooterHeight;
-                pdfFooterTemplate.FitHeight = fitFooterHeight;
-
-                // Set footer visibility on specific PDF pages: first page, odd-numbered pages and even-numbered pages
-                pdfFooterTemplate.ShowInFirstPage = model.ShowFooterInFirstPage;
-                pdfFooterTemplate.ShowInOddPages = model.ShowFooterInOddPages;
-                pdfFooterTemplate.ShowInEvenPages = model.ShowFooterInEvenPages;
-
-                // Optimize the footer rendering time by providing a hint if the HTML template contains variables such as { page_number} or { total_pages}
-                pdfFooterTemplate.SkipVariablesParsing = model.SkipFooterVariablesParsing;
-
-                // Optionally set additional time to wait for the asynchronous footer HTML content before rendering
-                if (model.FooterConversionDelay.HasValue)
-                    pdfFooterTemplate.ConversionDelay = model.FooterConversionDelay.Value;
-            }
+            // Optionally set additional time to wait for the asynchronous template HTML content before rendering
+            if (conversionDelay.HasValue)
+                template.ConversionDelay = conversionDelay.Value;
         }
 
         private Header_Footer_on_PDF_from_Multiple_HTML_ViewModel SetViewModel()
@@ -859,7 +698,6 @@ namespace EvoPdf_Next_AspNetDemo.Controllers.HTML_to_PDF
                 uriBuilder.Port = (int)request.Host.Port;
             uriBuilder.Path = request.PathBase.ToString() + request.Path.ToString();
             uriBuilder.Query = request.QueryString.ToString();
-
             string currentPageUrl = uriBuilder.Uri.AbsoluteUri;
             string rootUrl = currentPageUrl.Substring(0, currentPageUrl.Length - "Header_Footer_on_PDF_from_Multiple_HTML".Length);
 
@@ -883,8 +721,9 @@ namespace EvoPdf_Next_AspNetDemo.Controllers.HTML_to_PDF
 <html>
 <head>
     <title>Header HTML with Page Numbers</title>
+    <link href="styles/webfonts.css" type="text/css" rel="stylesheet">
 </head>
-<body style="font-family: 'Times New Roman'; font-size: 16px">
+<body style="font-family: Verdana, sans-serif; font-size: 16px">
     <table style="width: 100%">
         <tr>
             <td style=" font-size:18px; font-weight: bold; color: navy">Header HTML with Page Numbers</td>
@@ -912,8 +751,9 @@ namespace EvoPdf_Next_AspNetDemo.Controllers.HTML_to_PDF
 <html>
 <head>
     <title>Footer HTML with Page Numbers</title>
+    <link href="styles/webfonts.css" type="text/css" rel="stylesheet">
 </head>
-<body style="font-family: 'Times New Roman'; font-size: 16px">
+<body style="font-family: Verdana, sans-serif; font-size: 16px">
     <table style="width: 100%">
         <tr>
             <td style=" font-size:18px; font-weight: bold; color: navy">Footer HTML with Page Numbers</td>
@@ -938,11 +778,20 @@ namespace EvoPdf_Next_AspNetDemo.Controllers.HTML_to_PDF
 
 Topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/add-html-stamp-to-generated-pdf.htm
 
-### Add HTML Stamp with Page Numbering to Generated PDF
+### 
 
 ```html
 <!-- Use background-color: rgba(r, g, b, a) to apply background opacity (a = 0 transparent, 1 opaque) -->
 <body style="background-color: rgba(255, 255, 255, 0.75)">
+```
+
+### Draw the Stamp under the Content and Skip Pages
+
+```csharp
+stamp.RenderUnderContent = true;
+
+// The stamp is skipped in the second page
+stamp.OnPageRendering = placement => placement.DocumentPageNumber != 2;
 ```
 
 ### Code Sample - Add HTML Stamp with Page Numbers to PDF Generated from HTML
@@ -1077,10 +926,20 @@ namespace EvoPdf_Next_AspNetDemo.Controllers.HTML_to_PDF
                 // The zoom at which the stamp HTML is laid out and drawn, at the same stamp width
                 stamp.Zoom = model.StampZoom;
 
-                // Set stamp visibility in PDF for the first page, odd pages, and even pages
+                // Set stamp visibility in PDF for the first page, odd pages and even pages
                 stamp.ShowInFirstPage = model.ShowStampInFirstPage;
                 stamp.ShowInOddPages = model.ShowStampInOddPages;
                 stamp.ShowInEvenPages = model.ShowStampInEvenPages;
+
+                // The stamp is drawn under the existing content of the page, as a watermark, or over it
+                stamp.RenderUnderContent = model.RenderUnderContent;
+
+                if (model.SkipPagesWithCallback)
+                {
+                    // The callback decides for each page if the stamp is rendered, after the first, odd and even page
+                    // conditions; it receives the placement of the stamp in the page. The second page is skipped here
+                    stamp.OnPageRendering = placement => placement.DocumentPageNumber != 2;
+                }
 
                 // Sets the opacity for the entire stamp content, including text.
                 // To apply opacity only to the background, use the alpha channel
@@ -1142,9 +1001,10 @@ namespace EvoPdf_Next_AspNetDemo.Controllers.HTML_to_PDF
 <html>
 <head>
     <title>HTML Stamp with Page Numbers</title>
+    <link href="styles/webfonts.css" type="text/css" rel="stylesheet">
 </head>
 <!-- Use background-color: rgba(r, g, b, a) to apply background opacity (a = 0 transparent, 1 opaque) -->
-<body style="background-color: rgba(255, 255, 255, 0.9); font-family: 'Times New Roman'; font-size: 16px; margin: 5px">
+<body style="background-color: rgba(255, 255, 255, 0.9); font-family: Verdana, sans-serif; font-size: 16px; margin: 5px">
     <table style="width: 100%; border: 3px solid royalblue">
         <tr>
             <td>
@@ -1155,7 +1015,7 @@ namespace EvoPdf_Next_AspNetDemo.Controllers.HTML_to_PDF
             <td>
                 <table>
                     <tr>
-                        <td style="font-size: 30px; font-weight: bold; color: #BE1200">
+                        <td style="font-size: 24px; font-weight: bold; color: #BE1200">
                             HTML Stamp with Page Numbers
                         </td>
                     </tr>
@@ -1176,16 +1036,14 @@ namespace EvoPdf_Next_AspNetDemo.Controllers.HTML_to_PDF
 
 Topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/add-html-stamp-to-existing-pdf.htm
 
-### Add HTML Stamp with Page Numbering to Existing PDF
+### 
 
 ```html
 <!-- Use background-color: rgba(r, g, b, a) to apply background opacity (a = 0 transparent, 1 opaque) -->
 <body style="background-color: rgba(255, 255, 255, 0.75)">
 ```
 
-### Save the Modified PDF Document
-
-**Save the PDF Document to a File**
+### Save the PDF Document to a File
 
 ```csharp
 string outputPath = Path.Combine(outputDir, "ModifiedDocument.pdf");
@@ -1194,23 +1052,32 @@ string outputPath = Path.Combine(outputDir, "ModifiedDocument.pdf");
 pdfEditor.SaveToFile(outputPath);
 ```
 
-**Save the PDF Document to Memory**
+### Save the PDF Document to Memory
 
 ```csharp
 // Save the document to a memory buffer
 byte[] pdfBytes = pdfEditor.Save();
 ```
 
-**Asynchronously Save the PDF Document to a File**
+### Asynchronously Save the PDF Document to a File
 
 ```csharp
 await pdfEditor.SaveToFileAsync(outputPath);
 ```
 
-**Asynchronously Save the PDF Document to Memory**
+### Asynchronously Save the PDF Document to Memory
 
 ```csharp
 byte[] pdfBytes = await pdfEditor.SaveAsync();
+```
+
+### Draw the Stamp under the Content and Skip Pages
+
+```csharp
+stamp.RenderUnderContent = true;
+
+// The stamp is skipped in the second page
+stamp.OnPageRendering = placement => placement.DocumentPageNumber != 2;
 ```
 
 ### Code Sample - Add HTML Stamp with Page Numbers to an Existing PDF
@@ -1255,7 +1122,6 @@ namespace EvoPdf_Next_AspNetDemo.Controllers.PDF_Editor
                 throw new ValidationException(errorMessage);
             }
 
-            // Set license key received after purchase to use the library in licensed mode
             // Set the license key received after purchase to use the library in licensed mode; leave it commented for demo mode
             // Licensing.LicenseKey = "your-license-key";
 
@@ -1390,10 +1256,20 @@ namespace EvoPdf_Next_AspNetDemo.Controllers.PDF_Editor
                 // The zoom at which the stamp HTML is laid out and drawn, at the same stamp width
                 stamp.Zoom = model.StampZoom;
 
-                // Set stamp visibility in PDF for the first page, odd pages, and even pages
+                // Set stamp visibility in PDF for the first page, odd pages and even pages
                 stamp.ShowInFirstPage = model.ShowStampInFirstPage;
                 stamp.ShowInOddPages = model.ShowStampInOddPages;
                 stamp.ShowInEvenPages = model.ShowStampInEvenPages;
+
+                // The stamp is drawn under the existing content of the page, as a watermark, or over it
+                stamp.RenderUnderContent = model.RenderUnderContent;
+
+                if (model.SkipPagesWithCallback)
+                {
+                    // The callback decides for each page if the stamp is rendered, after the first, odd and even page
+                    // conditions; it receives the placement of the stamp in the page. The second page is skipped here
+                    stamp.OnPageRendering = placement => placement.DocumentPageNumber != 2;
+                }
 
                 // Sets the opacity for the entire stamp content, including text.
                 // To apply opacity only to the background, use the alpha channel
@@ -1456,9 +1332,10 @@ namespace EvoPdf_Next_AspNetDemo.Controllers.PDF_Editor
 <html>
 <head>
     <title>HTML Stamp with Page Numbers</title>
+    <link href="styles/webfonts.css" type="text/css" rel="stylesheet">
 </head>
 <!-- Use background-color: rgba(r, g, b, a) to apply background opacity (a = 0 transparent, 1 opaque) -->
-<body style="background-color: rgba(255, 255, 255, 0.9); font-family: 'Times New Roman'; font-size: 16px; margin: 5px">
+<body style="background-color: rgba(255, 255, 255, 0.9); font-family: Verdana, sans-serif; font-size: 16px; margin: 5px">
     <table style="width: 100%; border: 3px solid royalblue">
         <tr>
             <td>
@@ -1469,7 +1346,7 @@ namespace EvoPdf_Next_AspNetDemo.Controllers.PDF_Editor
             <td>
                 <table>
                     <tr>
-                        <td style="font-size: 30px; font-weight: bold; color: #BE1200">
+                        <td style="font-size: 24px; font-weight: bold; color: #BE1200">
                             HTML Stamp with Page Numbers
                         </td>
                     </tr>

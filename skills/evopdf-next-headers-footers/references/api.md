@@ -11,9 +11,9 @@ A PDF Template can be used to repeat an HTML content in many PDF pages. The HTML
 
 ### Properties
 
-- `AutoResizePdfMargins`: Allows the top and bottom margins of the PDF document to be automatically resized based on the header and footer HTML content. The default value is true
+- `AutoResizePdfMargins`: When true, the header is drawn inside the top margin of the document and the footer inside the bottom margin; a margin smaller than its header or footer is enlarged to the height of the header or footer. The default value is true
 - `DelayContentRendering`: When set to true, the header or footer will reserve layout space on applicable pages as it would be rendered, but will not render any visible content. This is useful when the actual content is intended to be inserted in a later processing stage. The default value is false.
-- `ReserveSpaceAlways`: If true, space is reserved on all pages regardless of header and footer visibility. This is the default behavior. If false, space for the header or footer is reserved only on pages where they are actually rendered, and styling rules intended for print layout will be applied in this case. It is ignored if ShowOnlyInHtmlToPdfPages is explicitly set to false. The default value is true
+- `ReserveSpaceAlways`: If true, space is reserved on all pages regardless of header and footer visibility. This is the default behavior. If false, space for the header or footer is reserved only on pages where they are actually rendered; the other pages keep the margins of the document. It is ignored if ShowOnlyInHtmlToPdfPages is explicitly set to false. The default value is true
 
 ## PdfHtmlTemplate
 
@@ -30,7 +30,7 @@ A PDF Template can be used to repeat HTML content on multiple PDF pages. The HTM
 - `CountEndPages`: Specifies whether the external PDF pages inserted after the HTML to PDF conversion result are included in the total page count used for page numbering. Is ignored if ShowOnlyInHtmlToPdfPages is explicitly set to false. The default value is true
 - `CountStartPages`: Specifies whether the external PDF pages inserted before the HTML to PDF conversion result are included in the total page count used for page numbering. Is ignored if ShowOnlyInHtmlToPdfPages is explicitly set to false. The default value is true
 - `CountTocPages`: In HTML to PDF conversion, determines whether the Table of Contents (TOC) pages inserted before the conversion result are included in the total page count used for page numbering. This setting has no effect for inline TOCs. It is ignored if ShowOnlyInHtmlToPdfPages is explicitly set to false. The default value is true
-- `DestinationSize`: The template destination size in PDF page determined during rendering
+- `DestinationSize`: The size of the area of the page given to the template, known after the rendering
 - `DisableWebSecurity`: Disables web security features such as CORS and same-origin policy. The default value is false
 - `EnableElevatedRendering`: Enables the HTML renderer to inherit the elevated privileges of the application using the library when the application is running elevated on Windows. The default value is true
 - `EnableSiteIsolation`: Enables site isolation, which renders the frames of a page that come from different sites in separate processes. The default value is false
@@ -62,7 +62,8 @@ A PDF Template can be used to repeat HTML content on multiple PDF pages. The HTM
 - `PageNumbersFont`: Gets or sets the default regular font used for page numbers. If not set, a default regular font will be used
 - `PageNumbersItalicFont`: Gets or sets the default italic font used for page numbers. If not set but PageNumbersFont is set, that font will be used as a fallback. If PageNumbersFont is not set either, a default italic font will be used
 - `PrintZoom`: The zoom, in percent, at which the template HTML was drawn in the PDF. It is the zoom of the template, lowered when the browser window grew to the width of the content and by any scaling the browser applied. It is 0 before a conversion
-- `RenderedSize`: The template rendered size in PDF page determined during rendering
+- `RenderUnderContent`: True to draw the template under the content of the pages, as a background, false to draw it over the content. The default is false
+- `RenderedSize`: The size of the rendered template in the page, known after the rendering
 - `RotationDegrees`: Rotation angle in degrees applied to the entire HTML template. Positive values rotate counter-clockwise. This property is ignored for header and footer templates. Default is 0
 - `RotationPivot`: Pivot used when rotating the HTML template. This property is ignored for header and footer templates. Default is TopLeft
 - `ShowInEvenPages`: Specifies whether the template should be displayed on even-numbered pages of the PDF document. In HTML to PDF conversion, if ShowOnlyInHtmlToPdfPages is true, the first page generated from HTML is considered odd, the second even, and so on. If ShowOnlyInHtmlToPdfPages is false, the same rule applies based on the final document. In PDF merging or editing, this refers to even-numbered pages in the final PDF. The default value is true
@@ -119,18 +120,19 @@ Represents a reusable template object
 ### Properties
 
 - `Height`: Gets the template height in points
-- `HorizontalAlign`: Specifies the horizontal alignment of the template on the PDF page. Takes precedence over the X coordinate when set to a value other than None. The default value is None. This property cannot be changed after document rendering has started
+- `HorizontalAlign`: Specifies the horizontal alignment of the template on the PDF page. Takes precedence over the X coordinate when set to a value other than None. The default value is None. This property cannot be changed after the template was drawn on a page
 - `OnPageRendering`: Optional callback invoked before the template is rendered on a page. Return true to allow rendering or false to skip rendering on the current page. This callback is evaluated after the ShowInFirstPage, ShowInOddPages and ShowInEvenPages conditions are applied. The callback receives the final placement of the template on the current page
 - `Opacity`: The opacity as a value between 0 and 1 to be applied to entire template. For example, setting this property to 0.75 will lower the opacity to 75% . The default value is 1 and the rendered PDF content will have its original opacity
-- `RotationDegrees`: Rotation angle in degrees applied to the entire template. Positive values rotate counter-clockwise. Default is 0 (no rotation). This property cannot be changed after document rendering has started
-- `RotationPivot`: Pivot used when rotating the template. The default value is TopLeft. This property cannot be changed after document rendering has started
+- `RenderUnderContent`: True to draw the template under the content of the pages, as a background, false to draw it over the content. The default is false
+- `RotationDegrees`: Rotation angle in degrees applied to the entire template. Positive values rotate counter-clockwise. Default is 0 (no rotation). This property cannot be changed after the template was drawn on a page
+- `RotationPivot`: Pivot used when rotating the template. The default value is TopLeft. This property cannot be changed after the template was drawn on a page
 - `ShowInEvenPages`: Specifies whether the template should be displayed on even-numbered pages of the PDF document The default value is true
 - `ShowInFirstPage`: Specifies whether the template should be displayed on the first page of the PDF document The default value is true
 - `ShowInOddPages`: Specifies whether the template should be displayed on odd-numbered pages of the PDF document The default value is true
-- `VerticalAlign`: Specifies the vertical alignment of the template on the PDF page. Takes precedence over the Y coordinate when set to a value other than None. The default value is None. This property cannot be changed after document rendering has started
+- `VerticalAlign`: Specifies the vertical alignment of the template on the PDF page. Takes precedence over the Y coordinate when set to a value other than None. The default value is None. This property cannot be changed after the template was drawn on a page
 - `Width`: Gets the template width in points
-- `X`: Gets or sets the X position of the template in the PDF pages relative to the top left of the page. This property is ignored for header and footer templates. This property cannot be changed after document rendering has started
-- `Y`: Gets or sets the Y position of the template in the PDF pages relative to the top left of the page. This property is ignored for header and footer templates. This property cannot be changed after document rendering has started
+- `X`: Gets or sets the X position of the template in the PDF pages relative to the top left of the page. This property cannot be changed after the template was drawn on a page
+- `Y`: Gets or sets the Y position of the template in the PDF pages relative to the top left of the page. This property cannot be changed after the template was drawn on a page
 
 ### Methods
 

@@ -3,28 +3,29 @@
 Instructions for AI coding agents (Claude Code, Codex, GitHub Copilot, Cursor, Gemini CLI, Windsurf and others) working in projects that use **EvoPdf Next**, the .NET PDF library from EVO PDF Software.
 
 ## When these instructions apply
-Any task that converts HTML, Word, Excel, RTF or Markdown to PDF, creates, edits or signs PDF documents, creates electronic invoices, or extracts text and images from PDF in .NET, any deployment of these to a server, container or cloud service, and any migration from **EvoPdf Classic** (`EvoPdf` namespace) to **EvoPdf Next**.
+Any task that converts HTML, Word, Excel, RTF or Markdown to PDF, creates, edits, merges, splits, redacts or signs PDF documents, creates or fills PDF forms, creates electronic invoices, or extracts text and images from PDF in .NET, any deployment of these to a server, container or cloud service, and any migration from **EvoPdf Classic** (`EvoPdf` namespace) to **EvoPdf Next**.
 
 ## Rules
 1. Use the current API surface listed below and in `skills/*/SKILL.md`. Do not guess member names; if a member is not listed, say so and link the documentation.
 2. Never fabricate license keys, package versions or platform claims. Reference packages without a version unless the user pins one.
 3. Prefer the smallest correct sample: `using EvoPdf.Next;`, one converter, one call, `File.WriteAllBytes`. Add options only when the task asks for them.
 4. Windows-only assumptions are wrong for EvoPdf Next: it runs on Windows, Linux and macOS. Choose the NuGet package for the target platform.
-5. For Classic to Next migrations follow `skills/evopdf-classic-to-next-migration/SKILL.md`: namespace, license key, page sizing model and header/footer model change; the conversion calls do not.
+5. For Classic to Next migrations follow `skills/evopdf-classic-to-next-migration/SKILL.md`. There are two ways: keep the Classic code and replace the `EvoPdf.HtmlToPdf` package with an `EvoPdf.HtmlToPdf.<Platform>` package (the Classic API on the Next engine, no code change), or port to the Next API, where the namespace, license key, page sizing model and header/footer model change and the conversion calls do not.
 
 
 ## EvoPdf Next: facts every generated answer must respect
 
 - Library: **EvoPdf Next** (namespace `EvoPdf.Next`), .NET Standard 2.0, for .NET 6 to 10 and .NET Framework 4.6.2 or later; Windows x64/ARM64, Linux x64/ARM64, macOS ARM64. Chromium-based rendering; no browser installation required.
-- Install one package per target platform. All components: `EvoPdf.Next.Windows`, `EvoPdf.Next.Linux`, `EvoPdf.Next.MacOS` (ARM64 variants `EvoPdf.Next.Windows.Arm64`, `EvoPdf.Next.Linux.Arm64`; `EvoPdf.Next` = Windows x64 + Linux x64). Single components follow the same pattern, e.g. `EvoPdf.Next.HtmlToPdf.Windows`, `EvoPdf.Next.WordToPdf.Linux`, `EvoPdf.Next.PdfProcessor.MacOS`, `EvoPdf.Next.Core.Windows`.
+- Install one package per target platform. All components: `EvoPdf.Next.Windows`, `EvoPdf.Next.Linux`, `EvoPdf.Next.MacOS` (ARM64 variants `EvoPdf.Next.Windows.Arm64`, `EvoPdf.Next.Linux.Arm64`; `EvoPdf.Next` = Windows x64 + Linux x64). Single components follow the same pattern, e.g. `EvoPdf.Next.HtmlToPdf.Windows`, `EvoPdf.Next.WordToPdf.Linux`, `EvoPdf.Next.PdfProcessor.MacOS`, `EvoPdf.Next.Core.Windows`. The Classic API (namespace `EvoPdf`) on the Next engine: `EvoPdf.HtmlToPdf.Windows`, `.Windows.Arm64`, `.Linux`, `.Linux.Arm64`, `.MacOS`.
 - License key: one static assignment, before any conversion: `Licensing.LicenseKey = "...";` (field on the static `EvoPdf.Next.Licensing` class). Without it the library runs in demo mode and stamps the output; never invent a key.
-- **Converter instances are not reusable**: one `new HtmlToPdfConverter()` (or Word/Excel/RTF/Markdown/Image converter) per conversion; the library throws "converter instances are not reusable" on a second call. Instances are cheap; never cache or share them. Every conversion method has an `...Async` twin.
+- **Converter instances are not reusable**: one `new HtmlToPdfConverter()` (or Word/Excel/RTF/Markdown/Image converter) per conversion; the library throws "converter instances are not reusable" on a second call. Instances are cheap; never cache or share them. Every conversion method has an `...Async` twin. The errors of the library are reported as `PdfException`, with a message that says what failed.
 - Page layout: a new `HtmlToPdfConverter` prints an A4 page with the HTML laid out as in a 1024 px browser window and scaled to the page width. Another layout is one method call on the converter: `FitBrowserWindowToPage(pageSize, orientation, windowWidth)` for a web page on paper, `LayoutAtPageWidth(pageSize)` for HTML designed for the paper size, drawn 1:1, `PrintLikeChrome(pageSize)` for the Save as PDF output of Chrome, `SinglePageOfWidth(widthPt, marginPt)` for receipts and `PageWidthFromBrowserWindow(windowWidth)` for a page as wide as the window. The `singlePage` argument of a method puts the whole content on one page. Set the margins, in points, after the method; setting `HtmlViewerWidth` or `HtmlViewerZoom` after it ends the automatic layout.
 - Headers/footers: `PdfDocumentOptions.PdfHtmlHeader` / `PdfHtmlFooter` (class `PdfHtmlHeaderFooter`, derives from `PdfHtmlTemplate`): `Html`, `HtmlBaseUrl` or `HtmlSourceUrl`, `Height`, `AutoSizeContentHeight`, `FitHeight`, `ShowInFirstPage`/`ShowInOddPages`/`ShowInEvenPages`, `ReserveSpaceAlways` (default `true`), `AutoResizePdfMargins`, `SkipVariablesParsing`, `PageNumberOffset`, `TotalPagesOffset`. Variables `{page_number}` and `{total_pages}` are replaced inside the header/footer HTML. Alternative browser mode: `EnableHeaderFooter` + `HeaderTemplate` / `FooterTemplate`.
 - Dynamic pages: `ConversionDelay` (seconds) waits after load; `TriggeringMode.Manual` waits until the page calls `evoPdfConverter_startConversion()`; `NavigationTimeout`, `JavaScriptEnabled`, `LoadLazyImages` (default `true`), `MediaType` (screen by default, not set), `LocalFilesEnabled`, `AllowInsecureContent`, `BlockedHosts`, `HttpRequestHeaders`, `HttpRequestCookies`, `AuthenticationOptions`.
-- Standards: `PdfDocumentOptions.PdfStandard` = `PdfStandard.None` (default), `PdfUa1`, `PdfUa2`, `PdfA2b`, `PdfA4`, `PdfUa1PdfA2b`, `PdfUa2PdfA4`, `Wtpdf1`, plus the other PDF/A levels and combinations; `AccessibilityOptions` applies when a tagged standard is selected.
+- Standards: `PdfDocumentOptions.PdfStandard` = `PdfStandard.None` (default), `PdfUa1`, `PdfUa2`, `PdfA2b`, `PdfA4`, `PdfUa1PdfA2b`, `PdfUa2PdfA4`, `Wtpdf1`, plus the other PDF/A levels and combinations; with a tagged standard the document structure comes from the HTML headings, lists, table header cells and image alternate text.
 - Electronic invoices: `ElectronicInvoice.FromXml(...)` or `FromFile(path)`, then `PdfDocumentOptions.AddElectronicInvoice(invoice)` with `PdfStandard` set to a PDF/A-3 level (`PdfA3b`, `PdfA3u`, `PdfA3a` or `PdfUa1PdfA3a`). Factur-X, ZUGFeRD, XRechnung and Order-X; profile and document type are read from the XML.
 - Digital signatures: a `PdfDigitalSignature` (PFX file, `X509Certificate2`, or an `IExternalDigitalSignature` for a hardware security module or cloud key service) on `HtmlToPdfConverter.DigitalSignature`, `PdfDocument.DigitalSignature` or the `PdfEditor` constructor for existing PDFs. `Profile` selects PAdES B-B, B-T, B-LT or B-LTA (T and above need `TimestampServerUrl`). `PdfEditor.AddSignatureField` prepares fields for several signers; `PdfEditor.AddLongTermValidation` adds validation data to signed documents.
+- Existing PDFs: `PdfEditor` adds text, images, shapes, HTML (`AddHtml`), HTML as an image, pages of other PDFs and templates, inserts, moves, rotates and removes pages, fills and flattens forms (`Form`, `Flatten`), edits bookmarks and the open action; `PageCount`, `DocumentInfo`, `SecurityInfo` and `SignatureInfo` read the loaded document. `PdfMerge` joins documents or page ranges, `PdfSplit` extracts and splits pages, `PdfRedactor` permanently removes text, personal data, areas and pages.
 - Cloud and containers: Windows hosts need nothing extra; Linux needs `libnss3 libatk-bridge2.0-0 libcairo2 libpango-1.0-0` (Debian/Ubuntu names) and execute permission on the runtimes in `evopdf_runtimes/<rid>/native/`. Azure Functions need an App Service or Premium plan (not Consumption or Flex Consumption); AWS Lambda needs a container image for the HTML to PDF Converter. See the docker, azure, aws, google-cloud and kubernetes skills.
 - Migration: from EvoPdf Classic follow `skills/evopdf-classic-to-next-migration`; from wkhtmltopdf, DinkToPdf, Rotativa or TuesPechkin follow `skills/evopdf-next-wkhtmltopdf-migration`.
 - Documentation: https://www.evopdf.com/help/evopdf-next-dotnet/; product pages: https://www.evopdf.com/evopdf-next-dotnet
@@ -59,17 +60,19 @@ Quickstart projects, all documentation samples and the complete demo application
 | `skills/evopdf-next-html-loading` | Control how EvoPdf Next fetches the HTML |
 | `skills/evopdf-next-untrusted-html` | Harden EvoPdf Next when the HTML comes from users |
 | `skills/evopdf-next-headers-footers` | Add headers, footers and HTML stamps to PDF with EvoPdf Next |
-| `skills/evopdf-next-bookmarks-and-toc` | Generate a document outline and an automatic table of contents from HTML headings with EvoPdf Next |
+| `skills/evopdf-next-bookmarks-and-toc` | Generate a document outline and an automatic table of contents with EvoPdf Next |
 | `skills/evopdf-next-html-element-mapping` | Convert or exclude parts of an HTML page with CSS selectors in EvoPdf Next and read back where each element landed in the PDF |
 | `skills/evopdf-next-html-to-image` | Render a URL or HTML string to PNG, JPEG or WebP in .NET with EvoPdf Next HtmlToImageConverter |
 | `skills/evopdf-next-document-converters` | Convert DOCX, XLSX, RTF and Markdown documents to PDF in .NET with EvoPdf Next |
 | `skills/evopdf-next-pdf-create` | Build PDF documents from scratch in .NET with the EvoPdf Next Core PDF API |
 | `skills/evopdf-next-pdf-edit` | Open and modify an existing PDF in .NET with EvoPdf Next PdfEditor |
 | `skills/evopdf-next-pdf-inspect` | Read the properties of an existing PDF with EvoPdf Next before processing it |
-| `skills/evopdf-next-pdf-merge` | Combine PDF documents in .NET with EvoPdf Next |
+| `skills/evopdf-next-pdf-merge` | Combine PDF documents in .NET with EvoPdf Next PdfMerge |
+| `skills/evopdf-next-pdf-split` | Extract and split pages of existing PDF documents in .NET with EvoPdf Next PdfSplit |
 | `skills/evopdf-next-pdf-annotations` | Add clickable link annotations and sticky-note text annotations to generated or existing PDFs with EvoPdf Next |
 | `skills/evopdf-next-pdf-attachments` | Attach files to a PDF with EvoPdf Next |
-| `skills/evopdf-next-pdf-forms` | Turn HTML form controls into interactive PDF form fields with EvoPdf Next PdfFormOptions |
+| `skills/evopdf-next-pdf-forms` | Work with interactive PDF forms in EvoPdf Next |
+| `skills/evopdf-next-pdf-redaction` | Permanently redact existing PDF documents in .NET with EvoPdf Next PdfRedactor |
 | `skills/evopdf-next-fonts` | Work with fonts in EvoPdf Next PDF documents |
 | `skills/evopdf-next-pdf-standards` | Produce standards-compliant PDF with EvoPdf Next |
 | `skills/evopdf-next-electronic-invoices` | Create Factur-X, ZUGFeRD and XRechnung electronic invoices and Order-X electronic orders with EvoPdf Next |
@@ -84,7 +87,7 @@ Quickstart projects, all documentation samples and the complete demo application
 | `skills/evopdf-next-google-cloud` | Run EvoPdf Next on Google Cloud |
 | `skills/evopdf-next-kubernetes` | Run EvoPdf Next in Kubernetes |
 | `skills/evopdf-next-troubleshooting` | Diagnose EvoPdf Next failures |
-| `skills/evopdf-classic-to-next-migration` | Migrate .NET applications from EvoPdf Classic (EvoPdf namespace) to EvoPdf Next |
+| `skills/evopdf-classic-to-next-migration` | Migrate .NET applications from EvoPdf Classic (EvoPdf namespace) to EvoPdf Next in one of two ways |
 | `skills/evopdf-next-wkhtmltopdf-migration` | Replace wkhtmltopdf, DinkToPdf, Rotativa, TuesPechkin or Pechkin with EvoPdf Next in .NET |
 
 
@@ -104,9 +107,14 @@ Namespace `EvoPdf.Next`. Install one NuGet package for the target platform, for 
 - **`TriggeringMode`**: This enumeration represents the possible modes to trigger the conversion of a HTML document
 - **`HtmlToPdfConversionInfo`**: Holds information about the result of an HTML to PDF conversion. This object is populated after the conversion completes and is exposed by the Convers...
 - **`PdfDocumentCreateSettings`**: Represents configuration settings for creating a PDF document
+- **`PdfException`**
 
-6 types, 123 public members. The complete member list with the shipped
+7 types, 127 public members. The complete member list with the shipped
 summaries is in `references/api.md`; do not guess member names that are not there.
+
+The errors of the library are reported as `PdfException`; the message says what failed and, when the cause is in the
+input or in the environment, what was wrong. After a conversion, `ConversionInfo` gives the pages generated from the
+HTML, the pages inserted before and after it, the total number of pages and the zoom drawn.
 
 ## HTML to PDF Converter Overview
 
@@ -118,7 +126,7 @@ Full topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/html-to-pdf-conv
 
 EVO HTML to PDF Converter allows you to set various options to control the internal HTML viewer and PDF document properties. The most important options are listed below, grouped into several categories.
 
-All 1 samples of this topic, complete: `references/examples.md`.
+All 2 samples of this topic, complete: `references/examples.md`.
 
 Full topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/html-to-pdf-converter-options.htm
 
@@ -145,7 +153,7 @@ htmlToPdfConverter.TriggeringMode = TriggeringMode.Auto;
 // Create the PDF converter
 HtmlToPdfConverter htmlToPdfConverter = new HtmlToPdfConverter();
 // Set the triggering mode
-htmlToPdfConverter.ConversionDelay = 3;
+htmlToPdfConverter.TriggeringMode = TriggeringMode.Auto;
 ```
 
 ```csharp
@@ -155,7 +163,7 @@ HtmlToPdfConverter htmlToPdfConverter = new HtmlToPdfConverter();
 htmlToPdfConverter.TriggeringMode = TriggeringMode.Manual;
 ```
 
-All 5 samples of this topic, complete: `references/examples.md`.
+All 6 samples of this topic, complete: `references/examples.md`.
 
 Full topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/select-conversion-triggering-mode.htm
 
@@ -166,6 +174,25 @@ EVO HTML to PDF Converter offers full support for SVG vector graphics. The SVG c
 All 1 samples of this topic, complete: `references/examples.md`.
 
 Full topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/convert-html-with-svg-to-pdf.htm
+
+## Retrieve HTML to PDF Conversion Information
+
+After a conversion completes, the `HtmlToPdfConverter.ConversionInfo` property of `HtmlToPdfConverter` holds a `HtmlToPdfConversionInfo` object with the number of pages generated from the HTML content, the pages of the table of contents and of the external PDF documents inserted before and after it, the total number of pages of the generated document and the zoom at which the HTML content was drawn.
+
+### Conversion Information
+
+```csharp
+byte[] outPdfBuffer = htmlToPdfConverter.ConvertUrl(url);
+
+HtmlToPdfConversionInfo conversionInfo = htmlToPdfConverter.ConversionInfo;
+Console.WriteLine("Pages from HTML: {0}", conversionInfo.PagesFromHtml);
+Console.WriteLine("Pages inserted before: {0}, after: {1}", conversionInfo.TotalPagesInsertedBefore, conversionInfo.ExternalPagesInsertedAfter);
+Console.WriteLine("Total pages: {0}, zoom: {1}%", conversionInfo.TotalPages, conversionInfo.PrintZoom);
+```
+
+All 2 samples of this topic, complete: `references/examples.md`.
+
+Full topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/retrieve-html-to-pdf-conversion-information.htm
 
 ## Rules that apply to every sample here
 
@@ -196,6 +223,9 @@ Namespace `EvoPdf.Next`. Install one NuGet package for the target platform, for 
 
 4 types, 45 public members. The complete member list with the shipped
 summaries is in `references/api.md`; do not guess member names that are not there.
+
+`PdfDocumentOptions.FirstPageTopMargin` gives the first page a different top margin in points, for a letterhead or a
+cover; the default, a negative value, keeps the top margin of the other pages.
 
 ## HTML to PDF Page Setup and Scaling
 
@@ -342,7 +372,7 @@ HtmlToPdfConverter converter = new HtmlToPdfConverter();
 // A4 landscape, the HTML laid out at its 1123 pixel content width
 converter.LayoutAtPageWidth(PdfPageSize.A4, PdfPageOrientation.Landscape);
 
-// A table built for 1280 pixels: a 1280 pixel window scaled to the page, zoom 87.73
+// A table built for 1280 pixels: a 1280 pixel window scaled to the page, zoom 87.71
 // converter.FitBrowserWindowToPage(PdfPageSize.A4, PdfPageOrientation.Landscape, 1280);
 
 byte[] pdf = converter.ConvertUrl(url);
@@ -367,8 +397,8 @@ converter.PdfDocumentOptions.TopMargin = 28;
 converter.PdfDocumentOptions.BottomMargin = 28;
 converter.MediaType = "print";
 converter.PdfDocumentOptions.PrintBackgrounds = false;
-// Viewer width equal to the content width: (595 - 56) * 4 / 3 = 719 pixels
-converter.HtmlViewerWidth = 719;
+// Viewer width equal to the content width: (595 - 56) * 4 / 3, rounded down = 718 pixels
+converter.HtmlViewerWidth = 718;
 ```
 
 ### A Page in Its Mobile Layout
@@ -529,7 +559,7 @@ Full topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/html-to-pdf-rend
 
 ## Convert Multiple HTML Pages to PDF in Parallel
 
-EvoPdf Next can convert multiple HTML documents to PDF in parallel tasks using the asynchronous HTML to PDF methods such as `HtmlToPdfConverter.ConvertUrlAsync` and merge the resulted PDFs using the `PdfMerge.AddPdf` method of `PdfMerge` class. The PdfMerge class allows you to set security options, configure PDF viewer preferences and apply a digital signature to the resulting PDF.
+EvoPdf Next can convert multiple HTML documents to PDF in parallel tasks using the asynchronous HTML to PDF methods such as `HtmlToPdfConverter.ConvertUrlAsync(String, CancellationToken)` and merge the resulted PDFs using the `PdfMerge.AddPdf(Byte[], String)` method of `PdfMerge` class. The PdfMerge class allows you to set security options, configure PDF viewer preferences and apply a digital signature to the resulting PDF.
 
 All 1 samples of this topic, complete: `references/examples.md`.
 
@@ -561,9 +591,16 @@ Namespace `EvoPdf.Next`. Install one NuGet package for the target platform, for 
 - **`NameValuePair`**: Represents a name value pair
 - **`NameValuePairsCollection`**: Represents a collection of NameValuePair objects
 - **`LazyImagesLoadMode`**: This enumeration defines the possible options for the lazy image loading mode
+- **`ProxyOptions`**: The network proxy used to load the HTML page and its resources. The proxy is used when Type is not None and a host name is set
+- **`NetworkProxyType`**: The type of the network proxy used to load the HTML page and its resources
 
-4 types, 10 public members. The complete member list with the shipped
+6 types, 19 public members. The complete member list with the shipped
 summaries is in `references/api.md`; do not guess member names that are not there.
+
+A proxy server is set on `ProxyOptions` (`HtmlToPdfConverter.ProxyOptions`, `HtmlToImageConverter.ProxyOptions`):
+`Type` (`NetworkProxyType.Http` or `Socks5`), `HostName`, `PortNumber`, `Username` and `Password` for an HTTP proxy
+that requires authentication, and `BypassedHosts` for the hosts reached directly. Without a proxy set, the network
+settings of the system are used.
 
 ## Convert HTML Pages with Authentication
 
@@ -574,7 +611,7 @@ summaries is in `references/api.md`; do not guess member names that are not ther
 HtmlToPdfConverter htmlToPdfConverter = new HtmlToPdfConverter();
 // Set authentication options
 htmlToPdfConverter.AuthenticationOptions.Username = username;
-htmlToPdfConverter.AuthenticationOptions.Password = password;            
+htmlToPdfConverter.AuthenticationOptions.Password = password;
 
 // Create the HTML to Image converter
 HtmlToImageConverter htmlToImageConverter = new HtmlToImageConverter();
@@ -627,6 +664,7 @@ EVO HTML to PDF Converter allows you to convert another page of the same applica
 ### Code Sample - Display Session Variables in Converted HTML Page
 
 ```html
+@model EvoPdf_Next_AspNetDemo.Models.HTML_to_PDF.Convert_Page_in_Same_Session_ViewModel
 @{
     Layout = null;
 }
@@ -645,14 +683,14 @@ EVO HTML to PDF Converter allows you to convert another page of the same applica
     <div>
         <b style="font-size: 16px">The session variables</b><br />
         <br />
-        <b>First Name:</b>&nbsp;<span id="firstNameLabel">@(ViewData["firstName"] != null ? ViewData["firstName"].ToString() : String.Empty)</span><br />
-        <b>Last Name:</b>&nbsp;<span id="lastNameLabel">@(ViewData["lastName"] != null ? ViewData["lastName"].ToString() : String.Empty)</span><br />
-        <b>Gender:</b>&nbsp;<span id="genderLabel">@(ViewData["gender"] != null && ViewData["gender"].ToString() == "maleRadioButton" ? "Male" : "Female")</span><br />
-        <b>I have a car:</b>&nbsp;<span id="haveCarLabel">@(ViewData["haveCar"] != null && ViewData["haveCar"].ToString() != "false" ? "Yes" : "No")</span><br />
-        <div id="carTypePanel" style="display : @(ViewData["haveCar"] != null && ViewData["haveCar"].ToString() == "false" ? "none" : "inline")">
-            <b>Car Type:</b>&nbsp;<span id="carTypeLabel">@(ViewData["carType"] != null ? ViewData["carType"].ToString() : String.Empty)</span><br />
+        <b>First Name:</b>&nbsp;<span id="firstNameLabel">@Model.FirstName</span><br />
+        <b>Last Name:</b>&nbsp;<span id="lastNameLabel">@Model.LastName</span><br />
+        <b>Gender:</b>&nbsp;<span id="genderLabel">@((Model.Gender == "Male") ? "Male" : "Female")</span><br />
+        <b>I have a car:</b>&nbsp;<span id="haveCarLabel">@(Model.HaveCar ? "Yes" : "No")</span><br />
+        <div id="carTypePanel" style="display : @(Model.HaveCar ? "inline" : "none")">
+            <b>Car Type:</b>&nbsp;<span id="carTypeLabel">@Model.CarType</span><br />
         </div>
-        <b>Comments:</b>&nbsp;<span id="commentsLabel">@(ViewData["comments"] != null ? ViewData["comments"].ToString() : String.Empty)</span><br />
+        <b>Comments:</b>&nbsp;<span id="commentsLabel">@Model.Comments</span><br />
     </div>
 </body>
 </html>
@@ -669,6 +707,14 @@ EVO HTML to PDF Converter offers full support for web fonts. The web fonts are r
 All 1 samples of this topic, complete: `references/examples.md`.
 
 Full topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/convert-html-with-web-fonts-to-pdf.htm
+
+## Convert HTML through a Proxy Server
+
+EVO HTML to PDF Converter can load the HTML page and its resources through a HTTP or a SOCKS5 proxy server. The proxy is configured with the `ProxyOptions` object exposed by the `HtmlToPdfConverter.ProxyOptions` property. By default no proxy is set and the network settings of the system are used.
+
+All 1 samples of this topic, complete: `references/examples.md`.
+
+Full topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/convert-html-through-proxy-server.htm
 
 ## Rules that apply to every sample here
 
@@ -779,8 +825,11 @@ Namespace `EvoPdf.Next`. Install one NuGet package for the target platform, for 
 - **`PdfTemplateHorizontalAlign`**: Specifies the horizontal alignment of a PDF template on a PDF page
 - **`PdfTemplateVerticalAlign`**: Specifies the vertical alignment of a PDF template on a PDF page
 
-7 types, 137 public members. The complete member list with the shipped
+7 types, 139 public members. The complete member list with the shipped
 summaries is in `references/api.md`; do not guess member names that are not there.
+
+An HTML template is drawn over the page content; `PdfHtmlTemplate.RenderUnderContent = true` draws it under the
+content, as a background or a watermark. `DestinationSize` and `RenderedSize` are `PdfSizeF` values in points.
 
 ## Add HTML in Header and Footer with Page Numbers
 
@@ -791,8 +840,9 @@ summaries is in `references/api.md`; do not guess member names that are not ther
 <html>
 <head>
     <title>Header HTML with Page Numbers</title>
+    <link href="styles/webfonts.css" type="text/css" rel="stylesheet">
 </head>
-<body style="font-family: 'Times New Roman'; font-size: 16px">
+<body style="font-family: Verdana, sans-serif; font-size: 16px">
     <table style="width: 100%">
         <tr>
             <td style=" font-size:18px; font-weight: bold; color: navy">Header HTML with Page Numbers</td>
@@ -820,8 +870,9 @@ summaries is in `references/api.md`; do not guess member names that are not ther
 <html>
 <head>
     <title>Footer HTML with Page Numbers</title>
+    <link href="styles/webfonts.css" type="text/css" rel="stylesheet">
 </head>
-<body style="font-family: 'Times New Roman'; font-size: 16px">
+<body style="font-family: Verdana, sans-serif; font-size: 16px">
     <table style="width: 100%">
         <tr>
             <td style=" font-size:18px; font-weight: bold; color: navy">Footer HTML with Page Numbers</td>
@@ -842,7 +893,7 @@ summaries is in `references/api.md`; do not guess member names that are not ther
 </html>
 ```
 
-All 3 samples of this topic, complete: `references/examples.md`.
+All 5 samples of this topic, complete: `references/examples.md`.
 
 Full topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/html-header-and-footer-with-page-numbers.htm
 
@@ -857,8 +908,9 @@ EVO HTML to PDF Converter allows you to include any valid HTML markup and elemen
 <html>
 <head>
     <title>Header HTML Template</title>
+    <link href="styles/webfonts.css" type="text/css" rel="stylesheet">
 </head>
-<body style="font-family: 'Times New Roman'; font-size: 14px">
+<body style="font-family: Verdana, sans-serif; font-size: 14px">
     <table style="width: 100%">
         <tr>
             <td style=" font-size:16px; font-weight: bold; color: navy">Header HTML with Page Numbers</td>
@@ -886,8 +938,9 @@ EVO HTML to PDF Converter allows you to include any valid HTML markup and elemen
 <html>
 <head>
     <title>Footer HTML Template</title>
+    <link href="styles/webfonts.css" type="text/css" rel="stylesheet">
 </head>
-<body style="font-family: 'Times New Roman'; font-size: 14px">
+<body style="font-family: Verdana, sans-serif; font-size: 14px">
     <table style="width: 100%">
         <tr>
             <td style=" font-size:16px; font-weight: bold; color: navy"><span class="url"></span></td>
@@ -923,8 +976,9 @@ The EvoPdf Next library offers extensive control over headers and footers. You c
 <html>
 <head>
     <title>Header HTML with Page Numbers</title>
+    <link href="styles/webfonts.css" type="text/css" rel="stylesheet">
 </head>
-<body style="font-family: 'Times New Roman'; font-size: 16px">
+<body style="font-family: Verdana, sans-serif; font-size: 16px">
     <table style="width: 100%">
         <tr>
             <td style=" font-size:18px; font-weight: bold; color: navy">Header HTML with Page Numbers</td>
@@ -952,8 +1006,9 @@ The EvoPdf Next library offers extensive control over headers and footers. You c
 <html>
 <head>
     <title>Footer HTML with Page Numbers</title>
+    <link href="styles/webfonts.css" type="text/css" rel="stylesheet">
 </head>
-<body style="font-family: 'Times New Roman'; font-size: 16px">
+<body style="font-family: Verdana, sans-serif; font-size: 16px">
     <table style="width: 100%">
         <tr>
             <td style=" font-size:18px; font-weight: bold; color: navy">Footer HTML with Page Numbers</td>
@@ -994,9 +1049,10 @@ EVO HTML to PDF Converter allows you to add stamps to the generated PDF document
 <html>
 <head>
     <title>HTML Stamp with Page Numbers</title>
+    <link href="styles/webfonts.css" type="text/css" rel="stylesheet">
 </head>
 <!-- Use background-color: rgba(r, g, b, a) to apply background opacity (a = 0 transparent, 1 opaque) -->
-<body style="background-color: rgba(255, 255, 255, 0.9); font-family: 'Times New Roman'; font-size: 16px; margin: 5px">
+<body style="background-color: rgba(255, 255, 255, 0.9); font-family: Verdana, sans-serif; font-size: 16px; margin: 5px">
     <table style="width: 100%; border: 3px solid royalblue">
         <tr>
             <td>
@@ -1007,7 +1063,7 @@ EVO HTML to PDF Converter allows you to add stamps to the generated PDF document
             <td>
                 <table>
                     <tr>
-                        <td style="font-size: 30px; font-weight: bold; color: #BE1200">
+                        <td style="font-size: 24px; font-weight: bold; color: #BE1200">
                             HTML Stamp with Page Numbers
                         </td>
                     </tr>
@@ -1024,7 +1080,7 @@ EVO HTML to PDF Converter allows you to add stamps to the generated PDF document
 </html>
 ```
 
-All 3 samples of this topic, complete: `references/examples.md`.
+All 4 samples of this topic, complete: `references/examples.md`.
 
 Full topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/add-html-stamp-to-generated-pdf.htm
 
@@ -1058,9 +1114,10 @@ byte[] pdfBytes = pdfEditor.Save();
 <html>
 <head>
     <title>HTML Stamp with Page Numbers</title>
+    <link href="styles/webfonts.css" type="text/css" rel="stylesheet">
 </head>
 <!-- Use background-color: rgba(r, g, b, a) to apply background opacity (a = 0 transparent, 1 opaque) -->
-<body style="background-color: rgba(255, 255, 255, 0.9); font-family: 'Times New Roman'; font-size: 16px; margin: 5px">
+<body style="background-color: rgba(255, 255, 255, 0.9); font-family: Verdana, sans-serif; font-size: 16px; margin: 5px">
     <table style="width: 100%; border: 3px solid royalblue">
         <tr>
             <td>
@@ -1071,7 +1128,7 @@ byte[] pdfBytes = pdfEditor.Save();
             <td>
                 <table>
                     <tr>
-                        <td style="font-size: 30px; font-weight: bold; color: #BE1200">
+                        <td style="font-size: 24px; font-weight: bold; color: #BE1200">
                             HTML Stamp with Page Numbers
                         </td>
                     </tr>
@@ -1088,7 +1145,7 @@ byte[] pdfBytes = pdfEditor.Save();
 </html>
 ```
 
-All 7 samples of this topic, complete: `references/examples.md`.
+All 8 samples of this topic, complete: `references/examples.md`.
 
 Full topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/add-html-stamp-to-existing-pdf.htm
 
@@ -1115,13 +1172,40 @@ Namespace `EvoPdf.Next`. Install one NuGet package for the target platform, for 
 ## Types covered here
 
 - **`TableOfContentsOptions`**: This class encapsulates the options to control the table of contents automatically generated in PDF from HTML heading tags (H1 to H6) or from any elem...
+- **`PdfBookmarkCollection`**: An ordered collection of bookmarks: the top level bookmarks of a document outline or the children of a bookmark
+- **`PdfBookmark`**: A bookmark of the document outline. A bookmark opens a location in a page of the document or a web address and can have child bookmarks
+- **`PdfDocumentTableOfContents`**: The table of contents of a document created from code. The headings of the HTML content added to the document (the H1 to H6 tags and the elements mark...
+- **`PdfFieldAction`**: An action performed by the PDF viewer when a form field event occurs, such as a click on a push button. The static methods of this class create the av...
+- **`PdfGoToPageAction`**: An action that displays a page of the document
+- **`PdfGoToNamedDestinationAction`**: An action that displays a named destination of the document
+- **`PdfOpenUrlAction`**: An action that opens a URL in the web browser
+- **`PdfNamedAction`**: A predefined action of the PDF viewer, such as going to the next page or opening the print dialog
+- **`PdfNamedActionType`**: The predefined actions of a PDF viewer
+- **`PdfJavaScriptAction`**: An action that runs JavaScript code in the PDF viewer
 
-1 types, 13 public members. The complete member list with the shipped
+11 types, 70 public members. The complete member list with the shipped
 summaries is in `references/api.md`; do not guess member names that are not there.
+
+| Task | API |
+|---|---|
+| Bookmarks from the H1 to H6 headings of the HTML | `PdfDocumentOptions.GenerateDocumentOutline = true` |
+| Bookmarks from other elements, one CSS selector per level | `PdfDocumentOptions.OutlineHeadingSelectors = new[] { "h1.chapter", ".section-title" }` |
+| Table of contents from the headings | `PdfDocumentOptions.GenerateTableOfContents = true`, styled with `TableOfContentsOptions` |
+| Table of contents entries from other elements | `TableOfContentsOptions.HeadingSelectors`, separate from the bookmark selectors |
+| Bookmarks from code, after the generated ones | `PdfDocumentOptions.Bookmarks.Add(title, pageNumber, location)`, `AddUrl(title, url)` |
+| Open the document at a page, a zoom, a named destination, a script or a URL | `PdfDocumentOptions.OpenAction = new PdfGoToPageAction(2, PdfLinkPageLocation.FitWidth(0))` |
+| The same in a document created from code | `PdfDocument.Bookmarks`, `PdfDocument.OpenAction`, `PdfDocument.TableOfContents` (`PdfDocumentTableOfContents`) |
+| Read, change, reorder or remove the bookmarks of an existing PDF | `PdfEditor.Bookmarks` (`Find`, `Insert`, `Remove`, `Children`), `PdfEditor.OpenAction` |
+| Bookmarks of merged documents | `PdfMerge.KeepSourceBookmarks`, `PdfMerge.Bookmarks` |
+
+A bookmark (`PdfBookmark`) goes to a page at a `PdfLinkPageLocation` (`FitPage()`, `FitWidth(top)`, `FitHeight(left)`,
+`AtCoordinates(left, top, zoom)`, from the top left corner of the page) or opens a URL; it can have `Children` and a
+`Bold`, `Italic` or `Color` title. The page numbers of the converter bookmarks count the table of contents and the
+PDF documents added before the HTML content.
 
 ## Auto Create Hierarchical Bookmarks
 
-All 2 samples of this topic, complete: `references/examples.md`.
+All 3 samples of this topic, complete: `references/examples.md`.
 
 Full topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/auto-create-hierarchical-bookmarks.htm
 
@@ -1147,11 +1231,11 @@ htmlToPdfConverter.PdfDocumentOptions.TableOfContents.Title = "Table of Contents
 ### Inline Table of Contents
 
 ```csharp
-// Set the table of contents title
+                  // Create the table of contents inline
 htmlToPdfConverter.PdfDocumentOptions.TableOfContents.CreateInline = true;
 ```
 
-All 8 samples of this topic, complete: `references/examples.md`.
+All 10 samples of this topic, complete: `references/examples.md`.
 
 Full topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/auto-create-table-of-contents.htm
 
@@ -1162,6 +1246,39 @@ EVO HTML to PDF Converter automatically converts all the internal links from HTM
 All 1 samples of this topic, complete: `references/examples.md`.
 
 Full topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/convert-internal-links-from-html-to-pdf.htm
+
+## Add Bookmarks and Open Action to Generated PDF
+
+The bookmarks of the PDF document generated by the HTML to PDF converter can be created automatically from the headings of the HTML document, as described in the topic and they can be added from code to the `PdfDocumentOptions.Bookmarks` collection, after the bookmarks created from the headings. A bookmark goes to a page at a given location and zoom or opens a web address, it can have child bookmarks and a bold, italic or colored title.
+
+### Add Bookmarks from Code
+
+```csharp
+PdfBookmarkCollection bookmarks = htmlToPdfConverter.PdfDocumentOptions.Bookmarks;
+
+PdfBookmark contentBookmark = bookmarks.Add("HTML content", 1, PdfLinkPageLocation.FitPage());
+contentBookmark.Open = true;
+contentBookmark.Bold = true;
+contentBookmark.Color = PdfColor.DarkBlue;
+contentBookmark.Children.Add("Second page at 150%", 2, PdfLinkPageLocation.AtCoordinates(0, 0, 1.5f));
+
+// A bookmark that opens a web address in the browser
+bookmarks.AddUrl("Product web site", "https://www.evopdf.com");
+
+// Display the bookmarks panel when the document is opened
+htmlToPdfConverter.PdfViewerPreferences.PageMode = ViewerPageMode.UseOutlines;
+```
+
+### Set the Open Action
+
+```csharp
+// The viewer opens the document at the second page, fitted to the window width
+htmlToPdfConverter.PdfDocumentOptions.OpenAction = new PdfGoToPageAction(2, PdfLinkPageLocation.FitWidth(0));
+```
+
+All 3 samples of this topic, complete: `references/examples.md`.
+
+Full topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/add-bookmarks-and-open-action.htm
 
 ## Rules that apply to every sample here
 
@@ -1209,7 +1326,7 @@ Full topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/select-html-elem
 
 You can select the HTML elements whose position in the PDF you want to retrieve by specifying a CSS selector. Along with the position in the PDF you can also retrieve other useful information such as ID, tag name, CSS class and text content. This feature enables various possibilities for post-processing the PDF document generated from HTML and provides insight into how specific HTML elements are rendered in the final PDF. In the code sample, the retrieved elements are highlighted in the PDF with colored borders based on their tag names but other useful scenarios are also possible such as adding a PDF annotation to a specific HTML element.
 
-All 1 samples of this topic, complete: `references/examples.md`.
+All 2 samples of this topic, complete: `references/examples.md`.
 
 Full topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/retrieve-html-element-positions-in-pdf.htm
 
@@ -1243,8 +1360,11 @@ Namespace `EvoPdf.Next`. Install one NuGet package for the target platform, for 
 - **`ImageType`**: The possible image formats
 - **`CaptureEntirePageMode`**: This enumeration defines the possible options for capturing the image of the entire HTML page, not just the visible viewport
 
-3 types, 52 public members. The complete member list with the shipped
+3 types, 54 public members. The complete member list with the shipped
 summaries is in `references/api.md`; do not guess member names that are not there.
+
+`Resolution` sets the resolution of the image in DPI, 96 by default: the image has the content size in pixels
+multiplied by `Resolution / 96`, with the layout of the page unchanged, so 192 gives a sharper image of the same page.
 
 ## HTML to Image Converter Overview
 
@@ -1302,9 +1422,36 @@ Namespace `EvoPdf.Next`. Install one NuGet package for the target platform, for 
 - **`RtfToPdfDocumentOptions`**: This class encapsulates the options to control the PDF document rendering process. The RtfToPdfConverter class defines a reference to an object of thi...
 - **`MarkdownToPdfConverter`**: Provides functionality for converting Markdown documents to PDF format with support for customization options such as metadata, security and viewer pr...
 - **`MarkdownToPdfDocumentOptions`**: This class encapsulates the options to control the PDF document rendering process. The MarkdownToPdfConverter class defines a reference to an object o...
+- **`WordToPdfConversionInfo`**: Information about the result of a Word to PDF conversion: the pages produced and the pages inserted before and after them
+- **`PdfWordElement`**: A Word document rendered in the pages of a PDF document being created. The content starts at a position in the current page and flows to as many new p...
+- **`WordPdfDocumentExtensions`**: Renders Word documents in the pages of a PdfDocument
+- **`ExcelToPdfConversionInfo`**: Information about the result of a Excel to PDF conversion: the pages produced and the pages inserted before and after them
+- **`PdfExcelElement`**: An Excel workbook rendered in the pages of a PDF document being created. The content starts at a position in the current page and flows to as many new...
+- **`ExcelPdfDocumentExtensions`**: Renders Excel workbooks in the pages of a PdfDocument
+- **`RtfToPdfConversionInfo`**: Information about the result of a RTF to PDF conversion: the pages produced and the pages inserted before and after them
+- **`PdfRtfElement`**: An RTF document rendered in the pages of a PDF document being created. The content starts at a position in the current page and flows to as many new p...
+- **`RtfPdfDocumentExtensions`**: Renders RTF documents in the pages of a PdfDocument
+- **`MarkdownToPdfConversionInfo`**: Information about the result of a Markdown to PDF conversion: the pages produced and the pages inserted before and after them
+- **`PdfMarkdownElement`**: A Markdown document rendered in the pages of a PDF document being created. The content starts at a position in the current page and flows to as many n...
+- **`MarkdownPdfDocumentExtensions`**: Renders Markdown documents in the pages of a PdfDocument
+- **`PdfContentRenderInfo`**: Describes where content that flows over one or more pages was rendered in the document: the pages it occupies and the area it covers on each of them
 
-8 types, 185 public members. The complete member list with the shipped
+21 types, 305 public members. The complete member list with the shipped
 summaries is in `references/api.md`; do not guess member names that are not there.
+
+| Task | API |
+|---|---|
+| Convert a whole document | `WordToPdfConverter`, `ExcelToPdfConverter`, `RtfToPdfConverter`, `MarkdownToPdfConverter` |
+| Add a document to a `PdfDocument` built from code, from a position, flowing over pages | `pdfDocument.AddWord(new PdfWordElement(...))`, `AddExcel(PdfExcelElement)`, `AddRtf(PdfRtfElement)`, `AddMarkdown(PdfMarkdownElement)` |
+| Fonts of the document | `FontFiles`, `FallbackFontFiles` on each converter; `WordToPdfConverter.UseEmbeddedFonts` for the fonts embedded in the DOCX |
+| Header and footer of the Word or RTF document | `WordToPdfDocumentOptions.UseHeaderFooterFromWord`, `RtfToPdfDocumentOptions.UseHeaderFooterFromRtf` |
+| Bookmarks from the document headings | `GenerateDocumentOutline` on the Word, RTF and Markdown document options |
+| Wide tables and pictures | `FitWideContentToPage` on the document options |
+| PDF/UA or PDF/A, attachments, bookmarks, open action, electronic invoice | `PdfStandard`, `AddFileAttachment`, `Bookmarks`, `OpenAction`, `AddElectronicInvoice` on the document options (`converter.PdfDocumentOptions`) |
+| Page counts after the conversion | `ConversionInfo` on each converter |
+
+Each converter package (`EvoPdf.Next.WordToPdf.<Platform>` and the others) also brings the extension method for
+`PdfDocument`; the full platform packages (`EvoPdf.Next.Windows`, ...) include all of them.
 
 ## Convert Word DOCX to PDF
 
@@ -1327,7 +1474,7 @@ wordToPdfConverter.PdfDocumentOptions.TopMargin = 30;
 wordToPdfConverter.PdfDocumentOptions.BottomMargin = 30;
 ```
 
-All 15 samples of this topic, complete: `references/examples.md`.
+All 17 samples of this topic, complete: `references/examples.md`.
 
 Full topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/convert-word-docx-to-pdf.htm
 
@@ -1366,7 +1513,7 @@ excelToPdfConverter.PdfDocumentOptions.ConvertOnlyFirstWorksheet = false;
 excelToPdfConverter.PdfDocumentOptions.PageBreakBetweenWorksheets = true;
 ```
 
-All 17 samples of this topic, complete: `references/examples.md`.
+All 19 samples of this topic, complete: `references/examples.md`.
 
 Full topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/convert-excel-xlsx-to-pdf.htm
 
@@ -1384,6 +1531,7 @@ RtfToPdfConverter rtfToPdfConverter = new RtfToPdfConverter();
 ### Configure the PDF Page Settings
 
 ```csharp
+rtfToPdfConverter.PdfDocumentOptions.UsePageSettingsFromRtf = false;
 rtfToPdfConverter.PdfDocumentOptions.PdfPageSize = PdfPageSize.A4;
 rtfToPdfConverter.PdfDocumentOptions.PdfPageOrientation = PdfPageOrientation.Landscape;
 rtfToPdfConverter.PdfDocumentOptions.LeftMargin = 20;
@@ -1392,7 +1540,7 @@ rtfToPdfConverter.PdfDocumentOptions.TopMargin = 30;
 rtfToPdfConverter.PdfDocumentOptions.BottomMargin = 30;
 ```
 
-All 21 samples of this topic, complete: `references/examples.md`.
+All 24 samples of this topic, complete: `references/examples.md`.
 
 Full topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/convert-rtf-to-pdf.htm
 
@@ -1422,7 +1570,7 @@ markdownToPdfConverter.PdfDocumentOptions.BottomMargin = 30;
 
 ```csharp
 markdownToPdfConverter.PdfDocumentOptions.StyleSheet = @"
-h1 { 
+h1 {
     font-size: 24pt;
     color: #0b57d0;
 }
@@ -1435,9 +1583,256 @@ string markdownString = Encoding.UTF8.GetString(inputMarkdownBytes);
 string baseUrl = "file://" + markdownFilePath;
 ```
 
-All 12 samples of this topic, complete: `references/examples.md`.
+All 14 samples of this topic, complete: `references/examples.md`.
 
 Full topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/convert-markdown-to-pdf.htm
+
+## Add Word Documents to PDF Documents
+
+A Word document can be rendered in the pages of a PDF document created with the `PdfDocument` class, between the text, images and other elements added from code. The content starts at a position in the current page and flows to as many new pages as it needs, laid out inside the margins of the PDF document. The document keeps its structure, headings, links and images.
+
+### Position, Width and Zoom of the Content
+
+```csharp
+PdfWordElement wordElement = new PdfWordElement(inputWordBytes)
+{
+    X = 0,
+    Y = crtYPos,
+    // 0 extends the content to the right margin of the page
+    Width = 0,
+    Zoom = 100,
+    GenerateDocumentOutline = true
+};
+
+PdfContentRenderInfo wordRenderInfo = pdfDocument.AddWord(wordElement);
+```
+
+### The Rendering Result
+
+```csharp
+// The rendered area reported for the last page places the elements after the content
+crtYPos = wordRenderInfo.LastPageRectangle.Bounds.Bottom + 15;
+
+PdfTextElement closingElement = new PdfTextElement("This text was added after the Word content", textFont)
+{
+    X = 0,
+    Y = crtYPos,
+    Width = pdfDocument.ContentWidth
+};
+pdfDocument.AddText(closingElement);
+```
+
+All 3 samples of this topic, complete: `references/examples.md`.
+
+Full topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/add-word-documents-to-pdf-documents.htm
+
+## Add Excel Workbooks to PDF Documents
+
+An Excel workbook can be rendered in the pages of a PDF document created with the `PdfDocument` class, between the text, images and other elements added from code. The worksheets start at a position in the current page and flow to as many new pages as they need, laid out inside the margins of the PDF document. The worksheets keep the formatting, the images and the shapes of the workbook.
+
+### Position, Width and Zoom of the Content
+
+```csharp
+PdfExcelElement excelElement = new PdfExcelElement(inputExcelBytes)
+{
+    X = 0,
+    Y = crtYPos,
+    // 0 extends the content to the right margin of the page
+    Width = 0,
+    Zoom = 100
+};
+
+PdfContentRenderInfo excelRenderInfo = pdfDocument.AddExcel(excelElement);
+```
+
+All 2 samples of this topic, complete: `references/examples.md`.
+
+Full topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/add-excel-workbooks-to-pdf-documents.htm
+
+## Add RTF Documents to PDF Documents
+
+An RTF document can be rendered in the pages of a PDF document created with the `PdfDocument` class, between the text, images and other elements added from code. The content starts at a position in the current page and flows to as many new pages as it needs, laid out inside the margins of the PDF document. The document keeps its formatting, headings, links and images.
+
+### The RTF Content
+
+```csharp
+// A RTF string is given to the element as it is
+PdfRtfElement rtfElement = new PdfRtfElement(rtfString);
+
+// The content of a RTF file
+PdfRtfElement rtfFileElement = new PdfRtfElement(inputRtfBytes);
+```
+
+### Position, Width and Zoom of the Content
+
+```csharp
+rtfElement.X = 0;
+rtfElement.Y = crtYPos;
+// 0 extends the content to the right margin of the page
+rtfElement.Width = 0;
+rtfElement.Zoom = 100;
+// The headings of the RTF document join the outline of the PDF document
+rtfElement.GenerateDocumentOutline = true;
+
+PdfContentRenderInfo rtfRenderInfo = pdfDocument.AddRtf(rtfElement);
+```
+
+All 3 samples of this topic, complete: `references/examples.md`.
+
+Full topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/add-rtf-documents-to-pdf-documents.htm
+
+## Add Markdown Content to PDF Documents
+
+Markdown content can be rendered in the pages of a PDF document created with the `PdfDocument` class, between the text, images and other elements added from code. The content starts at a position in the current page and flows to as many new pages as it needs, laid out inside the margins of the PDF document. The content keeps its structure, headings, links, code blocks and images.
+
+### The Markdown Content
+
+```csharp
+// A Markdown string with a base URL for its relative links and images
+PdfMarkdownElement markdownElement = new PdfMarkdownElement(markdownString, baseUrl);
+
+// A Markdown file
+PdfMarkdownElement markdownFileElement = new PdfMarkdownElement(markdownFilePath);
+```
+
+### Position, Width and Zoom of the Content
+
+```csharp
+markdownElement.X = 0;
+markdownElement.Y = crtYPos;
+// 0 extends the content to the right margin of the page
+markdownElement.Width = 0;
+markdownElement.Zoom = 100;
+// The CSS applied to the rendered Markdown content
+markdownElement.StyleSheet = styleSheet;
+// The headings of the Markdown content join the outline of the PDF document
+markdownElement.GenerateDocumentOutline = true;
+
+PdfContentRenderInfo markdownRenderInfo = pdfDocument.AddMarkdown(markdownElement);
+```
+
+All 3 samples of this topic, complete: `references/examples.md`.
+
+Full topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/add-markdown-content-to-pdf-documents.htm
+
+## Convert Word to PDF with Document Fonts
+
+The Word to PDF Converter renders the text of a document with the fonts installed on the machine, with the fonts stored in the Word document by its author and with the font files you give to the converter. This way the text keeps its look on a server where the fonts of the document are not installed.
+
+### Use the Fonts Stored in the Word Document
+
+```csharp
+wordToPdfConverter.UseEmbeddedFonts = true;
+```
+
+### Add Font Files
+
+```csharp
+wordToPdfConverter.FontFiles.Add(Path.Combine(fontsPath, "DejaVuSerif.ttf"));
+```
+
+### Add Fallback Font Files
+
+```csharp
+wordToPdfConverter.FallbackFontFiles.Add(Path.Combine(fontsPath, "NotoSansArabic-Regular.ttf"));
+```
+
+All 4 samples of this topic, complete: `references/examples.md`.
+
+Full topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/convert-word-to-pdf-with-document-fonts.htm
+
+## Convert Word to PDF with Document Headers and Footers
+
+The Word to PDF Converter renders the running header and footer of the Word document on the PDF pages, with the page number and page count fields they contain and with a different first page when the document has one. The feature is controlled by the `WordToPdfDocumentOptions.UseHeaderFooterFromWord` property, which is true by default.
+
+### Use the Header and Footer of the Word Document
+
+```csharp
+wordToPdfConverter.PdfDocumentOptions.UseHeaderFooterFromWord = true;
+```
+
+### Replace the Document Header or Footer
+
+```csharp
+wordToPdfConverter.PdfDocumentOptions.PdfHtmlFooter.Html = footerHtml;
+wordToPdfConverter.PdfDocumentOptions.PdfHtmlFooter.HtmlBaseUrl = footerHtmlBaseUrl;
+wordToPdfConverter.PdfDocumentOptions.PdfHtmlFooter.AutoSizeContentHeight = true;
+```
+
+All 3 samples of this topic, complete: `references/examples.md`.
+
+Full topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/convert-word-to-pdf-with-document-headers-and-footers.htm
+
+## Convert Word to PDF with Outline, Open Action and Attachments
+
+The Word to PDF Converter can create the outline of the generated PDF document from the headings of the Word document, add your own bookmarks to it, set the action executed when the document is opened and attach files to the document. The options are exposed by the `WordToPdfDocumentOptions` object of the `WordToPdfConverter.PdfDocumentOptions` property. The bookmarks, open action and attachment options are also available in the Excel, RTF and Markdown to PDF converters and the outline created from the headings in the RTF and Markdown to PDF converters.
+
+### Create the Outline from the Document Headings
+
+```csharp
+wordToPdfConverter.PdfDocumentOptions.GenerateDocumentOutline = true;
+```
+
+### Add Custom Bookmarks
+
+```csharp
+// Bookmarks added to the outline after the ones created from the headings: a bookmark to
+// a page location with a child bookmark and a bookmark opening a web address
+PdfBookmark contentBookmark = wordToPdfConverter.PdfDocumentOptions.Bookmarks.Add(
+    "Converted Word document", firstContentPage, PdfLinkPageLocation.FitWidth(0));
+contentBookmark.Bold = true;
+contentBookmark.Color = PdfColor.DarkBlue;
+contentBookmark.Children.Add("Top of the first page, zoomed", firstContentPage, PdfLinkPageLocation.AtCoordinates(0, 0, 1.5f));
+
+wordToPdfConverter.PdfDocumentOptions.Bookmarks.AddUrl("Library web site", "https://www.evopdf.com");
+```
+
+### Set the Open Action
+
+```csharp
+// The action executed when the document is opened: go to the first page of the
+// converted content, fit to the page width
+wordToPdfConverter.PdfDocumentOptions.OpenAction = new PdfGoToPageAction(firstContentPage, PdfLinkPageLocation.FitWidth(0));
+```
+
+### Attach Files to the Document
+
+```csharp
+// Attach the source Word document to the generated PDF. The attachment appears in the
+// Attachments panel of the PDF viewer
+PdfFileAttachment attachment = PdfFileAttachment.FromBytes(inputWordBytes, "Source_Document.docx");
+attachment.Description = "The Word document the PDF was generated from";
+wordToPdfConverter.PdfDocumentOptions.AddFileAttachment(attachment);
+
+// The panel shown by the viewer when the document is opened
+wordToPdfConverter.PdfViewerPreferences.PageMode = ViewerPageMode.UseAttachments;
+```
+
+All 5 samples of this topic, complete: `references/examples.md`.
+
+Full topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/convert-word-to-pdf-with-outline-open-action-and-attachments.htm
+
+## Convert RTF to PDF with Document Headers and Footers
+
+The RTF to PDF Converter renders the running header and footer of the RTF document on the PDF pages, with the page number and page count fields they contain and with a different first page when the document has one. The feature is controlled by the `RtfToPdfDocumentOptions.UseHeaderFooterFromRtf` property, which is true by default.
+
+### Use the Header and Footer of the RTF Document
+
+```csharp
+rtfToPdfConverter.PdfDocumentOptions.UseHeaderFooterFromRtf = true;
+```
+
+### Replace the Document Header or Footer
+
+```csharp
+rtfToPdfConverter.PdfDocumentOptions.PdfHtmlFooter.Html = footerHtml;
+rtfToPdfConverter.PdfDocumentOptions.PdfHtmlFooter.HtmlBaseUrl = footerHtmlBaseUrl;
+rtfToPdfConverter.PdfDocumentOptions.PdfHtmlFooter.AutoSizeContentHeight = true;
+```
+
+All 3 samples of this topic, complete: `references/examples.md`.
+
+Full topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/convert-rtf-to-pdf-with-document-headers-and-footers.htm
 
 ## Rules that apply to every sample here
 
@@ -1464,18 +1859,18 @@ Namespace `EvoPdf.Next`. Install one NuGet package for the target platform, for 
 - **`PdfDocument`**: Represents a new PDF document being constructed in memory
 - **`PdfTextElement`**: Represents a block of text to be rendered in a PDF document. Supports positioning, styling and multi-page continuation
 - **`PdfImageElement`**: Represents an image element that can be rendered into a PDF document. Supports positioning, scaling and alignment
-- **`PdfRectangleElement`**: Defines a rectangle to be drawn in the PDF document. Coordinates are relative to the top-left corner of the page or template
-- **`PdfRoundedRectangleElement`**: Defines a rectangle with rounded corners drawn in a PDF document. Coordinates are relative to the top-left corner of the page or template
-- **`PdfCircleElement`**: Defines a circle drawn in a PDF document, specified by its center point and radius. Coordinates are relative to the top-left corner of the page or tem...
-- **`PdfEllipseElement`**: Defines an ellipse drawn in a PDF document, inscribed within an axis-aligned bounding rectangle before any rotation is applied. Coordinates are relati...
+- **`PdfRectangleElement`**: Defines a rectangle to be drawn in the PDF document. The coordinates are in points and relative to the top left corner of the content area of the page...
+- **`PdfRoundedRectangleElement`**: Defines a rectangle with rounded corners drawn in a PDF document. The coordinates are in points and relative to the top left corner of the content are...
+- **`PdfCircleElement`**: Defines a circle drawn in a PDF document, specified by its center point and radius. The coordinates are in points and relative to the top left corner ...
+- **`PdfEllipseElement`**: Defines an ellipse drawn in a PDF document, inscribed within an axis-aligned bounding rectangle before any rotation is applied. The coordinates are in...
 - **`PdfArcElement`**: Defines an elliptical arc drawn in a PDF document. The arc is a portion of the ellipse inscribed in the axis-aligned rectangle defined by X, Y, Width ...
 - **`PdfArcClosureType`**: Specifies how an arc element is closed and whether it can be filled
-- **`PdfLineElement`**: Defines a straight line segment drawn between two points in a PDF document. Coordinates are relative to the top-left corner of the page or template
+- **`PdfLineElement`**: Defines a straight line segment drawn between two points in a PDF document. The coordinates are in points and relative to the top left corner of the c...
 - **`PdfPathElement`**: Defines a generic path composed of move, line, cubic Bezier and close operations. Use this element when none of the dedicated shape elements is expres...
 - **`PdfPathOperation`**: Represents a single drawing operation that contributes to the geometry of a PdfPathElement. Use the factory methods to construct operations rather tha...
 - **`PdfPathOperationType`**: Identifies the type of operation stored in a PdfPathOperation
-- **`PdfPolygonElement`**: Defines a closed polygon drawn through a sequence of points in a PDF document. The polygon can be both stroked and filled. Coordinates are relative to...
-- **`PdfPolylineElement`**: Defines an open polyline drawn through a sequence of points in a PDF document. The polyline is stroked but not filled. Coordinates are relative to the...
+- **`PdfPolygonElement`**: Defines a closed polygon drawn through a sequence of points in a PDF document. The polygon can be both stroked and filled. The coordinates are in poin...
+- **`PdfPolylineElement`**: Defines an open polyline drawn through a sequence of points in a PDF document. The polyline is stroked but not filled. The coordinates are in points a...
 - **`PdfLineStyle`**: Defines the appearance of a stroked line, including width, dash pattern, endpoint shape and corner join style
 - **`PdfLineCapStyle`**: Specifies the shape used at the endpoints of a stroked open path
 - **`PdfLineDashStyle`**: Specifies the dash style for line rendering
@@ -1496,8 +1891,16 @@ Namespace `EvoPdf.Next`. Install one NuGet package for the target platform, for 
 - **`PdfTextPageRenderInfo`**: Carries the per-page render result for a text element: the geometric rectangle on a specific page together with the portion of text drawn on that page...
 - **`PdfImageRenderInfo`**: Contains metadata about how and where an image was rendered on a PDF page. Exposes both the axis-aligned bounding box and the rotated four-corner outl...
 - **`PdfRenderedRectangle`**: Represents a single occurrence of an element on a PDF page. Carries the axis-aligned bounding rectangle, the rotated four-corner outline and the page ...
+- **`PdfHtmlElement`**: HTML content rendered in the pages of a document. In a document being created the content starts at a position in the current page and flows to as man...
+- **`PdfHtmlImageElement`**: Represents HTML content rendered as an image in a PDF document. The HTML is converted to an image by the HTML to Image converter of the element, at th...
+- **`PdfPageElement`**: A page of an existing PDF document drawn in a page of the document being created or edited, at a given position and size, optionally rotated and with ...
+- **`PdfHtmlRenderInfo`**: Describes where the content of a PdfHtmlElement was rendered in the document: the pages it occupies, the area it covers on each of them and the positi...
+- **`PdfContentRenderInfo`**: Describes where content that flows over one or more pages was rendered in the document: the pages it occupies and the area it covers on each of them
+- **`PdfGradientFill`**: A fill that changes smoothly from one color to another across the bounds of a shape. When set on a shape it replaces its fill color
+- **`PdfGradientDirection`**: The direction in which the colors of a gradient change inside a shape
+- **`PdfSizeF`**: A size in points: a width and a height
 
-35 types, 448 public members. The complete member list with the shipped
+43 types, 525 public members. The complete member list with the shipped
 summaries is in `references/api.md`; do not guess member names that are not there.
 
 The Core PDF API alone is installed with `EvoPdf.Next.Core.Windows` (x64 and ARM64), `EvoPdf.Next.Core.Linux` (x64 and
@@ -1505,7 +1908,27 @@ ARM64), `EvoPdf.Next.Core.MacOS` or the `EvoPdf.Next.Core` metapackage for all t
 Core Component Overview: https://www.evopdf.com/help/evopdf-next-dotnet/html/core-component.htm
 
 `PdfDocument.DigitalSignature`, `PdfDocument.AddSignatureField` and `PdfDocument.AddElectronicInvoice` are described in
-`evopdf-next-security-signatures` and `evopdf-next-electronic-invoices`.
+`evopdf-next-security-signatures` and `evopdf-next-electronic-invoices`; `PdfDocument.AddFormField` in
+`evopdf-next-pdf-forms`; `PdfDocument.Bookmarks`, `OpenAction` and `TableOfContents` in `evopdf-next-bookmarks-and-toc`.
+Word, Excel, RTF and Markdown documents are added to a `PdfDocument` with the `AddWord`, `AddExcel`, `AddRtf` and
+`AddMarkdown` extension methods of the document converter packages (`evopdf-next-document-converters`).
+
+What can be added to a page, and the method that adds it:
+
+| Content | Element | Method |
+|---|---|---|
+| Text, flowing over pages | `PdfTextElement` | `AddText` |
+| Image | `PdfImageElement` (`KeepAspectRatio` false stretches it to the given size) | `AddImage` |
+| HTML as text and vectors, flowing over pages | `PdfHtmlElement` | `AddHtml`, `AddHtmlAsync` |
+| HTML rendered as an image | `PdfHtmlImageElement` | `AddHtmlImage` |
+| A page of another PDF | `PdfPageElement` | `AddPdfPage` |
+| Shapes, lines, paths, polygons | `PdfRectangleElement`, `PdfCircleElement`, `PdfPathElement`, ... | `AddRectangle`, `AddCircle`, `AddPath`, ... |
+| Gradient fill of a shape | `PdfGradientFill` on `GradientFill` | with the shape |
+
+`AddPage(pageSize, orientation)` adds a page of a given size and returns its number; the pages added next keep that
+size. `PdfTextElement` and `PdfImageElement` continue on the next pages when they do not fit, on pages inserted after
+the current one when `InsertContinuationPages` is true, with `ContinuationTopMargin` and `ContinuationBottomMargin` on
+those pages. Closed shapes and paths are outlined with `Border`, `BorderColor` and `BorderOpacity`.
 
 ## Create PDF Documents
 
@@ -1536,14 +1959,11 @@ pdfDocument.AddPage();
 ```
 
 ```csharp
-// Set the next page to landscape A4
-pdfDocument.SetPageSize(PdfPageSize.A4, PdfPageOrientation.Landscape);
-
-// Set the next page margins
+// The margins of the pages added next
 pdfDocument.Margins = new PdfMargins(100, 100, 100, 100);
 
-// Add a new PDF page with the modified page settings
-pdfDocument.AddPage();
+// A landscape A4 page; the pages added next keep this size
+pdfDocument.AddPage(PdfPageSize.A4, PdfPageOrientation.Landscape);
 ```
 
 All 11 samples of this topic, complete: `references/examples.md`.
@@ -1598,7 +2018,7 @@ PdfTextElement highlighted = new PdfTextElement(text, bodyFont)
 pdfDocument.AddText(highlighted);
 ```
 
-All 8 samples of this topic, complete: `references/examples.md`.
+All 10 samples of this topic, complete: `references/examples.md`.
 
 Full topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/create-pdf-documents-with-text.htm
 
@@ -1640,7 +2060,7 @@ PdfImageRenderInfo imageRenderInfo = pdfDocument.AddImage(pdfPngImage);
 crtYPos = imageRenderInfo.BoundingBox.Bottom + ySeparator;
 ```
 
-All 4 samples of this topic, complete: `references/examples.md`.
+All 5 samples of this topic, complete: `references/examples.md`.
 
 Full topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/create-pdf-documents-with-images.htm
 
@@ -1648,7 +2068,7 @@ Full topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/create-pdf-docum
 
 The library exposes a dedicated element for each common geometric primitive. Call sites are short. The rendering pipeline is more efficient than building the same shapes with arbitrary paths.
 
-All 1 samples of this topic, complete: `references/examples.md`.
+All 2 samples of this topic, complete: `references/examples.md`.
 
 Full topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/create-pdf-documents-with-shapes.htm
 
@@ -1663,8 +2083,8 @@ PdfPathElement heart = new PdfPathElement
 {
     FillColor = PdfColor.Crimson,
     FillOpacity = 0.8f,
-    LineColor = PdfColor.DarkRed,
-    LineStyle = new PdfLineStyle { LineWidth = 1.5f, LineJoin = PdfLineJoinStyle.Round }
+    BorderColor = PdfColor.DarkRed,
+    Border = new PdfLineStyle { LineWidth = 1.5f, LineJoin = PdfLineJoinStyle.Round }
 };
 heart
     .MoveTo(cx, cy + s * 0.25f)
@@ -1681,6 +2101,188 @@ pdfDocument.AddPath(heart);
 All 2 samples of this topic, complete: `references/examples.md`.
 
 Full topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/create-pdf-documents-with-paths-and-polygons.htm
+
+## Create PDF Documents with HTML Content
+
+The `PdfHtmlElement` class renders HTML content in the pages of a document being created with `PdfDocument`. The content starts at a position in the current page, after the elements added before it and flows to as many new pages as it needs, laid out inside the margins of the document. The elements added after it go to its last page, below the rendered content. The HTML is given as a string with a base URL or as the URL of a page, like for the HTML to PDF converter.
+
+### Position and Width
+
+```csharp
+PdfHtmlElement htmlElement = new PdfHtmlElement(htmlString, baseUrl)
+{
+    X = 0,
+    Y = crtYPos,
+    // 0 extends the content to the right margin of the page
+    Width = 0
+};
+PdfHtmlRenderInfo htmlRenderInfo = pdfDocument.AddHtml(htmlElement);
+
+// The elements added after the content go below it, in its last page
+crtYPos = htmlRenderInfo.LastPageRectangle.Bounds.Bottom + 15;
+```
+
+### Converter Settings
+
+```csharp
+htmlElement.Converter.MediaType = "print";
+htmlElement.Converter.PdfDocumentOptions.GenerateDocumentOutline = true;
+```
+
+### Table of Contents
+
+```csharp
+pdfDocument.TableOfContents.Enabled = true;
+pdfDocument.TableOfContents.Title = "Contents";
+pdfDocument.AddHtml(new PdfHtmlElement(firstHtml, null));
+pdfDocument.AddPage();
+pdfDocument.AddHtml(new PdfHtmlElement(secondHtml, null));
+byte[] pdf = pdfDocument.Save();
+```
+
+### Positions of the HTML Elements
+
+```csharp
+htmlElement.HtmlElementsInfoSelector = "h1, h2";
+PdfHtmlRenderInfo htmlRenderInfo = pdfDocument.AddHtml(htmlElement);
+
+foreach (HtmlElementInfo elementInfo in htmlRenderInfo.HtmlElementsInfo.Elements)
+{
+    foreach (PdfRenderedRectangle rectangle in elementInfo.RenderedRectangles)
+        Console.WriteLine("{0} on page {1} at {2}", elementInfo.TagName, rectangle.PageNumber, rectangle.Bounds);
+}
+```
+
+All 5 samples of this topic, complete: `references/examples.md`.
+
+Full topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/create-pdf-documents-with-html-content.htm
+
+## Create PDF Documents with HTML as Image
+
+The `PdfHtmlImageElement` class renders an HTML document as an image in the pages of a document being created with `PdfDocument`. The HTML is given as the URL of a page or as a string with a base URL and it is converted by the HTML to Image converter of the element, which captures the whole page at the height of its content. The image starts at a position in the current page, after the elements added before it, and continues on the next pages when it is taller than the space left on the page. The elements added after it go below the image on its last page.
+
+### Position, Size and Resolution
+
+```csharp
+PdfHtmlImageElement htmlImage = new PdfHtmlImageElement(htmlCode, baseUrl)
+{
+    X = 0,
+    Y = crtYPos,
+    // 0 draws the image at the size of the content on screen, scaled down to the right margin when it is wider
+    Width = 0,
+    // 0 gives no height limit
+    Height = 0,
+    // The image has the same size in the page at any resolution; a higher resolution gives a sharper image
+    Resolution = 150
+};
+htmlImage.Accessibility.AlternateText = "Sales table rendered from HTML";
+
+PdfImageRenderInfo htmlImageInfo = pdfDocument.AddHtmlImage(htmlImage);
+```
+
+### Converter Settings
+
+```csharp
+htmlImage.Converter.HtmlViewerWidth = 1024;
+htmlImage.Converter.MediaType = "print";
+```
+
+### Image Continued on the Next Pages
+
+```csharp
+htmlImage.ContinueOnNextPage = true;
+PdfImageRenderInfo htmlImageInfo = pdfDocument.AddHtmlImage(htmlImage);
+
+foreach (PdfRenderedRectangle part in htmlImageInfo.RenderedRectangles)
+    Console.WriteLine("Page {0}: {1}", part.PageNumber, part.Bounds);
+
+// The elements added after the image go below the part drawn on its last page
+PdfRectangleF lastPart = htmlImageInfo.LastPageRectangle.VisibleBounds ?? htmlImageInfo.LastPageRectangle.Bounds;
+crtYPos = lastPart.Bottom + 10;
+```
+
+All 4 samples of this topic, complete: `references/examples.md`.
+
+Full topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/create-pdf-documents-with-html-as-image.htm
+
+## Create PDF Documents with Pages of Other PDF Documents
+
+The `PdfPageElement` class draws a page of an existing PDF document in a page of the document being created, at a given position and size, optionally rotated and with a given opacity. The drawn page keeps its content, its fonts, images and vector graphics, its links and form fields when the annotations are included and its structure when both documents are tagged. The element is added with `PdfDocument.AddPdfPage(PdfPageElement)`, which returns the rectangle used by the drawn page.
+
+### Position, Size and Rotation
+
+```csharp
+// The letterhead page covers the whole current page, under the content added later
+PdfPageElement letterhead = new PdfPageElement(letterheadPath, 1)
+{
+    X = -margins.Left,
+    Y = -margins.Top,
+    RenderUnderContent = true
+};
+pdfDocument.AddPdfPage(letterhead);
+
+// A page of another document scaled to fit a rectangle, keeping its proportions
+PdfPageElement pageElement = new PdfPageElement(sourcePdfBytes, 2)
+{
+    X = 0,
+    Y = crtYPos,
+    Width = 150,
+    Height = 210,
+    Opacity = 1,
+    RotationDegrees = 0,
+    IncludeAnnotations = true
+};
+PdfElementRenderInfo renderInfo = pdfDocument.AddPdfPage(pageElement);
+PdfRectangleF bounds = renderInfo.LastPageRectangle.Bounds;
+```
+
+All 2 samples of this topic, complete: `references/examples.md`.
+
+Full topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/create-pdf-documents-with-pdf-pages.htm
+
+## Create PDF Documents with Gradient Fills
+
+The shapes of a PDF document can be painted with a linear gradient instead of a solid color. A `PdfGradientFill` object changes smoothly from a start color to an end color across the bounds of the shape, along one of the directions of the `PdfGradientDirection` enumeration.
+
+### Gradient Colors and Directions
+
+```csharp
+PdfRectangleElement rectangle = new PdfRectangleElement(0, 0, 110, 60)
+{
+    GradientFill = new PdfGradientFill(PdfColor.LightSkyBlue, PdfColor.DarkBlue, PdfGradientDirection.Horizontal),
+    BorderColor = PdfColor.DarkBlue,
+    Border = new PdfLineStyle { LineWidth = 1f }
+};
+pdfDocument.AddRectangle(rectangle);
+```
+
+### Size Shapes with the Measured Text Width
+
+```csharp
+// The width of the text written with the font gives the width of its badge
+float textWidth = badgeFont.GetTextWidth("GRADIENT FILL");
+float badgeWidth = textWidth + 2 * badgePadding;
+
+pdfDocument.AddRoundedRectangle(new PdfRoundedRectangleElement(badgeX, badgeY, badgeWidth, badgeHeight, badgeHeight / 2)
+{
+    GradientFill = new PdfGradientFill(PdfColor.LightSkyBlue, PdfColor.DarkBlue, PdfGradientDirection.Vertical),
+    BorderColor = PdfColor.DarkBlue,
+    Border = new PdfLineStyle { LineWidth = 0.5f }
+});
+
+// The text is centered in the badge from the measured width
+PdfTextElement badgeText = new PdfTextElement("GRADIENT FILL", badgeFont)
+{
+    X = badgeX + badgePadding,
+    Y = badgeY + (badgeHeight - badgeFont.Size) / 2 - 1,
+    Width = textWidth + 2
+};
+pdfDocument.AddText(badgeText);
+```
+
+All 3 samples of this topic, complete: `references/examples.md`.
+
+Full topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/create-pdf-documents-with-gradient-fills.htm
 
 ## Rules that apply to every sample here
 
@@ -1704,13 +2306,31 @@ Namespace `EvoPdf.Next`. Install one NuGet package for the target platform, for 
 
 ## Types covered here
 
-- **`PdfEditor`**: Allows editing of existing PDF documents by adding HTML content, setting metadata, applying security options, and digital signatures. Use Save or Save...
+- **`PdfEditor`**: Allows editing of existing PDF documents by adding HTML content, text, images and shapes, form fields and annotations, filling the existing form field...
 
-1 types, 52 public members. The complete member list with the shipped
+1 types, 67 public members. The complete member list with the shipped
 summaries is in `references/api.md`; do not guess member names that are not there.
 
 `PdfEditor` also signs existing documents, adds signature fields and long-term validation data (see
-`evopdf-next-security-signatures`) and embeds electronic invoices in PDF/A-3 documents (see `evopdf-next-electronic-invoices`).
+`evopdf-next-security-signatures`), embeds electronic invoices in PDF/A-3 documents (see `evopdf-next-electronic-invoices`),
+fills, flattens and adds form fields (`Form`, `AddFormField`, see `evopdf-next-pdf-forms`) and edits the bookmarks and the
+open action (`Bookmarks`, `OpenAction`, see `evopdf-next-bookmarks-and-toc`).
+
+| Task | Member |
+|---|---|
+| Number of pages | `PageCount` |
+| Add a blank page at the end, of the size of the last page or of a given size | `AddPage()`, `AddPage(pageSize, orientation)` |
+| Insert, move, remove pages | `InsertPage`, `MovePage`, `RemovePage`, `RemovePages("2,4-")` |
+| Rotate a page | `RotatePage(page, degrees)` adds to the rotation, `SetPageRotation(page, rotation)` sets it |
+| HTML as text and vectors from a position, flowing over the next pages | `AddHtml(pageNumber, PdfHtmlElement)` |
+| HTML as an image | `AddHtmlImage(pageNumber, PdfHtmlImageElement)` |
+| A page of another PDF drawn on a page | `AddPdfPage(pageNumber, PdfPageElement)` |
+| Static form fields and no form | `Flatten = true` |
+| Document information, viewer preferences, security of the saved document | `PdfDocumentInfo`, `PdfViewerPreferences`, `PdfSecurityOptions` |
+| The same, read from the loaded document | `DocumentInfo`, `ViewerPreferencesInfo`, `SecurityInfo`, `SignatureInfo` |
+
+Page numbers are 1-based. Page operations are done before content is added to the pages concerned; the bookmarks and
+the open action set in the editor keep pointing to the same pages.
 
 ## Add Text to Existing PDF
 
@@ -1730,7 +2350,7 @@ currentPage = info.LastPageRectangle.PageNumber;        // follow the engine if 
 crtYPos = (int)info.LastPageRectangle.Bounds.Bottom + ySeparator;
 ```
 
-All 3 samples of this topic, complete: `references/examples.md`.
+All 4 samples of this topic, complete: `references/examples.md`.
 
 Full topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/add-text-to-existing-pdf.htm
 
@@ -1752,6 +2372,168 @@ All 1 samples of this topic, complete: `references/examples.md`.
 
 Full topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/add-paths-and-polygons-to-existing-pdf.htm
 
+## Add HTML to Existing PDF
+
+The `PdfEditor` class renders HTML content in the pages of a loaded document with `PdfEditor.AddHtml(Int32, PdfHtmlElement)`, or asynchronously with `PdfEditor.AddHtmlAsync(Int32, PdfHtmlElement, CancellationToken)`, which take the number of the page where the content starts and a `PdfHtmlElement`, the element described in the topic. The content starts at the position given by the element, relative to the top left corner of the page, and continues on the next pages when it does not fit, between the continuation margins of the element. The links and the form fields of the content are kept and the outline generated from the HTML headings joins the bookmarks of the document. In a tagged document, like a PDF/UA document, the content is rendered with the standard of the document and its structure joins the structure tree of the document.
+
+### Position, Width and Continuation
+
+```csharp
+using PdfEditor pdfEditor = new PdfEditor(inputPdfBytes, null);
+
+PdfHtmlElement htmlElement = new PdfHtmlElement(htmlString, baseUrl)
+{
+    X = 36,
+    Y = 120,
+    Width = 523,
+    // The pages where the content continues are inserted after the first page
+    InsertContinuationPages = true,
+    ContinuationTopMargin = 72,
+    ContinuationBottomMargin = 72
+};
+PdfHtmlRenderInfo htmlRenderInfo = pdfEditor.AddHtml(1, htmlElement);
+
+// The elements added after the content go below it, in its last page
+int lastPage = htmlRenderInfo.LastPageNumber;
+float crtYPos = htmlRenderInfo.LastPageRectangle.Bounds.Bottom + 15;
+```
+
+### Converter Settings and Element Positions
+
+```csharp
+htmlElement.Converter.MediaType = "print";
+htmlElement.Converter.PdfDocumentOptions.GenerateDocumentOutline = true;
+htmlElement.HtmlElementsInfoSelector = "h1, h2";
+
+PdfHtmlRenderInfo htmlRenderInfo = pdfEditor.AddHtml(1, htmlElement);
+foreach (HtmlElementInfo elementInfo in htmlRenderInfo.HtmlElementsInfo.Elements)
+{
+    foreach (PdfRenderedRectangle rectangle in elementInfo.RenderedRectangles)
+        Console.WriteLine("{0} on page {1} at {2}", elementInfo.TagName, rectangle.PageNumber, rectangle.Bounds);
+}
+```
+
+All 3 samples of this topic, complete: `references/examples.md`.
+
+Full topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/add-html-to-existing-pdf.htm
+
+## Add HTML as Image to Existing PDF
+
+The `PdfEditor` class renders an HTML document as an image in a page of a loaded document with `PdfEditor.AddHtmlImage(Int32, PdfHtmlImageElement)`, which takes the number of the page to draw in and a `PdfHtmlImageElement`, the element described in the topic. In an edited document the position of the element is given from the top left corner of the page and the image is scaled down to the right edge of the page when it is wider.
+
+### Image Continued on the Next Pages
+
+```csharp
+using PdfEditor pdfEditor = new PdfEditor(inputPdfBytes, null);
+
+int pageNumber = pdfEditor.AddPage();
+PdfHtmlImageElement htmlImage = new PdfHtmlImageElement(htmlCode, baseUrl)
+{
+    X = 36,
+    Y = 72,
+    Resolution = 150,
+    ContinueOnNextPage = true,
+    // The pages where the image continues are inserted after the current page
+    InsertContinuationPages = true,
+    ContinuationTopMargin = 36,
+    ContinuationBottomMargin = 36
+};
+PdfImageRenderInfo htmlImageInfo = pdfEditor.AddHtmlImage(pageNumber, htmlImage);
+
+byte[] outPdfBuffer = pdfEditor.Save();
+```
+
+All 2 samples of this topic, complete: `references/examples.md`.
+
+Full topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/add-html-as-image-to-existing-pdf.htm
+
+## Add Pages of Other PDF Documents to Existing PDF
+
+The `PdfEditor` class draws a page of another PDF document in the pages of a loaded document with `PdfEditor.AddPdfPage(Int32, PdfPageElement)`, which takes the number of the page to draw in and a `PdfPageElement`, the element described in the topic. The drawn page keeps its size or is scaled to fit the given width and height, it can be rotated around a pivot point and it can have an opacity. The links and form fields of the drawn page are added to the edited page when the annotations are included.
+
+### Draw a Page in the Edited Pages
+
+```csharp
+using PdfEditor pdfEditor = new PdfEditor(inputPdfBytes, null);
+
+for (int pageNumber = 1; pageNumber <= pdfEditor.PageCount; pageNumber++)
+{
+    // The letterhead page under the content of each page, at its own size
+    PdfPageElement pageElement = new PdfPageElement(letterheadPdfBytes, 1)
+    {
+        X = 0,
+        Y = 0,
+        Opacity = 1,
+        RenderUnderContent = true,
+        IncludeAnnotations = true
+    };
+    PdfElementRenderInfo renderInfo = pdfEditor.AddPdfPage(pageNumber, pageElement);
+}
+
+byte[] outPdfBuffer = pdfEditor.Save();
+```
+
+All 2 samples of this topic, complete: `references/examples.md`.
+
+Full topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/add-pdf-pages-to-existing-pdf.htm
+
+## Add, Insert, Move, Rotate and Remove PDF Pages
+
+The `PdfEditor` class can change the pages of an existing PDF document: it adds blank pages at the end, inserts blank pages at a position, moves pages to another position, rotates pages and removes pages. The content, the links and the bookmarks of the existing pages are not changed by these operations.
+
+### Add and Insert Pages
+
+```csharp
+// Insert a blank page of the chosen size before the first page. The existing pages
+// are shifted and keep their content, links and bookmarks
+int coverPageNumber = pdfEditor.InsertPage(1, PdfPageSize.A4, PdfPageOrientation.Portrait);
+
+// Add a blank page at the end of the document, with the size of the last page
+int lastPageNumber = pdfEditor.AddPage();
+```
+
+### Move Pages
+
+```csharp
+// Move a page to another position; the pages in between are shifted
+pdfEditor.MovePage(movePageNumber, moveToPageNumber);
+```
+
+### Rotate Pages
+
+```csharp
+// Rotate the page clockwise by a multiple of 90 degrees. The rotation is added to the
+// current rotation of the page; SetPageRotation would set an absolute rotation instead.
+// A page is rotated before content is added to it
+pdfEditor.RotatePage(rotatePageNumber, 90);
+
+// A note at the bottom of the rotated page, placed in the page as it is displayed:
+// a rotation of 90 or 270 degrees swaps its width and height
+PdfPageInfo rotatedPageInfo = pdfEditor.GetPdfPageInfo(rotatePageNumber);
+bool turned = rotatedPageInfo.Rotation % 180 != 0;
+float displayedWidth = turned ? rotatedPageInfo.PageSize.Height : rotatedPageInfo.PageSize.Width;
+float displayedHeight = turned ? rotatedPageInfo.PageSize.Width : rotatedPageInfo.PageSize.Height;
+PdfTextElement rotatedPageText = new PdfTextElement("This page was rotated by 90 degrees", noteFont)
+{
+    X = 36,
+    Y = displayedHeight - 60,
+    Width = displayedWidth - 72
+};
+pdfEditor.AddText(rotatePageNumber, rotatedPageText);
+```
+
+### Remove Pages
+
+```csharp
+// The pages are removed first, so the ranges refer to the pages of the loaded document. The
+// ranges are 1-based, for example "2,4-5" or "3-" for the pages from the third one to the end
+pdfEditor.RemovePages("2,4-5");
+```
+
+All 5 samples of this topic, complete: `references/examples.md`.
+
+Full topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/add-insert-move-rotate-and-remove-pdf-pages.htm
+
 ## Rules that apply to every sample here
 
 - Converter instances are single use. Create a new converter for every conversion; a second
@@ -1772,12 +2554,12 @@ Namespace `EvoPdf.Next`. Install one NuGet package for the target platform, for 
 
 ## Types covered here
 
-- **`PdfPageInfo`**: Represents page-specific information extracted from a loaded PDF document. Includes details like page size, rotation, crop box, media box, and other b...
+- **`PdfPageInfo`**: The information of a page of a loaded document: its size, its rotation and its boxes. The dimensions are in points and the boxes are relative to the t...
 - **`PdfSecurityInfo`**: Represents security-related information extracted from a loaded PDF document. Includes encryption status, permission flags and encryption algorithm de...
 - **`PdfSignatureInfo`**: Represents digital signature information extracted from a loaded PDF document. Reports the presence and metadata of signatures, but does NOT validate ...
 - **`PdfCertificationLevel`**: PDF certification levels
 
-4 types, 28 public members. The complete member list with the shipped
+4 types, 29 public members. The complete member list with the shipped
 summaries is in `references/api.md`; do not guess member names that are not there.
 
 ## Reading a PDF before you process it
@@ -1788,7 +2570,7 @@ Nothing here modifies the file; do not call `Save` unless you meant to.
 ```csharp
 using var editor = new PdfEditor(pdfBytes, null);   // the owner password of a protected PDF, or null
 
-int pages = editor.GetPageCount();
+int pages = editor.PageCount;
 string version = editor.PdfVersion;
 
 bool tagged = editor.IsTaggedPdf;
@@ -1802,7 +2584,7 @@ bool hasAttachments = editor.ContainsEmbeddedFiles;
 ## Page geometry
 
 ```csharp
-for (int i = 1; i <= editor.GetPageCount(); i++)
+for (int i = 1; i <= editor.PageCount; i++)
 {
     PdfPageInfo page = editor.GetPdfPageInfo(i);
     // page.PageSize, page.Rotation, page.MediaBox, page.CropBox,
@@ -1816,7 +2598,7 @@ page can be A4 portrait in `MediaBox` and land as landscape in a viewer.
 ## Encryption and permissions
 
 ```csharp
-PdfSecurityInfo security = editor.PdfSecurityInfo;
+PdfSecurityInfo security = editor.SecurityInfo;
 if (security.IsEncrypted)
 {
     // security.IsOwnerPasswordUsed tells you whether you opened it with full permissions
@@ -1830,7 +2612,7 @@ if (security.IsEncrypted)
 ## Signatures
 
 ```csharp
-PdfSignatureInfo signature = editor.PdfSignatureInfo;
+PdfSignatureInfo signature = editor.SignatureInfo;
 // signature.IsSigned, signature.SignatureCount, signature.IsCertified,
 // signature.CertificationLevel, signature.ContainsTimestamp
 ```
@@ -1841,10 +2623,17 @@ user as "the signature is valid".
 
 ## Metadata and viewer preferences of a loaded document
 
-`editor.PdfDocumentInfo` holds the description of the loaded file (`Title`, `AuthorName`, `Subject`, `Keywords`,
-`CreatedDate`); values changed there are written when the document is saved. `editor.PdfViewerPreferencesInfo`
-returns the viewer preferences the document was saved with, while `editor.PdfViewerPreferences` sets the ones
-it will be saved with.
+The properties read from the loaded document and the ones it is saved with are separate:
+
+| Read from the loaded document | Written when the document is saved |
+|---|---|
+| `editor.DocumentInfo` (`Title`, `AuthorName`, `Subject`, `Keywords`, `CreatedDate`) | `editor.PdfDocumentInfo`; the values read are kept when they are not set |
+| `editor.ViewerPreferencesInfo` | `editor.PdfViewerPreferences` |
+| `editor.SecurityInfo` | `editor.PdfSecurityOptions` |
+| `editor.SignatureInfo` | `editor.DigitalSignature` |
+
+The bookmarks (`editor.Bookmarks`), the open action (`editor.OpenAction`) and the form fields (`editor.Form`) of
+the loaded document can be read and changed: see `evopdf-next-bookmarks-and-toc` and `evopdf-next-pdf-forms`.
 
 ## Rules that apply to every sample here
 
@@ -1857,18 +2646,33 @@ it will be saved with.
 
 # EvoPdf Next: merging and combining PDFs
 
-EvoPdf Next can convert multiple HTML documents to a single PDF using the `PdfMerge` class. Each HTML is converted to PDF and the result is added to PdfMerge using the `PdfMerge.AddPdf` method. The PdfMerge class allows you to set security options, configure PDF viewer preferences and apply a digital signature to the resulting PDF.
+The `PdfMerge` class merges PDF documents, or selected pages of them, blank pages and images into a single PDF document. The form fields, bookmarks, annotations, internal links and scripts of the merged documents are kept. Several HTML documents can also be rendered one after the other in a single PDF with `PdfDocument.AddHtml`, without converting each of them to a separate PDF first.
 
 Namespace `EvoPdf.Next`. Install one NuGet package for the target platform, for example
 `EvoPdf.Next.Windows`, `EvoPdf.Next.Linux` or `EvoPdf.Next.MacOS`.
 
 ## Types covered here
 
-- **`PdfMerge`**: The PdfMerge class provides functionality to merge multiple PDF files or streams into a single PDF document. It supports adding password protected PDF...
+- **`PdfMerge`**: Merges PDF documents, or selected pages of them, blank pages and images into a single PDF document. The form fields, bookmarks, annotations, internal ...
 - **`PdfMergeInfo`**: An object of this class is exposed by the PdfMerge class to provide details such as the total number of pages produced and the number of pages from ea...
 
-2 types, 28 public members. The complete member list with the shipped
+2 types, 39 public members. The complete member list with the shipped
 summaries is in `references/api.md`; do not guess member names that are not there.
+
+| Task | Member |
+|---|---|
+| Add a whole document, from memory or a file, with its password | `AddPdf` |
+| Add selected pages, by range or by page ranges such as `"1,3-5,8-"` | `AddPdfPages` |
+| Add a blank page or a page with an image | `AddBlankPage`, `AddImagePage` |
+| Keep the form fields of the merged documents apart when their names repeat | `KeepFieldsSeparate = true` |
+| Keep or drop the bookmarks of the merged documents; add new ones | `KeepSourceBookmarks`, `Bookmarks` |
+| Open action, document information, security, viewer preferences, signature | `OpenAction`, `PdfDocumentInfo`, `PdfSecurityOptions`, `PdfViewerPreferences`, `DigitalSignature` |
+| Footer or stamp on every page | `AddHtmlTemplate` |
+| Static form fields | `Flatten = true` |
+
+The add methods return the 1-based number of the first added page in the merged document, where a bookmark or the
+open action can point; `PageCount` gives the number of pages of the merged document.
+To extract or split pages, use `PdfSplit` (`evopdf-next-pdf-split`).
 
 ## Merge Multiple HTML to PDF
 
@@ -1877,6 +2681,127 @@ All 1 samples of this topic, complete: `references/examples.md`.
 Full topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/merge-multiple-html-to-pdf.htm
 
 - Merge Multiple HTML to PDF: https://www.evopdf.com/help/evopdf-next-dotnet/html/merge-multiple-html-to-pdf.htm
+
+## Merge PDF Documents
+
+The `PdfMerge` class merges PDF documents, or selected pages of them, blank pages and images into a single PDF document. The form fields, bookmarks, annotations, internal links and scripts of the merged documents are kept. The merged documents can be password protected, the merged document can have its own document information, security options, viewer preferences, bookmarks, open action and digital signature and HTML templates can be drawn in all its pages, for example a footer with the page numbers.
+
+### Add Documents and Pages
+
+```csharp
+using PdfMerge pdfMerge = new PdfMerge();
+
+// The add methods return the number of the first added page in the merged document
+int firstDocumentPage = pdfMerge.AddPdf(firstPdfBytes);
+
+// A blank page between the documents
+int blankPage = pdfMerge.AddBlankPage(PdfPageSize.A4, PdfPageOrientation.Portrait);
+
+// Selected pages of the second document, in the order of the ranges
+int secondDocumentPage = pdfMerge.AddPdfPages(secondPdfBytes, "1,3-", null);
+
+byte[] mergedPdf = pdfMerge.Save();
+```
+
+### Form Fields and Bookmarks
+
+```csharp
+pdfMerge.KeepFieldsSeparate = true;
+pdfMerge.KeepSourceBookmarks = true;
+pdfMerge.Bookmarks.Add("First document", firstDocumentPage, PdfLinkPageLocation.FitPage());
+pdfMerge.Bookmarks.Add("Second document", secondDocumentPage, PdfLinkPageLocation.FitPage());
+```
+
+### Properties of the Merged Document
+
+```csharp
+pdfMerge.PdfDocumentInfo.Title = "Merged Document";
+pdfMerge.OpenAction = new PdfGoToPageAction(secondDocumentPage, PdfLinkPageLocation.FitPage());
+
+PdfHtmlTemplate footer = pdfMerge.AddHtmlTemplate(0, 0, 300, 30,
+    "<div style=\"font-family: Arial; font-size: 10px;\">Page {page_number} of {total_pages}</div>", null);
+footer.HorizontalAlign = PdfTemplateHorizontalAlign.Center;
+footer.VerticalAlign = PdfTemplateVerticalAlign.Bottom;
+```
+
+All 4 samples of this topic, complete: `references/examples.md`.
+
+Full topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/merge-pdf-documents.htm
+
+## Rules that apply to every sample here
+
+- Converter instances are single use. Create a new converter for every conversion; a second
+  call on the same instance throws.
+- `Licensing.LicenseKey` is a static field, assigned once per process before any conversion.
+- Every conversion method has an asynchronous variant ending in `Async` that takes a `CancellationToken`.
+
+## Runnable code
+
+Compilable versions of the samples above: https://github.com/EvoPdf/evopdf-next-samples/tree/main/docs-samples
+
+
+
+# EvoPdf Next: splitting PDF documents
+
+The `PdfSplit` class extracts pages from an existing PDF document, removes pages from it and splits it in several documents, by a number of pages or by page ranges. The extracted pages keep their content, links, bookmarks, form fields and annotations. The document is loaded from a file or from memory, with the password of a protected document and `PdfSplit.PageCount` gives its number of pages.
+
+Namespace `EvoPdf.Next`. Install one NuGet package for the target platform, for example
+`EvoPdf.Next.Windows`, `EvoPdf.Next.Linux` or `EvoPdf.Next.MacOS`.
+
+## Types covered here
+
+- **`PdfSplit`**: Extracts pages from a PDF document into new PDF documents: a range of pages, the pages selected by page ranges, the document split in parts of a given...
+
+1 types, 14 public members. The complete member list with the shipped
+summaries is in `references/api.md`; do not guess member names that are not there.
+
+## Choosing the method
+
+| Task | Method | Result |
+|---|---|---|
+| One page | `ExtractPage(pageNumber)` | `byte[]` |
+| A range of pages | `ExtractPages(firstPage, lastPage)`, `ExtractPagesToFile(...)` | `byte[]` or a file |
+| Pages selected by page ranges, in the order of the ranges | `ExtractPages("1,3-5,8-")` | `byte[]` |
+| Everything except some pages | `RemovePages("2,4-")` | `byte[]` |
+| Parts of a fixed number of pages | `SplitByPageCount(pagesPerPart)`, `SplitByPageCountToFiles(...)` | one document per part |
+| One part for each page ranges text | `SplitByPageRanges(...)` | one document per part |
+
+Page numbers are 1-based. A page ranges text is a comma separated list of page numbers and ranges; a range
+without an end, such as `8-`, goes to the last page. `PdfDocumentInfo`, `PdfSecurityOptions` and
+`PdfViewerPreferences` apply to every extracted document; the values of the loaded document are used when
+they are not set. `PdfSplit` is disposable: create it in a `using` statement. To insert, move, rotate or
+remove pages in place, use `PdfEditor` (`evopdf-next-pdf-edit`); to join documents, `PdfMerge`
+(`evopdf-next-pdf-merge`).
+
+## Split PDF Documents
+
+### Extract and Remove Pages
+
+```csharp
+using PdfSplit pdfSplit = new PdfSplit(inputPdfBytes, null);
+
+// One page, a range of pages and the pages of several ranges
+byte[] pagePdf = pdfSplit.ExtractPage(2);
+byte[] pagesPdf = pdfSplit.ExtractPages(2, 4);
+byte[] rangesPdf = pdfSplit.ExtractPages("1,3-4,6-");
+
+// The loaded document without some pages
+byte[] remainingPdf = pdfSplit.RemovePages("2,5");
+```
+
+### Split in Several Documents
+
+```csharp
+// Two pages per document
+List<byte[]> parts = pdfSplit.SplitByPageCount(2);
+
+// One document for each range
+List<byte[]> chapters = pdfSplit.SplitByPageRanges(new[] { "1-2", "3-5", "6-" });
+```
+
+All 3 samples of this topic, complete: `references/examples.md`.
+
+Full topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/split-pdf-documents.htm
 
 ## Rules that apply to every sample here
 
@@ -1900,7 +2825,7 @@ Namespace `EvoPdf.Next`. Install one NuGet package for the target platform, for 
 
 ## Types covered here
 
-- **`PdfLinkAnnotation`**: A clickable hyperlink annotation placed on a PDF page. Use one of the static factory methods (FromUrl, ToPage, ToPageLocation to build the link, then ...
+- **`PdfLinkAnnotation`**: A clickable hyperlink annotation placed on a PDF page. Use one of the static factory methods (FromUrl, ToPage, ToPageLocation) to build the link, then...
 - **`PdfLinkBorderStyle`**: Border style drawn around a PdfLinkAnnotation hotspot. Default is None -- typical for text hyperlinks where the clickable area is implied by the under...
 - **`PdfLinkHighlightMode`**: Visual feedback shown when the user activates a PdfLinkAnnotation hotspot
 - **`PdfLinkPageFit`**: Page-fit type used by PdfLinkPageLocation to describe how the target page is displayed when the link is followed
@@ -1908,7 +2833,7 @@ Namespace `EvoPdf.Next`. Install one NuGet package for the target platform, for 
 - **`PdfTextAnnotation`**: Represents a sticky-note style annotation displayed as a clickable icon on a specific page of the PDF. Clicking the icon opens a popup with the note t...
 - **`PdfTextAnnotationIcon`**: Icon displayed on the page surface for a sticky-note text annotation
 
-7 types, 45 public members. The complete member list with the shipped
+7 types, 48 public members. The complete member list with the shipped
 summaries is in `references/api.md`; do not guess member names that are not there.
 
 ## Create PDF Documents with Link Annotations
@@ -1930,13 +2855,13 @@ link.BorderStyle = PdfLinkBorderStyle.None;
 pdfDocument.AddLinkAnnotation(link);
 ```
 
-All 2 samples of this topic, complete: `references/examples.md`.
+All 3 samples of this topic, complete: `references/examples.md`.
 
 Full topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/create-pdf-documents-with-link-annotations.htm
 
 ## Add Link Annotations to Existing PDF
 
-The `PdfEditor` class lets you add new content to an existing PDF without rewriting the rest of the document. The editor is instantiated with the source PDF bytes or file path and an optional password. The standard claimed by the source document and its existing page geometry are inherited by the editor. Content is added at absolute page coordinates using the dedicated Add methods. Every Add method takes the target page number as the first argument. If the rendered content overflows the available space a new page is created automatically by the engine. The resulting modified PDF is produced with `PdfEditor.Save`.
+The `PdfEditor` class lets you add new content to an existing PDF without rewriting the rest of the document. The editor is instantiated with the source PDF bytes or file path and an optional password. The standard claimed by the source document and its existing page geometry are inherited by the editor. Content is added at absolute page coordinates using the dedicated Add methods. The methods that draw page content, such as AddText, AddImage or AddHtml, take the target page number as the first argument. Content that does not fit in the page continues on the following pages of the document when the element is set to continue, or on pages inserted after the current one when InsertContinuationPages is true. The resulting modified PDF is produced with `PdfEditor.Save`.
 
 ### External URL Links
 
@@ -1974,13 +2899,13 @@ ann.Open = true;
 pdfDocument.AddTextAnnotation(ann);
 ```
 
-All 2 samples of this topic, complete: `references/examples.md`.
+All 3 samples of this topic, complete: `references/examples.md`.
 
 Full topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/create-pdf-documents-with-text-annotations.htm
 
 ## Add Text Annotations to Existing PDF
 
-The `PdfEditor` class lets you add new content to an existing PDF without rewriting the rest of the document. The editor is instantiated with the source PDF bytes or file path and an optional password. The standard claimed by the source document and its existing page geometry are inherited by the editor. Content is added at absolute page coordinates using the dedicated Add methods. Every Add method takes the target page number as the first argument. If the rendered content overflows the available space a new page is created automatically by the engine. The resulting modified PDF is produced with `PdfEditor.Save`.
+The `PdfEditor` class lets you add new content to an existing PDF without rewriting the rest of the document. The editor is instantiated with the source PDF bytes or file path and an optional password. The standard claimed by the source document and its existing page geometry are inherited by the editor. Content is added at absolute page coordinates using the dedicated Add methods. The methods that draw page content, such as AddText, AddImage or AddHtml, take the target page number as the first argument. Content that does not fit in the page continues on the following pages of the document when the element is set to continue, or on pages inserted after the current one when InsertContinuationPages is true. The resulting modified PDF is produced with `PdfEditor.Save`.
 
 ### Author Identification and Initial Popup State
 
@@ -2025,7 +2950,7 @@ Namespace `EvoPdf.Next`. Install one NuGet package for the target platform, for 
 - **`PdfAttachmentIcon`**: Icon displayed for an attachment annotation on a PDF page
 - **`PdfAttachmentRelationship`**: Relationship between an attached file and the host PDF document, per PDF/A-3 and PDF/A-4 specifications
 
-4 types, 34 public members. The complete member list with the shipped
+4 types, 35 public members. The complete member list with the shipped
 summaries is in `references/api.md`; do not guess member names that are not there.
 
 ## Add Attachments to Generated PDF
@@ -2059,7 +2984,7 @@ Full topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/add-attachments-
 
 ## Add File Attachments to Existing PDF
 
-The `PdfEditor` class lets you add new content to an existing PDF without rewriting the rest of the document. The editor is instantiated with the source PDF bytes or file path and an optional password. The standard claimed by the source document and its existing page geometry are inherited by the editor. Content is added at absolute page coordinates using the dedicated Add methods. Every Add method takes the target page number as the first argument. If the rendered content overflows the available space a new page is created automatically by the engine. The resulting modified PDF is produced with `PdfEditor.Save`.
+The `PdfEditor` class lets you add new content to an existing PDF without rewriting the rest of the document. The editor is instantiated with the source PDF bytes or file path and an optional password. The standard claimed by the source document and its existing page geometry are inherited by the editor. Content is added at absolute page coordinates using the dedicated Add methods. The methods that draw page content, such as AddText, AddImage or AddHtml, take the target page number as the first argument. Content that does not fit in the page continues on the following pages of the document when the element is set to continue, or on pages inserted after the current one when InsertContinuationPages is true. The resulting modified PDF is produced with `PdfEditor.Save`.
 
 ### Document-Level Attachments
 
@@ -2115,7 +3040,7 @@ textAttachment.Description = "Sample alphabet text";
 pdfDocument.AddFileAttachment(textAttachment);
 ```
 
-All 3 samples of this topic, complete: `references/examples.md`.
+All 4 samples of this topic, complete: `references/examples.md`.
 
 Full topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/create-pdf-documents-with-file-attachments.htm
 
@@ -2146,17 +3071,329 @@ Namespace `EvoPdf.Next`. Install one NuGet package for the target platform, for 
 - **`PdfSubmitBehavior`**: Specifies how submit actions are generated for PDF buttons
 - **`PdfSubmitFormat`**: Specifies the format used when a PDF form is submitted
 - **`PdfValidationBehavior`**: Specifies how HTML validation metadata is mapped to PDF form behavior
+- **`PdfForm`**: The interactive form of a loaded document. It reads the fields of the document, fills them with values, changes their appearance and flattens, removes...
+- **`PdfFormField`**: The base class of the interactive form fields created from code: text fields, check boxes, radio button groups, combo boxes, list boxes and push butto...
+- **`PdfWidgetFormField`**: The base class of the form fields displayed in one rectangle of a page. The position is given in points from the top left corner of the content area o...
+- **`PdfTextField`**: A text field of an interactive form, where the user types a single line or several lines of text
+- **`PdfCheckBoxField`**: A check box of an interactive form
+- **`PdfCheckBoxStyle`**: The symbol displayed in a selected check box or radio button
+- **`PdfRadioGroupField`**: A group of radio buttons of an interactive form, from which the user selects one button. The buttons are added with AddButton and can be placed on dif...
+- **`PdfRadioButton`**: A radio button of a radio button group, displayed in one rectangle of a page. The position is given in points from the top left corner of the content ...
+- **`PdfChoiceFormField`**: The base class of the form fields where the user selects from a list of options: combo boxes and list boxes
+- **`PdfComboBoxField`**: A combo box of an interactive form, a drop-down list from which the user selects one option
+- **`PdfListBoxField`**: A list box of an interactive form, a scrollable list from which the user selects one or more options
+- **`PdfChoiceOption`**: An option of a combo box or list box
+- **`PdfPushButtonField`**: A push button of an interactive form, which performs an action when it is clicked
+- **`PdfPushButtonLayout`**: The arrangement of the caption and the icon of a push button
+- **`PdfFormFieldType`**: The type of a form field
+- **`PdfFormFieldBorderStyle`**: The border style of a form field
+- **`PdfFormFieldVisibility`**: The visibility of a form field on screen and in print
+- **`PdfFormFieldInfo`**: The description of a form field read from an existing document: its type, current value, options and placements in the pages
+- **`PdfFormFieldWidgetInfo`**: The placement of a form field in a page. A field with several placements, such as a radio button group, has one placement for each button
+- **`PdfFormFieldActions`**: The actions performed by the PDF viewer on the events of a form field. Each property holds the action performed on one event, or null when nothing is ...
+- **`PdfFieldAction`**: An action performed by the PDF viewer when a form field event occurs, such as a click on a push button. The static methods of this class create the av...
+- **`PdfSubmitFormAction`**: An action that submits the form field values to a URL
+- **`PdfResetFormAction`**: An action that resets form fields to their default values
+- **`PdfHideFieldsAction`**: An action that hides or shows form fields
+- **`PdfImportDataAction`**: An action that imports form field values from a FDF file
+- **`PdfOpenUrlAction`**: An action that opens a URL in the web browser
+- **`PdfJavaScriptAction`**: An action that runs JavaScript code in the PDF viewer
+- **`PdfNamedAction`**: A predefined action of the PDF viewer, such as going to the next page or opening the print dialog
+- **`PdfGoToPageAction`**: An action that displays a page of the document
+- **`PdfGoToNamedDestinationAction`**: An action that displays a named destination of the document
 
-5 types, 28 public members. The complete member list with the shipped
+35 types, 228 public members. The complete member list with the shipped
 summaries is in `references/api.md`; do not guess member names that are not there.
+
+Three ways to work with PDF forms:
+
+| Task | API |
+|---|---|
+| Convert the controls of an HTML form to PDF fields | `HtmlToPdfConverter.PdfDocumentOptions.PdfFormOptions` (`ExcludedFieldsSelector` keeps the matching controls static) |
+| Create fields from code in a new or an existing document | `PdfDocument.AddFormField`, `PdfEditor.AddFormField` with `PdfTextField`, `PdfCheckBoxField`, `PdfRadioGroupField`, `PdfComboBoxField`, `PdfListBoxField`, `PdfPushButtonField` |
+| Read, fill, import, export, flatten, rename or remove the fields of an existing document | `PdfEditor.Form` (`PdfForm`) |
+
+Field names are unique in a document. The actions of push buttons and the field events (`PdfFormFieldActions`) use the
+`PdfFieldAction` types: submit, reset, hide fields, import data, open a URL, go to a page or a named destination,
+JavaScript and named viewer actions; `PdfDocument.AddJavaScript` and `PdfEditor.AddJavaScript` add document scripts
+whose functions the actions can call. `PdfEditor.Flatten = true` turns the fields into static page content.
 
 ## Create PDF Forms from HTML Forms
 
-All 1 samples of this topic, complete: `references/examples.md`.
+All 2 samples of this topic, complete: `references/examples.md`.
 
 Full topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/create-pdf-forms-from-html-forms.htm
 
 - Create PDF Forms from HTML Forms: https://www.evopdf.com/help/evopdf-next-dotnet/html/create-pdf-forms-from-html-forms.htm
+
+## Create PDF Forms from Code
+
+The fields of an interactive PDF form can be created from code in a document being created with `PdfDocument` or added to an existing document loaded in `PdfEditor`, with the `PdfDocument.AddFormField(PdfFormField)` and `PdfEditor.AddFormField(PdfFormField)` methods. The fields have a name, a position, a size and an appearance, they can be required or read-only and they can carry scripts and actions executed by the PDF viewer. The fields of a HTML form are converted automatically by the HTML to PDF converter, as described in the topic; this topic describes the fields created from code.
+
+### Field Types
+
+```csharp
+// A text field with a maximum length displayed in separate cells
+PdfTextField accessCodeField = new PdfTextField("accessCode", 1, 130, 110, 120, 22)
+{
+    Font = fieldFont,
+    BorderColor = PdfColor.Gray,
+    MaxLength = 6,
+    Comb = true,
+    Description = "Six character access code"
+};
+pdfDocument.AddFormField(accessCodeField);
+
+// A combo box with a selected option
+PdfComboBoxField countryField = new PdfComboBoxField("country", 1, 130, 144, 180, 22) { Font = fieldFont };
+countryField.AddOption("Austria", "AT");
+countryField.AddOption("Romania", "RO");
+countryField.SelectedValue = "RO";
+pdfDocument.AddFormField(countryField);
+
+// A group of radio buttons; each button is placed in a page
+PdfRadioGroupField ticketField = new PdfRadioGroupField("ticketType") { SelectedValue = "standard" };
+ticketField.AddButton("standard", 1, 130, 181, 14, 14);
+ticketField.AddButton("premium", 1, 230, 181, 14, 14);
+pdfDocument.AddFormField(ticketField);
+```
+
+### Scripts and Actions
+
+```csharp
+// The total is computed by the viewer from the other fields
+totalField.Actions.Calculate = new PdfJavaScriptAction(
+    "var prices = { standard: 350, premium: 500, student: 120 };" +
+    "event.value = prices[this.getField('ticketType').value] || 0;");
+
+// The buttons submit the form as FDF, reset it and print the document
+submitButton.Action = new PdfSubmitFormAction("https://www.example.com/register") { Format = PdfSubmitFormat.Fdf };
+resetButton.Action = new PdfResetFormAction(null);
+printButton.Action = new PdfNamedAction(PdfNamedActionType.Print);
+
+// The document level script defines a function used by the validate script of the email field
+pdfDocument.AddJavaScript("function isValidEmail(value) { return value.length == 0 || value.indexOf('@') > 0; }");
+emailField.Actions.Validate = new PdfJavaScriptAction(
+    "if (!isValidEmail(event.value)) { app.alert('The email address is not valid'); event.rc = false; }");
+```
+
+All 3 samples of this topic, complete: `references/examples.md`.
+
+Full topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/create-pdf-forms-from-code.htm
+
+## Fill, Flatten and Edit PDF Forms
+
+The `PdfEditor.Form` property of `PdfEditor` gives the interactive form of a loaded document as a `PdfForm` object. The form reads the fields of the document, fills them with values, imports the values of a FDF or XFDF file, changes the appearance of the fields, makes them read-only or hidden, renames and removes them and flattens them to static content. The current values can be exported as FDF. The changes are written when the document is saved with `PdfEditor.Save`. `PdfEditor.ContainsForm` tells if the loaded document has a form.
+
+### Read the Fields
+
+```csharp
+foreach (PdfFormFieldInfo field in pdfEditor.Form.Fields)
+{
+    string value = field.Type == PdfFormFieldType.ListBox && field.Values.Count > 0
+        ? string.Join(", ", field.Values) : field.Value;
+    Console.WriteLine("{0} ({1}): {2}", field.Name, field.Type, value);
+}
+```
+
+### Fill the Fields
+
+```csharp
+PdfForm form = pdfEditor.Form;
+
+form.SetValue("fullName", "John Smith");
+form.SetValue("country", "DE");
+form.SetValue("ticketType", "premium");
+form.SetChecked("newsletter", true);
+form.SetValues("sessions", new[] { "Keynote", "Panel discussion" });
+
+// The values of a FDF file fill the fields with the same names
+form.ImportData(fdfData);
+```
+
+### Flatten the Fields
+
+```csharp
+// Only the fields with a value become static content; the other fields stay editable
+foreach (string fieldName in form.FieldNames)
+{
+    string value = form.GetValue(fieldName);
+    if (!string.IsNullOrEmpty(value) && value != "Off")
+        form.FlattenField(fieldName);
+}
+```
+
+All 4 samples of this topic, complete: `references/examples.md`.
+
+Full topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/fill-flatten-and-edit-pdf-forms.htm
+
+## Rules that apply to every sample here
+
+- Converter instances are single use. Create a new converter for every conversion; a second
+  call on the same instance throws.
+- `Licensing.LicenseKey` is a static field, assigned once per process before any conversion.
+- Every conversion method has an asynchronous variant ending in `Async` that takes a `CancellationToken`.
+
+## Runnable code
+
+Compilable versions of the samples above: https://github.com/EvoPdf/evopdf-next-samples/tree/main/docs-samples
+
+
+
+# EvoPdf Next: PDF redaction
+
+The `PdfRedactor` class permanently removes the text, images and graphics of some areas of an existing PDF document. The texts to remove can be searched in all the pages, the personal data like email addresses, phone numbers, bank accounts and payment card numbers is found by its structure and the redacted areas are covered with a fill color and an overlay text. The removed content cannot be recovered from the saved document, unlike the content hidden under a shape drawn over the page.
+
+Namespace `EvoPdf.Next`. Install one NuGet package for the target platform, for example
+`EvoPdf.Next.Windows`, `EvoPdf.Next.Linux` or `EvoPdf.Next.MacOS`.
+
+## Types covered here
+
+- **`PdfRedactor`**: Removes text, images and graphics from areas of the pages of a PDF document. The content of an area is removed from the document, not only covered: te...
+- **`PdfRedactionArea`**: An area of a page whose content is removed by PdfRedactor. The area is measured in points from the top left corner of the page as it is displayed
+- **`PdfRedactionResult`**: What the redaction removed from the document, available from Result after the document is saved
+- **`PdfPersonalDataTypes`**: The kinds of personal data found by FindPersonalData. The values can be combined
+- **`PdfTextMatch`**: A text found in a page by FindText or FindPersonalData, with the areas it covers, one for each line, measured in points from the top left corner of th...
+
+5 types, 70 public members. The complete member list with the shipped
+summaries is in `references/api.md`; do not guess member names that are not there.
+
+## How a redaction works
+
+1. Load the document: `new PdfRedactor(pdfBytes)` or a file path, with the password of a protected document.
+2. Mark what to remove: `RedactText` (a text or a regular expression), `RedactPersonalData`,
+   `AddRedaction` (an area of a page, or the matches of `FindText`), `RedactPage` and `RedactPages`,
+   `AddRedactionAnnotations` (the redaction annotations of a reviewed document).
+3. Optionally choose the appearance: `FillColor` (black by default, null leaves the area empty),
+   `OverlayText`, `OverlayTextColor`, `OverlayFontSize`, `RepeatOverlayText`, `SetOverlayImage`; a
+   `PdfRedactionArea` can override them for one area.
+4. Optionally clean the rest of the document: `RemoveHiddenContent`, `RemoveMetadata`, `RemoveJavaScript`,
+   `RemoveEmbeddedFiles`; `RemoveIntersectingAnnotations` is on by default.
+5. `Save` or `SaveToFile` applies the redactions; `Result` then reports what was removed.
+
+`FindText` and `FindPersonalData` return `PdfTextMatch` objects without marking anything, so the matches can
+be reviewed first. `SaveRedactionMarks` saves the marks as redaction annotations without removing content, for
+a review in a PDF viewer; the reviewed document is redacted later with `AddRedactionAnnotations`. A redactor
+saves once: create a new one for every document. A signed document loses the signatures that no longer match
+the redacted content (`PdfRedactionResult.RemovedSignatures`).
+
+## Redact Text and Personal Data in PDF
+
+### Redact Texts
+
+```csharp
+using PdfRedactor pdfRedactor = new PdfRedactor(inputPdfBytes, password);
+
+// Every occurrence of a name, as a whole word
+pdfRedactor.RedactText("Jane Smith", false, true);
+
+// The texts that match a regular expression, for example the customer numbers
+pdfRedactor.RedactText(new Regex(@"C-\d{4}-\d{5}"));
+
+byte[] redactedPdf = pdfRedactor.Save();
+```
+
+### Redact Personal Data
+
+```csharp
+// All the email addresses, phone numbers and bank accounts
+pdfRedactor.RedactPersonalData(PdfPersonalDataTypes.EmailAddress | PdfPersonalDataTypes.PhoneNumber |
+    PdfPersonalDataTypes.Iban);
+
+// The payment card numbers found, reviewed one by one
+foreach (PdfTextMatch match in pdfRedactor.FindPersonalData(PdfPersonalDataTypes.PaymentCardNumber))
+{
+    if (match.PageNumber == 1)
+        pdfRedactor.AddRedaction(match);
+}
+```
+
+### Redaction Marks for a Review
+
+```csharp
+using PdfRedactor pdfRedactor = new PdfRedactor(inputPdfBytes, password);
+pdfRedactor.RedactText("Jane Smith", false, true);
+pdfRedactor.RedactPersonalData(PdfPersonalDataTypes.All);
+// The document with the redaction marks, to review before the content is removed
+byte[] markedPdf = pdfRedactor.SaveRedactionMarks();
+```
+
+All 4 samples of this topic, complete: `references/examples.md`.
+
+Full topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/redact-text-and-personal-data-in-pdf.htm
+
+## Redact Areas and Pages of PDF
+
+The `PdfRedactor` class permanently removes the content of some areas and pages of an existing PDF document. The text, images and graphics inside an area are removed, the content partially inside an area is cut at the area boundary, so the text characters and the image pixels outside the area are kept. The area is then covered with a fill color, an image and an overlay text.
+
+### Redact Areas
+
+```csharp
+using PdfRedactor pdfRedactor = new PdfRedactor(inputPdfBytes, password);
+
+// The payment details table of the first page
+pdfRedactor.AddRedaction(1, new PdfRectangleF(36, 288, 525, 62));
+
+// The signature, covered with an image that keeps its aspect ratio
+PdfRedactionArea signatureArea = pdfRedactor.AddRedaction(1, new PdfRectangleF(50, 505, 200, 60));
+signatureArea.SetOverlayImage(System.IO.File.ReadAllBytes("Redacted_Stamp.png"), true);
+
+byte[] redactedPdf = pdfRedactor.Save();
+```
+
+### Redact Pages
+
+```csharp
+// The second page loses all its content and receives its own overlay text
+PdfRedactionArea pageArea = pdfRedactor.RedactPage(2);
+pageArea.OverlayText = "PAGE REMOVED";
+pageArea.OverlayFontSize = 24;
+```
+
+All 3 samples of this topic, complete: `references/examples.md`.
+
+Full topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/redact-areas-and-pages-in-pdf.htm
+
+## Apply Redaction Annotations in PDF
+
+Redaction annotations mark the areas of a PDF document that must be redacted, during a review in a PDF viewer or with `PdfRedactor.SaveRedactionMarks`, without removing the content yet. The `PdfRedactor` class applies these annotations: the content of each marked area is permanently removed, the area is covered with the fill color and the overlay text of the annotation and the annotations are removed from the saved document.
+
+### Apply Redaction Annotations
+
+```csharp
+using PdfRedactor pdfRedactor = new PdfRedactor(inputPdfBytes, password);
+
+// The areas marked in a PDF viewer
+int markedCount = pdfRedactor.AddRedactionAnnotations();
+
+// Other redactions can be added to the same operation
+pdfRedactor.RedactPersonalData(PdfPersonalDataTypes.All);
+
+byte[] redactedPdf = pdfRedactor.Save();
+```
+
+### Create Redaction Marks
+
+```csharp
+// First step: the marks, saved for a review
+using (PdfRedactor marker = new PdfRedactor(inputPdfBytes, password))
+{
+    marker.OverlayText = "REDACTED";
+    marker.RedactPersonalData(PdfPersonalDataTypes.All);
+    marker.SaveRedactionMarksToFile("Document_with_Redaction_Marks.pdf");
+}
+
+// Second step: the reviewed marks, applied
+using (PdfRedactor pdfRedactor = new PdfRedactor("Document_with_Redaction_Marks.pdf"))
+{
+    pdfRedactor.AddRedactionAnnotations();
+    pdfRedactor.SaveToFile("Redacted_Document.pdf");
+}
+```
+
+All 3 samples of this topic, complete: `references/examples.md`.
+
+Full topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/apply-redaction-annotations-in-pdf.htm
 
 ## Rules that apply to every sample here
 
@@ -2185,7 +3422,7 @@ Namespace `EvoPdf.Next`. Install one NuGet package for the target platform, for 
 - **`PdfFontStyle`**: Represents font style flags used in text rendering
 - **`PdfUnicodeRanges`**: Provides predefined Unicode character ranges for use with CreateBaseFont. Each range is an array of two integers representing the inclusive start and ...
 
-6 types, 71 public members. The complete member list with the shipped
+6 types, 75 public members. The complete member list with the shipped
 summaries is in `references/api.md`; do not guess member names that are not there.
 
 ## Three kinds of font
@@ -2235,6 +3472,13 @@ the page, as in a browser; they do not come from `PdfFontManager`.
 `PdfFontManager` applies to the Core PDF API: text you draw yourself with `PdfTextElement` into a
 `PdfDocument`, a `PdfEditor` or a `PdfTemplate`.
 
+## Measuring text
+
+`PdfFont.GetTextWidth(text)` returns the width in points of a text written on one line with the font, and
+`Ascent` and `Descent` the distances from the baseline to the top and the bottom of its line box, so text can be
+fitted or aligned before it is added. The fonts of Word documents are chosen on the converter: `UseEmbeddedFonts`,
+`FontFiles` and `FallbackFontFiles` (`evopdf-next-document-converters`).
+
 ## Rules that apply to every sample here
 
 - Converter instances are single use. Create a new converter for every conversion; a second
@@ -2254,11 +3498,10 @@ Namespace `EvoPdf.Next`. Install one NuGet package for the target platform, for 
 ## Types covered here
 
 - **`PdfStandard`**: Specifies the PDF standards compliance level for the generated PDF document
-- **`PdfAccessibilityOptions`**: Controls the accessibility settings of the generated PDF document. These settings take effect only when a PDF/UA or PDF/A standard requiring a tagged ...
 - **`PdfAccessibilityProperties`**: Accessibility metadata controlling how an element is inserted into the structure tree of a tagged PDF
 - **`PdfStructureType`**: Identifies the PDF logical structure role attached to a content element when the document is tagged
 
-4 types, 51 public members. The complete member list with the shipped
+3 types, 49 public members. The complete member list with the shipped
 summaries is in `references/api.md`; do not guess member names that are not there.
 
 ## PDF/UA and PDF/A from HTML
@@ -2275,9 +3518,10 @@ byte[] pdf = converter.ConvertUrl(url);
 ```
 
 `PdfStandard.None`, the default, produces a plain PDF without a structure tree. With a tagged
-standard selected, `PdfDocumentOptions.AccessibilityOptions` adds a default alternate text to images
-that have none (`AddMissingImageAlternateText`) and a header row to tables without header cells
-(`InsertMissingTableHeaders`); both are on by default.
+standard selected, the structure of the document comes from the HTML: the headings, paragraphs,
+lists, tables with their header cells, links and the alternate text of the images carry over to the
+PDF, together with the document language and title. Write the HTML with that structure (`th` cells,
+`alt` attributes, a `lang` attribute) to get a complete accessible document.
 
 `PdfStandard.Wtpdf1`, `Wtpdf1PdfA4` and `Wtpdf1PdfA4f` produce Well-Tagged PDF 1.0 documents, also identified as
 PDF/UA-2 and written as PDF 2.0. `PdfA4f`, `PdfUa2PdfA4f` and `Wtpdf1PdfA4f` require at least one embedded file.
@@ -2291,7 +3535,7 @@ Full topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/create-pdfua-and
 
 ## Create PDF/UA and PDF/A Documents
 
-A PDF created from scratch with `PdfDocument` can target an accessibility (PDF/UA) or archival (PDF/A) standard simply by setting the `PdfDocumentCreateSettings.PdfStandard` property on the `PdfDocumentCreateSettings` passed to the constructor. The library then handles the standard-mandated artefacts. These include embedded fonts, color profiles, the structure tree, namespaces, document metadata and viewer preferences.
+A PDF created from scratch with `PdfDocument` can target an accessibility (PDF/UA) or archival (PDF/A) standard simply by setting the `PdfDocumentCreateSettings.PdfStandard` property on the `PdfDocumentCreateSettings` passed to the constructor. The library produces a document that conforms to the selected standard.
 
 ### Configure Standard, Language and Page Setup
 
@@ -2362,8 +3606,9 @@ byte[] pdf = converter.ConvertHtml(invoiceHtml, baseUrl);
 - `Relationship` defaults to `PdfAttachmentRelationship.Alternative`; MINIMUM and BASIC WL are always attached as `Data`.
 - One electronic invoice per document. Other attachments can be added with `PdfDocumentOptions.AddFileAttachment`.
 - `PdfViewerPreferences.PageMode = ViewerPageMode.UseAttachments` opens the Attachments panel, so the reader sees the XML.
-- The same `AddElectronicInvoice` method exists on `PdfDocument` (documents created from code) and on `PdfEditor`
-  (an existing document that is already PDF/A-3).
+- The same `AddElectronicInvoice` method exists on `PdfDocument` (documents created from code), on `PdfEditor`
+  (an existing document that is already PDF/A-3) and on the document options of the Word, Excel, RTF and Markdown
+  converters (the invoice page from a document, with `PdfStandard` set to a PDF/A-3 level on the same options).
 - A digital signature can be added to the same converter; the document keeps its PDF/A-3 conformance.
 
 ## Create Factur-X, ZUGFeRD and XRechnung Electronic Invoices
@@ -2371,6 +3616,14 @@ byte[] pdf = converter.ConvertHtml(invoiceHtml, baseUrl);
 All 1 samples of this topic, complete: `references/examples.md`.
 
 Full topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/create-electronic-invoice-pdf.htm
+
+## Create Electronic Invoices from Word
+
+The Word to PDF Converter creates electronic invoices in the Factur-X and ZUGFeRD formats (including the XRechnung profile) and electronic orders in the Order-X format from a Word document. An electronic invoice is a PDF/A-3 document that shows the invoice as a page a person reads and carries the same invoice as an XML file that accounting software reads automatically. The Word document gives the visible page and the invoice XML is embedded as given.
+
+All 1 samples of this topic, complete: `references/examples.md`.
+
+Full topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/create-electronic-invoices-from-word.htm
 
 ## Rules that apply to every sample here
 
@@ -2409,7 +3662,7 @@ Namespace `EvoPdf.Next`. Install one NuGet package for the target platform, for 
 - **`PdfLongTermValidationOptions`**: The options used by AddLongTermValidation to add long-term validation data to the signatures of a PDF document. When TimestampServerUrl is set, a docu...
 - **`PdfSignatureField`**: An empty signature field placed in a page of the document, to be signed later by a digital signature with the same field name. A form with a field for...
 
-10 types, 65 public members. The complete member list with the shipped
+10 types, 66 public members. The complete member list with the shipped
 summaries is in `references/api.md`; do not guess member names that are not there.
 
 When `EncryptionAlgorithm` and `KeySize` are not set, PDF 1.x documents are encrypted with RC4 and a 128 bit key and
@@ -2457,6 +3710,14 @@ into an `X509Certificate2` with `X509KeyStorageFlags.MachineKeySet`; the PFX fil
 using (var editor = new PdfEditor(pdfBytes, password, signature))
     signedPdf = editor.Save();
 
+// or set the signature after loading, for example after filling the form fields
+using (var editor = new PdfEditor(pdfBytes))
+{
+    editor.Form.SetValue("Name", "John Smith");
+    editor.DigitalSignature = signature;
+    signedPdf = editor.Save();
+}
+
 // Prepare a form with an empty field for each signer, then sign the fields one by one by name
 using (var editor = new PdfEditor(pdfBytes))
 {
@@ -2474,16 +3735,17 @@ using (var editor = new PdfEditor(signedPdf))
 }
 ```
 
-A signed document accepts only new signatures and long-term validation data: adding content, pages, annotations,
-fields or security options is refused because it would invalidate the signatures, so add the fields before the first
+A signed document accepts only new signatures, long-term validation data and the values of its form fields
+(`PdfEditor.Form`, unless the document is certified with `NoChanges`): adding content, pages, annotations, fields or
+security options is refused because it would invalidate the signatures, so add the fields before the first
 signature. A certification signature (`CertificationLevel` other than `NotCertified`) must be the first signature; a
 document certified with `NoChanges` accepts no further signatures. Signing keeps the PDF/A and PDF/UA conformance of the
-document. `PdfEditor.PdfSignatureInfo` reports the signatures already present. Adding long-term validation data needs
+document. `PdfEditor.SignatureInfo` reports the signatures already present. Adding long-term validation data needs
 network access when the document is saved; encrypted documents do not accept it.
 
 ## Set Permissions and Password of the Generated PDF Document
 
-All 1 samples of this topic, complete: `references/examples.md`.
+All 2 samples of this topic, complete: `references/examples.md`.
 
 Full topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/set-pdf-permissions-and-password.htm
 
@@ -2491,21 +3753,21 @@ Full topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/set-pdf-permissi
 
 EVO HTML to PDF Converter allows you to add digital signatures to the generated PDF document. In order to add digital signatures you need a certificate with private and public keys. These certificates are usually stored in a .pfx or a .p12 file in PKCS#12 format and they can be password protected. A digital signature is represented by a `PdfDigitalSignature` object. An object of this type is exposed by the `HtmlToPdfConverter.DigitalSignature` property of the HTML to PDF Converter class.
 
-All 1 samples of this topic, complete: `references/examples.md`.
+All 2 samples of this topic, complete: `references/examples.md`.
 
 Full topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/digitally-sign-the-generated-pdf.htm
 
 ## Digitally Sign Existing PDF
 
-The `PdfEditor` class adds a digital signature to an existing PDF document. The signature is given to the `PdfEditor.PdfEditor(Byte[], String, PdfDigitalSignature)` or `PdfEditor.PdfEditor(String, String, PdfDigitalSignature)` constructor as a `PdfDigitalSignature` object, the same object used by the HTML to PDF converter and the PDF creator, with the same signature levels, signing keys and appearance options described in the Digital Signatures topic. The signature is applied when the document is saved with `PdfEditor.Save()`. The signed document keeps the PDF/A and PDF/UA conformance of the source document.
+The `PdfEditor` class adds a digital signature to an existing PDF document. The signature is given to the `PdfEditor.PdfEditor(Byte[], String, PdfDigitalSignature)` or `PdfEditor.PdfEditor(String, String, PdfDigitalSignature)` constructor as a `PdfDigitalSignature` object, the same object used by the HTML to PDF converter and the PDF creator, with the same signature levels, signing keys and appearance options described in the Digital Signatures topic. The signature is applied when the document is saved with `PdfEditor.Save`. The signed document keeps the PDF/A and PDF/UA conformance of the source document.
 
-All 1 samples of this topic, complete: `references/examples.md`.
+All 3 samples of this topic, complete: `references/examples.md`.
 
 Full topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/digitally-sign-existing-pdf.htm
 
 ## Add Signature Fields from HTML Elements
 
-A document that several people sign needs an empty signature field for each signer, placed where the layout shows the signature. EVO HTML to PDF Converter and the PDF editor prepare such a document from a HTML page: the page marks the place of each signature with an element, the converter returns the page and the rectangle where the element was rendered and `PdfEditor.AddSignatureField(PdfSignatureField)` adds an empty signature field there. Each signer then fills in the field prepared for them with a digital signature that has the same field name, as described in the Digitally Sign Existing PDF topic, and the signatures already in the document stay valid.
+A document that several people sign needs an empty signature field for each signer, placed where the layout shows the signature. EVO HTML to PDF Converter and the PDF editor prepare such a document from a HTML page: the page marks the place of each signature with an element, the converter returns the page and the rectangle where the element was rendered and `PdfEditor.AddSignatureField(PdfSignatureField)` adds an empty signature field there. Each signer then fills in the field prepared for them with a digital signature that has the same field name, as described in the topic and the signatures already in the document stay valid.
 
 All 1 samples of this topic, complete: `references/examples.md`.
 
@@ -2550,7 +3812,7 @@ summaries is in `references/api.md`; do not guess member names that are not ther
 
 ## Set PDF Viewer Preferences for the Generated PDF Document
 
-All 1 samples of this topic, complete: `references/examples.md`.
+All 2 samples of this topic, complete: `references/examples.md`.
 
 Full topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/set-pdf-viewer-preferences.htm
 
@@ -2628,7 +3890,7 @@ Full topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/convert-pdf-to-t
 
 ## Search for Text in PDF
 
-The PDF to Text Converter component allows you to search for text in PDF documents and retrieve the text location and bounding rectangle information in PDF documents. This component is distributed as part of the EvoPdf.Next.PdfProcessor.Windows NuGet package when targeting Windows x64 and as part of the EvoPdf.Next.PdfProcessor.Linux package when targeting Linux x64. The Windows x64 package is referenced by the EvoPdf.Next.Windows metapackage and the Linux x64 package is referenced by the EvoPdf.Next.Linux metapackage.
+The PDF to Text Converter component allows you to search for text in PDF documents and retrieve the text location and bounding rectangle information in PDF documents. This component is distributed as part of the EvoPdf.Next.PdfProcessor.Windows https://www.nuget.org/packages/EvoPdf.Next.PdfProcessor.Windows NuGet package when targeting Windows x64 and as part of the EvoPdf.Next.PdfProcessor.Linux https://www.nuget.org/packages/EvoPdf.Next.PdfProcessor.Linux package when targeting Linux x64. The Windows x64 package is referenced by the EvoPdf.Next.Windows https://www.nuget.org/packages/EvoPdf.Next.Windows metapackage and the Linux x64 package is referenced by the EvoPdf.Next.Linux https://www.nuget.org/packages/EvoPdf.Next.Linux metapackage.
 
 ### Create the PDF to Text Converter
 
@@ -2662,7 +3924,7 @@ Full topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/search-for-text-
 
 ## Convert PDF Pages to Images
 
-The PDF to Image Converter component allows you to convert PDF pages into PNG images. This component is distributed as part of the EvoPdf.Next.PdfProcessor.Windows NuGet package when targeting Windows x64 and as part of the EvoPdf.Next.PdfProcessor.Linux package when targeting Linux x64. The Windows x64 package is referenced by the EvoPdf.Next.Windows metapackage and the Linux x64 package is referenced by the EvoPdf.Next.Linux metapackage.
+The PDF to Image Converter component allows you to convert PDF pages into PNG images. This component is distributed as part of the EvoPdf.Next.PdfProcessor.Windows https://www.nuget.org/packages/EvoPdf.Next.PdfProcessor.Windows NuGet package when targeting Windows x64 and as part of the EvoPdf.Next.PdfProcessor.Linux https://www.nuget.org/packages/EvoPdf.Next.PdfProcessor.Linux package when targeting Linux x64. The Windows x64 package is referenced by the EvoPdf.Next.Windows https://www.nuget.org/packages/EvoPdf.Next.Windows metapackage and the Linux x64 package is referenced by the EvoPdf.Next.Linux https://www.nuget.org/packages/EvoPdf.Next.Linux metapackage.
 
 ### Create the PDF to Image Converter
 
@@ -2694,7 +3956,7 @@ Full topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/convert-pdf-page
 
 ## Extract Images from PDF
 
-The PDF Images Extractor component of the library allows you to extract images from PDF documents in PNG format. This component is distributed as part of the EvoPdf.Next.PdfProcessor.Windows NuGet package when targeting Windows x64 and as part of the EvoPdf.Next.PdfProcessor.Linux package when targeting Linux x64. The Windows x64 package is referenced by the EvoPdf.Next.Windows metapackage and the Linux x64 package is referenced by the EvoPdf.Next.Linux metapackage.
+The PDF Images Extractor component of the library allows you to extract images from PDF documents in PNG format. This component is distributed as part of the EvoPdf.Next.PdfProcessor.Windows https://www.nuget.org/packages/EvoPdf.Next.PdfProcessor.Windows NuGet package when targeting Windows x64 and as part of the EvoPdf.Next.PdfProcessor.Linux https://www.nuget.org/packages/EvoPdf.Next.PdfProcessor.Linux package when targeting Linux x64. The Windows x64 package is referenced by the EvoPdf.Next.Windows https://www.nuget.org/packages/EvoPdf.Next.Windows metapackage and the Linux x64 package is referenced by the EvoPdf.Next.Linux https://www.nuget.org/packages/EvoPdf.Next.Linux metapackage.
 
 ### Create the PDF Images Extractor
 
@@ -2766,12 +4028,12 @@ Restriction for both: the software is used as part of your application, not offe
 ## Products and prices (USD)
 | Product | Deployment | Company | Covers |
 |---|---|---|---|
-| EVO HTML to PDF Converter | 450 | 1200 | HTML to PDF, Next **and** Classic editions |
+| EVO HTML to PDF Converter | 450 | 1200 | HTML to PDF, Next **and** Classic editions, including the Classic API on the Next engine (`EvoPdf.HtmlToPdf.<Platform>`) |
 | EVO PDF Toolkit | 650 | 1400 | every component on evopdf.com: all EvoPdf Next components and the complete Classic suite |
 Word, Excel, RTF, Markdown to PDF and the PDF tools are licensed only through the Toolkit.
 
 ## What you get
-Evaluation: the full product, unlimited in time, no registration; output watermarked until a key is set; technical support is free while evaluating. After purchase: a license key string by e-mail (usually within minutes), set in code (`Licensing.LicenseKey` for Next); no activation, no online check. Keys are perpetual for the versions released during the maintenance period.
+Evaluation: the full product, unlimited in time, no registration; output watermarked until a key is set; technical support is free while evaluating. After purchase: a license key string by e-mail (usually within minutes), set in code (`Licensing.LicenseKey` for Next, the `LicenseKey` property of the converter in the Classic API, also on the `EvoPdf.HtmlToPdf.<Platform>` packages); no activation, no online check. The HTML to PDF license key of version 15 is the same for Classic and Next. Keys are perpetual for the versions released during the maintenance period.
 
 ## Maintenance and renewals
 First year of updates and support included. Renewal (optional; applications keep working without it): Toolkit 300 / 650 USD, HTML to PDF 250 / 550 USD (Deployment / Company), within maintenance or the 15-day grace period. Late renewal up to one year after expiration at 20% off the full license price (520 / 1120 and 360 / 960). After one year: a new license. Published renewal prices assume auto-renewal; one-time payments via sales.
@@ -2834,6 +4096,8 @@ summaries is in `references/api.md`; do not guess member names that are not ther
 | macOS (Apple Silicon) | `EvoPdf.Next.MacOS` | `EvoPdf.Next.HtmlToPdf.MacOS` |
 | Windows x64 + Linux x64 | `EvoPdf.Next` | `EvoPdf.Next.HtmlToPdf` |
 Other components follow the same naming (`WordToPdf`, `ExcelToPdf`, `RtfToPdf`, `MarkdownToPdf`, `Core`, `PdfProcessor`). Several platform packages can be referenced in one project.
+An application written for EvoPdf Classic keeps its code with the `EvoPdf.HtmlToPdf.<Platform>` packages, the Classic API on
+the Next engine, with the same platform names (`evopdf-classic-to-next-migration`).
 
 ```
 dotnet add package EvoPdf.Next.Windows
@@ -2988,8 +4252,6 @@ Full topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/evopdf-next-over
 
 ## Getting Started with EvoPdf Next for .NET on Linux
 
-EvoPdf Next for .NET is a library that can be integrated into any type of .NET application to create and process PDF documents.
-
 All 9 samples of this topic, complete: `references/examples.md`.
 
 Full topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/getting-started-on-linux.htm
@@ -3060,8 +4322,6 @@ Base image `mcr.microsoft.com/dotnet/aspnet:10.0-windowsservercore-ltsc2025` (or
 Docs: https://www.evopdf.com/help/evopdf-next-dotnet/html/publish-to-docker-on-linux.htm, https://www.evopdf.com/help/evopdf-next-dotnet/html/publish-to-docker-on-windows.htm, https://www.evopdf.com/evopdf-next-docker
 
 ## Publish EvoPdf Next ASP.NET Demo to Docker on Linux
-
-This guide explains how to build and run a Docker container for a published ASP.NET Core application using EvoPdf Next on Linux.
 
 All 14 samples of this topic, complete: `references/examples.md`.
 
@@ -3410,6 +4670,8 @@ This troubleshooting guide for EvoPdf Next for .NET contains the necessary infor
 Namespace `EvoPdf.Next`. Install one NuGet package for the target platform, for example
 `EvoPdf.Next.Windows`, `EvoPdf.Next.Linux` or `EvoPdf.Next.MacOS`.
 
+The errors of the library are reported as `PdfException` objects. The message says what failed and, when the cause is in the input or in the environment, what was wrong, so it is the first thing to check.
+
 Ask for: the call used (`ConvertUrl` / `ConvertHtml`), the platform, whether the page renders correctly in Chrome, and the exception text. Then match the symptom below. All members are on `HtmlToPdfConverter` unless stated; `o` = `converter.PdfDocumentOptions`.
 
 | Symptom | Cause | Fix |
@@ -3426,6 +4688,7 @@ Ask for: the call used (`ConvertUrl` / `ConvertHtml`), the platform, whether the
 | Fonts replaced / Unicode boxes | the font is not installed on the server | install the fonts on the server or embed web fonts (`@font-face`, WOFF2) in the HTML; the converter embeds used fonts as subsets automatically |
 | Right-to-left, Arabic, Indic, Thai | - | supported by the Chromium engine; use `dir="rtl"` / correct `lang` and fonts that contain the glyphs |
 | HTTPS page fails with a certificate error | self-signed or internal CA | `IgnoreCertificateErrors = true` (development) or install the CA on the server |
+| Page loads only through a proxy | no proxy set | `converter.ProxyOptions.Type = NetworkProxyType.Http`, `HostName`, `PortNumber`, and `Username`/`Password` when the proxy requires authentication |
 | Page behind a login | no credentials | `AuthenticationOptions` with the user name and password, or forward the session: `HttpRequestCookies.Add(...)`, `HttpRequestHeaders.Add("Authorization", ...)`; the converter does **not** share the browser's session automatically |
 | Mixed content blocked | HTTPS page loading HTTP resources | `AllowInsecureContent = true` |
 | Links in the PDF undesired | - | remove or neutralise the anchors in CSS/HTML before conversion (links come from the HTML) |
@@ -3457,22 +4720,79 @@ Compilable versions of the samples above: https://github.com/EvoPdf/evopdf-next-
 
 EvoPdf Classic and EvoPdf Next share the `HtmlToPdfConverter` class name, the conversion methods and most option names, but the two rendering engines place the HTML on the PDF page in different ways and describe headers and footers differently. This topic covers the two areas where an integration moved from Classic changes its output or its code: the page setup with its scaling rules and the headers and footers. The namespace, package and license key changes are covered in the Classic to Next migration guide on the website.
 
+## Two ways to migrate
+
+| | Option 1: keep the Classic code | Option 2: port to the Next API |
+|---|---|---|
+| Package | `EvoPdf.HtmlToPdf.Windows`, `.Windows.Arm64`, `.Linux`, `.Linux.Arm64`, `.MacOS` | `EvoPdf.Next.HtmlToPdf.<Platform>` or `EvoPdf.Next.<Platform>` |
+| Namespace | `EvoPdf`, unchanged | `EvoPdf.Next` |
+| Code | unchanged | license key, page sizing, headers and footers change |
+| Output | the Classic page layout, rendered by the Next engine | the Next page model |
+| New options (PDF/UA, PDF/A-3, electronic invoices, ...) | through the Next converter behind each Classic converter | directly |
+| Suited to | PDF code spread over many projects, a quick move | new code, applications developed further |
+
+Both run on Windows, Linux (x64 and ARM64) and macOS (Apple Silicon), also in Azure App Service for Windows. They
+combine: start with option 1 and port one file at a time, since Classic and Next code produce plain PDF bytes and work
+side by side in the same application. The HTML to PDF license covers both.
+
+## Option 1: the platform packages with the Classic API
+
+```bash
+dotnet remove package EvoPdf.HtmlToPdf
+dotnet add package EvoPdf.HtmlToPdf.Windows
+```
+
+```csharp
+using EvoPdf;   // unchanged
+
+HtmlToPdfConverter converter = new HtmlToPdfConverter();
+converter.LicenseKey = "your-license-key";
+
+// The Next converter behind the Classic one, created for each conversion: options without a Classic counterpart
+converter.NextConverterCreated += next =>
+{
+    next.PdfDocumentOptions.PdfStandard = EvoPdf.Next.PdfStandard.PdfUa1;
+};
+
+byte[] pdf = converter.ConvertUrl(url);
+```
+
+- Every Classic class and member is there; the assembly is `EvoPdf.Classic.dll`. `HtmlToPdfConverter` and
+  `HtmlToImageConverter` expose the Next converter as `Next` and raise `NextConverterCreated` when they create it.
+- A multi-platform application references two packages, for example `EvoPdf.HtmlToPdf.Windows` and
+  `EvoPdf.HtmlToPdf.Linux`. The platform-less `EvoPdf.HtmlToPdf` package stays the Classic engine on Windows.
+- An electronic invoice from the Classic code: `next.PdfDocumentOptions.PdfStandard = EvoPdf.Next.PdfStandard.PdfA3b;`
+  and `next.PdfDocumentOptions.AddElectronicInvoice(EvoPdf.Next.ElectronicInvoice.FromXml(xml));` in the handler.
+- Repeated table headers and footers come from the print rendering of the page: set `MediaType = "print"` with
+  `TableHeaderRepeatEnabled` or `TableFooterRepeatEnabled`.
+- The options specific to the Classic rendering engine are accepted and have no effect. The Next engine does not
+  produce PDF/X (`PdfStandardSubset.Pdf_X_1a`), the gray scale and CMYK color spaces of `Document` or Flash content.
+- On Linux and macOS, the fonts and images created from `System.Drawing` objects (a system font, a
+  `System.Drawing.Image`, `HtmlToImageConverter` returning an image) need libgdiplus, the native library of
+  System.Drawing (`apt-get install libgdiplus`, `brew install mono-libgdiplus`); the fonts created from a file, from
+  font data or from a standard font and the images given by file path do not use it.
+- The Classic demo application on the Next engine shows the packages at work:
+  https://www.evopdf.com/downloaded?prodCode=evoPdfClassicOnNext and the `classic-demo` folder of
+  https://github.com/EvoPdf/evopdf-next-samples
+
+## Option 2: port to the Next API
+
 Namespace `EvoPdf.Next`. Install one NuGet package for the target platform, for example
 `EvoPdf.Next.Windows`, `EvoPdf.Next.Linux` or `EvoPdf.Next.MacOS`.
 
 Read `references/option-map.md` for the full property table before editing option code.
 
-## What stays the same
+### What stays the same
 `ConvertUrl`, `ConvertHtml(html, baseUrl)`, `...ToFile`; the option groups (`PdfDocumentOptions`, `PdfSecurityOptions`, `PdfViewerPreferences`, `HtmlViewerWidth`, `ConversionDelay`, `NavigationTimeout`, `JavaScriptEnabled`, authentication, headers, cookies); the license covers both.
 
-## What changes
+### What changes
 1. **Package and namespace**: `EvoPdf.HtmlToPdf` becomes `EvoPdf.Next.HtmlToPdf.<Platform>`; `using EvoPdf;` becomes `using EvoPdf.Next;`. Classic tools had sub-namespaces (`EvoPdf.PdfMerge`, `EvoPdf.PdfToText`, `EvoWordToPdf`, `EvoExcelToPdf`, `EvoPdfClient`); Next has one namespace.
 2. **License key**: the instance property `converter.LicenseKey = "..."` becomes the static `Licensing.LicenseKey = "..."`, set once per process.
-3. **Page sizing**: Classic `FitWidth` (default true) laid the page out at 1024 pixels and shrank it to the page width. A new Next converter does the same through `FitBrowserWindowToPage(PdfPageSize.A4)`: the page is laid out in a 1024 pixel browser window and drawn at 77.47 percent on A4. `FitWidth = false` with `AutoSizePdfPage = true` becomes `PageWidthFromBrowserWindow()`; `StretchToFit` becomes a zoom above 100; `SinglePage` becomes `PageWidthFromBrowserWindow(1024, singlePage: true)`. `FitHeight`, `ClipHtmlView` and the destination rectangle have no equivalent. The complete map is in the page setup migration section of this skill.
+3. **Page sizing**: Classic `FitWidth` (default true) laid the page out at 1024 pixels and shrank it to the page width. A new Next converter does the same through `FitBrowserWindowToPage(PdfPageSize.A4)`: the page is laid out in a 1024 pixel browser window and drawn at 77.47 percent on A4. `FitWidth = false` with `AutoSizePdfPage = true` becomes `PageWidthFromBrowserWindow()`; `StretchToFit` becomes a zoom above 100; `SinglePage` becomes `PageWidthFromBrowserWindow(1024, singlePage: true)`. `FitHeight`, `ClipHtmlView` and the destination rectangle have no equivalent; the Classic `Y` offset of the first page becomes `PdfDocumentOptions.FirstPageTopMargin`. The complete map is in the page setup migration section of this skill.
 4. **Headers and footers**: Classic composed `PdfHeaderOptions` from `HtmlToPdfElement`, `TextElement` (`&p;`, `&P;`), `LineElement`, `HeaderHeight`, `HeaderBackColor`; Next describes each header/footer as **one HTML template**: `PdfDocumentOptions.PdfHtmlHeader.Html`/`HtmlSourceUrl`, `Height` or `AutoSizeContentHeight`, `{page_number}`/`{total_pages}`, `ShowInFirstPage`/`OddPages`/`EvenPages`, `ReserveSpaceAlways`, `AutoResizePdfMargins`; `PageNumberingStartIndex` becomes `PageNumberOffset`/`TotalPagesOffset`; `PrepareRenderPdfPageEvent` (per-page header on/off) becomes `ShowIn...` flags.
 5. **Engine behaviour**: Chromium renders modern CSS/JS exactly as Chrome: flexbox/grid/custom properties, ES2015+, `@page` and `break-*` rules are honoured; fonts and line breaks follow Chrome; lazy images load by default; `LocalFilesEnabled`/`AllowInsecureContent` govern local and mixed content; HTTP/2 and TLS 1.3 sites load directly.
 
-## Before / after
+### Before / after
 ```csharp
 // Classic
 using EvoPdf;
@@ -3493,11 +4813,12 @@ c.PdfDocumentOptions.PdfHtmlFooter.Height = 30;
 byte[] pdf = c.ConvertUrl(url);
 ```
 
-## Procedure
-1. Swap package and `using`; move the license key to `Licensing.LicenseKey` at startup.
-2. Build; fix the members flagged in `option-map.md`.
-3. Convert two or three representative documents; settle page sizing first, then port headers/footers.
-4. Only then touch CSS: drop workarounds written for the old engine.
+### Procedure
+1. Decide between option 1 and option 2; the steps below are for option 2.
+2. Swap package and `using`; move the license key to `Licensing.LicenseKey` at startup.
+3. Build; fix the members flagged in `option-map.md`.
+4. Convert two or three representative documents; settle page sizing first, then port headers/footers.
+5. Only then touch CSS: drop workarounds written for the old engine.
 
 Reference: https://www.evopdf.com/evopdf-classic-to-next-migration
 
@@ -3623,7 +4944,7 @@ footer.Height = 40;
 </html>
 ```
 
-All 13 samples of this topic, complete: `references/examples.md`.
+All 15 samples of this topic, complete: `references/examples.md`.
 
 Full topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/migrate-html-to-pdf-from-classic.htm
 

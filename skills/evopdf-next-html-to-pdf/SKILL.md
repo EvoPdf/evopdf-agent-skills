@@ -1,6 +1,6 @@
 ---
 name: evopdf-next-html-to-pdf
-description: "Convert URLs and HTML strings to PDF in .NET with EvoPdf Next HtmlToPdfConverter: the conversion methods and their async versions, the converter options, conversion delay and manual triggering, SVG, converting the current ASP.NET page. A new converter prints on an A4 page with the HTML laid out as in a 1024 pixel browser window; evopdf-next-page-setup covers the page layout. Start here for any C# HTML to PDF task."
+description: "Convert URLs and HTML strings to PDF in .NET with EvoPdf Next HtmlToPdfConverter: the conversion methods and their async versions, the converter options, conversion delay and manual triggering, SVG, converting the current ASP.NET page, the conversion information and the PdfException errors. A new converter prints on an A4 page with the HTML laid out as in a 1024 pixel browser window; evopdf-next-page-setup covers the page layout. Start here for any C# HTML to PDF task."
 ---
 
 # EvoPdf Next: HTML to PDF
@@ -18,9 +18,14 @@ Namespace `EvoPdf.Next`. Install one NuGet package for the target platform, for 
 - **`TriggeringMode`**: This enumeration represents the possible modes to trigger the conversion of a HTML document
 - **`HtmlToPdfConversionInfo`**: Holds information about the result of an HTML to PDF conversion. This object is populated after the conversion completes and is exposed by the Convers...
 - **`PdfDocumentCreateSettings`**: Represents configuration settings for creating a PDF document
+- **`PdfException`**
 
-6 types, 123 public members. The complete member list with the shipped
+7 types, 127 public members. The complete member list with the shipped
 summaries is in `references/api.md`; do not guess member names that are not there.
+
+The errors of the library are reported as `PdfException`; the message says what failed and, when the cause is in the
+input or in the environment, what was wrong. After a conversion, `ConversionInfo` gives the pages generated from the
+HTML, the pages inserted before and after it, the total number of pages and the zoom drawn.
 
 ## HTML to PDF Converter Overview
 
@@ -32,7 +37,7 @@ Full topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/html-to-pdf-conv
 
 EVO HTML to PDF Converter allows you to set various options to control the internal HTML viewer and PDF document properties. The most important options are listed below, grouped into several categories.
 
-All 1 samples of this topic, complete: `references/examples.md`.
+All 2 samples of this topic, complete: `references/examples.md`.
 
 Full topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/html-to-pdf-converter-options.htm
 
@@ -59,7 +64,7 @@ htmlToPdfConverter.TriggeringMode = TriggeringMode.Auto;
 // Create the PDF converter
 HtmlToPdfConverter htmlToPdfConverter = new HtmlToPdfConverter();
 // Set the triggering mode
-htmlToPdfConverter.ConversionDelay = 3;
+htmlToPdfConverter.TriggeringMode = TriggeringMode.Auto;
 ```
 
 ```csharp
@@ -69,7 +74,7 @@ HtmlToPdfConverter htmlToPdfConverter = new HtmlToPdfConverter();
 htmlToPdfConverter.TriggeringMode = TriggeringMode.Manual;
 ```
 
-All 5 samples of this topic, complete: `references/examples.md`.
+All 6 samples of this topic, complete: `references/examples.md`.
 
 Full topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/select-conversion-triggering-mode.htm
 
@@ -80,6 +85,25 @@ EVO HTML to PDF Converter offers full support for SVG vector graphics. The SVG c
 All 1 samples of this topic, complete: `references/examples.md`.
 
 Full topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/convert-html-with-svg-to-pdf.htm
+
+## Retrieve HTML to PDF Conversion Information
+
+After a conversion completes, the `HtmlToPdfConverter.ConversionInfo` property of `HtmlToPdfConverter` holds a `HtmlToPdfConversionInfo` object with the number of pages generated from the HTML content, the pages of the table of contents and of the external PDF documents inserted before and after it, the total number of pages of the generated document and the zoom at which the HTML content was drawn.
+
+### Conversion Information
+
+```csharp
+byte[] outPdfBuffer = htmlToPdfConverter.ConvertUrl(url);
+
+HtmlToPdfConversionInfo conversionInfo = htmlToPdfConverter.ConversionInfo;
+Console.WriteLine("Pages from HTML: {0}", conversionInfo.PagesFromHtml);
+Console.WriteLine("Pages inserted before: {0}, after: {1}", conversionInfo.TotalPagesInsertedBefore, conversionInfo.ExternalPagesInsertedAfter);
+Console.WriteLine("Total pages: {0}, zoom: {1}%", conversionInfo.TotalPages, conversionInfo.PrintZoom);
+```
+
+All 2 samples of this topic, complete: `references/examples.md`.
+
+Full topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/retrieve-html-to-pdf-conversion-information.htm
 
 ## Rules that apply to every sample here
 

@@ -153,7 +153,7 @@ HtmlToPdfConverter converter = new HtmlToPdfConverter();
 // A4 landscape, the HTML laid out at its 1123 pixel content width
 converter.LayoutAtPageWidth(PdfPageSize.A4, PdfPageOrientation.Landscape);
 
-// A table built for 1280 pixels: a 1280 pixel window scaled to the page, zoom 87.73
+// A table built for 1280 pixels: a 1280 pixel window scaled to the page, zoom 87.71
 // converter.FitBrowserWindowToPage(PdfPageSize.A4, PdfPageOrientation.Landscape, 1280);
 
 byte[] pdf = converter.ConvertUrl(url);
@@ -178,8 +178,8 @@ converter.PdfDocumentOptions.TopMargin = 28;
 converter.PdfDocumentOptions.BottomMargin = 28;
 converter.MediaType = "print";
 converter.PdfDocumentOptions.PrintBackgrounds = false;
-// Viewer width equal to the content width: (595 - 56) * 4 / 3 = 719 pixels
-converter.HtmlViewerWidth = 719;
+// Viewer width equal to the content width: (595 - 56) * 4 / 3, rounded down = 718 pixels
+converter.HtmlViewerWidth = 718;
 ```
 
 ### A Page in Its Mobile Layout
@@ -237,7 +237,7 @@ converter.PdfDocumentOptions.RightMargin = 36;
 converter.HtmlViewerZoom = 90;
 ```
 
-## Insert Page Breaks in PDF Using CSS in HTML
+## Insert Page Breaks in PDF Using CSS in HTML 
 
 Topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/insert-page-breaks-in-pdf-using-css.htm
 
@@ -348,8 +348,9 @@ namespace EvoPdf_Next_AspNetDemo.Controllers.HTML_to_PDF
 <html>
 <head>
     <title>Insert Page Breaks Before and After HTML Elements Using CSS</title>
+    <link href="styles/webfonts.css" type="text/css" rel="stylesheet">
 </head>
-<body style="width: 1010px; font-family: 'Times New Roman'; font-size: 20px; margin: 5px">
+<body style="width: 1010px; font-family: Verdana, sans-serif; font-size: 20px; margin: 5px">
     <div style="width: 100%; height: 500px; background-color: aliceblue; border: 2px solid gray; text-align: center">
         <div style="width: 100%; height: 200px"></div>
         A block <b>without any page break</b> style<br />
@@ -501,9 +502,10 @@ namespace EvoPdf_Next_AspNetDemo.Controllers.HTML_to_PDF
 <html>
 <head>
     <title>Avoid Page Breaks Inside HTML Elements Using CSS</title>
+    <link href="styles/webfonts.css" type="text/css" rel="stylesheet">
 </head>
-<body style="margin: 0px; font-family: 'Times New Roman'; font-size: 14px">
-    <table style="width: 1024px; font-family: 'Times New Roman'; font-size: 16px">
+<body style="margin: 0px; font-family: Verdana, sans-serif; font-size: 14px">
+    <table style="width: 1024px; font-family: Verdana, sans-serif; font-size: 16px">
         <!-- The automatically repeated table header -->
         <thead>
             <tr>
@@ -1277,60 +1279,51 @@ namespace EvoPdf_Next_AspNetDemo.Controllers.HTML_to_PDF
 <html>
 <head>
     <title>Media Type Rules</title>
+    <link href="styles/webfonts.css" type="text/css" rel="stylesheet">
     <style type="text/css">
         /* Set the body text family and font size both for screen and print*/
-        body
-        {
+        body {
             width: 1000px;
             margin: 10px;
-            font-family: 'Times New Roman';
+            font-family: Verdana, sans-serif;
             font-size: 18px;
         }
 
         /* Set the title text font size and weight both for screen and print*/
-        .title
-        {
+        .title {
             font-size: 24px;
             font-weight: bold;
         }
 
-        @media screen
-        {
+        @media screen {
             /* Set a background color only when the HTML page is displayed on screen*/
-            body
-            {
+            body {
                 background-color: aliceblue;
             }
 
             /* Use blue to write the text on screen*/
-            p
-            {
+            p {
                 color: darkblue;
             }
         }
 
-        @media print
-        {
+        @media print {
             /* Hide images when priting*/
-            img
-            {
+            img {
                 display: none;
             }
 
             /* Use black to write the text on screen*/
-            p
-            {
+            p {
                 color: black;
             }
         }
 
 
-        @media screen,print
-        {
+        @media screen,print {
             /* Set the paragraph text family and font size both for screen and print*/
-            p
-            {
-                font-family: 'Times New Roman';
+            p {
+                font-family: Verdana, sans-serif;
                 font-size: 20px;
             }
         }
@@ -1473,9 +1466,10 @@ namespace EvoPdf_Next_AspNetDemo.Controllers.HTML_to_PDF
 <html>
 <head>
     <title>Repeat HTML Table Header and Footer in PDF Pages</title>
+    <link href="styles/webfonts.css" type="text/css" rel="stylesheet">
 </head>
-<body style="margin: 0px; font-family: 'Times New Roman'; font-size: 14px">
-    <table style="width: 1024px; font-family: 'Times New Roman'; font-size: 16px">
+<body style="margin: 0px; font-family: Verdana, sans-serif; font-size: 14px">
+    <table style="width: 1024px; font-family: Verdana, sans-serif; font-size: 16px">
         <!-- The automaticaly repeated table header -->
         <thead>
             <tr>

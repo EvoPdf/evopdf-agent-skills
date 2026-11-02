@@ -17,7 +17,7 @@ Namespace `EvoPdf.Next`. Install one NuGet package for the target platform, for 
 - **`PdfAttachmentIcon`**: Icon displayed for an attachment annotation on a PDF page
 - **`PdfAttachmentRelationship`**: Relationship between an attached file and the host PDF document, per PDF/A-3 and PDF/A-4 specifications
 
-4 types, 34 public members. The complete member list with the shipped
+4 types, 35 public members. The complete member list with the shipped
 summaries is in `references/api.md`; do not guess member names that are not there.
 
 ## Add Attachments to Generated PDF
@@ -51,7 +51,7 @@ Full topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/add-attachments-
 
 ## Add File Attachments to Existing PDF
 
-The `PdfEditor` class lets you add new content to an existing PDF without rewriting the rest of the document. The editor is instantiated with the source PDF bytes or file path and an optional password. The standard claimed by the source document and its existing page geometry are inherited by the editor. Content is added at absolute page coordinates using the dedicated Add methods. Every Add method takes the target page number as the first argument. If the rendered content overflows the available space a new page is created automatically by the engine. The resulting modified PDF is produced with `PdfEditor.Save`.
+The `PdfEditor` class lets you add new content to an existing PDF without rewriting the rest of the document. The editor is instantiated with the source PDF bytes or file path and an optional password. The standard claimed by the source document and its existing page geometry are inherited by the editor. Content is added at absolute page coordinates using the dedicated Add methods. The methods that draw page content, such as AddText, AddImage or AddHtml, take the target page number as the first argument. Content that does not fit in the page continues on the following pages of the document when the element is set to continue, or on pages inserted after the current one when InsertContinuationPages is true. The resulting modified PDF is produced with `PdfEditor.Save`.
 
 ### Document-Level Attachments
 
@@ -107,7 +107,7 @@ textAttachment.Description = "Sample alphabet text";
 pdfDocument.AddFileAttachment(textAttachment);
 ```
 
-All 3 samples of this topic, complete: `references/examples.md`.
+All 4 samples of this topic, complete: `references/examples.md`.
 
 Full topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/create-pdf-documents-with-file-attachments.htm
 

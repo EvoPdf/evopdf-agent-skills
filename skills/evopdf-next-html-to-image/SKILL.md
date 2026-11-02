@@ -1,6 +1,6 @@
 ---
 name: evopdf-next-html-to-image
-description: "Render a URL or HTML string to PNG, JPEG or WebP in .NET with EvoPdf Next HtmlToImageConverter: viewport size, entire page capture, image type and quality, element selectors."
+description: "Render a URL or HTML string to PNG, JPEG or WebP in .NET with EvoPdf Next HtmlToImageConverter: viewport size, entire page capture, image type and quality, resolution in DPI, proxy server, element selectors."
 ---
 
 # EvoPdf Next: HTML to image
@@ -16,8 +16,11 @@ Namespace `EvoPdf.Next`. Install one NuGet package for the target platform, for 
 - **`ImageType`**: The possible image formats
 - **`CaptureEntirePageMode`**: This enumeration defines the possible options for capturing the image of the entire HTML page, not just the visible viewport
 
-3 types, 52 public members. The complete member list with the shipped
+3 types, 54 public members. The complete member list with the shipped
 summaries is in `references/api.md`; do not guess member names that are not there.
+
+`Resolution` sets the resolution of the image in DPI, 96 by default: the image has the content size in pixels
+multiplied by `Resolution / 96`, with the layout of the page unchanged, so 192 gives a sharper image of the same page.
 
 ## HTML to Image Converter Overview
 

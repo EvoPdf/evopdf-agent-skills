@@ -27,7 +27,7 @@ Namespace `EvoPdf.Next`. Install one NuGet package for the target platform, for 
 - **`PdfLongTermValidationOptions`**: The options used by AddLongTermValidation to add long-term validation data to the signatures of a PDF document. When TimestampServerUrl is set, a docu...
 - **`PdfSignatureField`**: An empty signature field placed in a page of the document, to be signed later by a digital signature with the same field name. A form with a field for...
 
-10 types, 65 public members. The complete member list with the shipped
+10 types, 66 public members. The complete member list with the shipped
 summaries is in `references/api.md`; do not guess member names that are not there.
 
 When `EncryptionAlgorithm` and `KeySize` are not set, PDF 1.x documents are encrypted with RC4 and a 128 bit key and
@@ -75,6 +75,14 @@ into an `X509Certificate2` with `X509KeyStorageFlags.MachineKeySet`; the PFX fil
 using (var editor = new PdfEditor(pdfBytes, password, signature))
     signedPdf = editor.Save();
 
+// or set the signature after loading, for example after filling the form fields
+using (var editor = new PdfEditor(pdfBytes))
+{
+    editor.Form.SetValue("Name", "John Smith");
+    editor.DigitalSignature = signature;
+    signedPdf = editor.Save();
+}
+
 // Prepare a form with an empty field for each signer, then sign the fields one by one by name
 using (var editor = new PdfEditor(pdfBytes))
 {
@@ -92,16 +100,17 @@ using (var editor = new PdfEditor(signedPdf))
 }
 ```
 
-A signed document accepts only new signatures and long-term validation data: adding content, pages, annotations,
-fields or security options is refused because it would invalidate the signatures, so add the fields before the first
+A signed document accepts only new signatures, long-term validation data and the values of its form fields
+(`PdfEditor.Form`, unless the document is certified with `NoChanges`): adding content, pages, annotations, fields or
+security options is refused because it would invalidate the signatures, so add the fields before the first
 signature. A certification signature (`CertificationLevel` other than `NotCertified`) must be the first signature; a
 document certified with `NoChanges` accepts no further signatures. Signing keeps the PDF/A and PDF/UA conformance of the
-document. `PdfEditor.PdfSignatureInfo` reports the signatures already present. Adding long-term validation data needs
+document. `PdfEditor.SignatureInfo` reports the signatures already present. Adding long-term validation data needs
 network access when the document is saved; encrypted documents do not accept it.
 
 ## Set Permissions and Password of the Generated PDF Document
 
-All 1 samples of this topic, complete: `references/examples.md`.
+All 2 samples of this topic, complete: `references/examples.md`.
 
 Full topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/set-pdf-permissions-and-password.htm
 
@@ -109,21 +118,21 @@ Full topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/set-pdf-permissi
 
 EVO HTML to PDF Converter allows you to add digital signatures to the generated PDF document. In order to add digital signatures you need a certificate with private and public keys. These certificates are usually stored in a .pfx or a .p12 file in PKCS#12 format and they can be password protected. A digital signature is represented by a `PdfDigitalSignature` object. An object of this type is exposed by the `HtmlToPdfConverter.DigitalSignature` property of the HTML to PDF Converter class.
 
-All 1 samples of this topic, complete: `references/examples.md`.
+All 2 samples of this topic, complete: `references/examples.md`.
 
 Full topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/digitally-sign-the-generated-pdf.htm
 
 ## Digitally Sign Existing PDF
 
-The `PdfEditor` class adds a digital signature to an existing PDF document. The signature is given to the `PdfEditor.PdfEditor(Byte[], String, PdfDigitalSignature)` or `PdfEditor.PdfEditor(String, String, PdfDigitalSignature)` constructor as a `PdfDigitalSignature` object, the same object used by the HTML to PDF converter and the PDF creator, with the same signature levels, signing keys and appearance options described in the Digital Signatures topic. The signature is applied when the document is saved with `PdfEditor.Save()`. The signed document keeps the PDF/A and PDF/UA conformance of the source document.
+The `PdfEditor` class adds a digital signature to an existing PDF document. The signature is given to the `PdfEditor.PdfEditor(Byte[], String, PdfDigitalSignature)` or `PdfEditor.PdfEditor(String, String, PdfDigitalSignature)` constructor as a `PdfDigitalSignature` object, the same object used by the HTML to PDF converter and the PDF creator, with the same signature levels, signing keys and appearance options described in the Digital Signatures topic. The signature is applied when the document is saved with `PdfEditor.Save`. The signed document keeps the PDF/A and PDF/UA conformance of the source document.
 
-All 1 samples of this topic, complete: `references/examples.md`.
+All 3 samples of this topic, complete: `references/examples.md`.
 
 Full topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/digitally-sign-existing-pdf.htm
 
 ## Add Signature Fields from HTML Elements
 
-A document that several people sign needs an empty signature field for each signer, placed where the layout shows the signature. EVO HTML to PDF Converter and the PDF editor prepare such a document from a HTML page: the page marks the place of each signature with an element, the converter returns the page and the rectangle where the element was rendered and `PdfEditor.AddSignatureField(PdfSignatureField)` adds an empty signature field there. Each signer then fills in the field prepared for them with a digital signature that has the same field name, as described in the Digitally Sign Existing PDF topic, and the signatures already in the document stay valid.
+A document that several people sign needs an empty signature field for each signer, placed where the layout shows the signature. EVO HTML to PDF Converter and the PDF editor prepare such a document from a HTML page: the page marks the place of each signature with an element, the converter returns the page and the rectangle where the element was rendered and `PdfEditor.AddSignatureField(PdfSignatureField)` adds an empty signature field there. Each signer then fills in the field prepared for them with a digital signature that has the same field name, as described in the topic and the signatures already in the document stay valid.
 
 All 1 samples of this topic, complete: `references/examples.md`.
 

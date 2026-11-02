@@ -6,9 +6,7 @@ Every code sample of the documentation topics behind this skill, complete and in
 
 Topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/create-pdf-documents-with-link-annotations.htm
 
-### External URL Links
-
-**URL link over rendered text**
+### URL link over rendered text
 
 ```csharp
 PdfTextElement t = new PdfTextElement("Visit evopdf.com", linkFont) { X = 0, Y = crtYPos };
@@ -22,6 +20,15 @@ PdfLinkAnnotation link = PdfLinkAnnotation.FromUrl(
 link.Description = "EvoPdf homepage";
 link.BorderStyle = PdfLinkBorderStyle.None;
 
+pdfDocument.AddLinkAnnotation(link);
+```
+
+### Set the Highlight Mode
+
+```csharp
+PdfLinkAnnotation link = PdfLinkAnnotation.FromUrl("https://www.example.com", 1, 30, 100, 200, 20);
+link.BorderStyle = PdfLinkBorderStyle.Solid;
+link.HighlightMode = PdfLinkHighlightMode.Outline;
 pdfDocument.AddLinkAnnotation(link);
 ```
 
@@ -44,6 +51,7 @@ namespace EvoPdf_Next_AspNetDemo.Controllers.PDF_Creator
     public class Create_PDF_Documents_with_Link_AnnotationsController : Controller
     {
         private readonly IWebHostEnvironment m_hostingEnvironment;
+        private PdfLinkHighlightMode m_highlightMode;
 
         public Create_PDF_Documents_with_Link_AnnotationsController(IWebHostEnvironment hostingEnvironment)
         {
@@ -112,6 +120,8 @@ namespace EvoPdf_Next_AspNetDemo.Controllers.PDF_Creator
             };
             titleElement.Accessibility.StructureType = PdfStructureType.Heading1;
             crtYPos = (int)pdfDocument.AddText(titleElement).LastPageRectangle.Bounds.Bottom + ySeparator * 2;
+
+            m_highlightMode = model.HighlightMode;
 
             // ===== Section 1: PdfLinkAnnotation.FromUrl =====
             crtYPos = AddSectionLabel(pdfDocument, sectionFont,
@@ -325,6 +335,8 @@ namespace EvoPdf_Next_AspNetDemo.Controllers.PDF_Creator
                 x: tb.X, y: tb.Y, width: tb.Width, height: tb.Height);
             link.Description = description;
             link.BorderStyle = borderStyle;
+            // The visual effect of the viewer when the link is clicked
+            link.HighlightMode = m_highlightMode;
             doc.AddLinkAnnotation(link);
 
             int capBottom = AddCaption(doc, labelFont, captionText,
@@ -359,6 +371,7 @@ namespace EvoPdf_Next_AspNetDemo.Controllers.PDF_Creator
 
             PdfLinkAnnotation link = linkFactory(x, y, linkW, linkH);
             link.Description = description;
+            link.HighlightMode = m_highlightMode;
             doc.AddLinkAnnotation(link);
 
             int capBottom = AddCaption(doc, labelFont, captionText,
@@ -426,9 +439,7 @@ namespace EvoPdf_Next_AspNetDemo.Controllers.PDF_Creator
 
 Topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/add-link-annotations-to-existing-pdf.htm
 
-### External URL Links
-
-**URL link over rendered text**
+### URL link over rendered text
 
 ```csharp
 PdfTextElement t = new PdfTextElement("Visit evopdf.com", linkFont) { X = 0, Y = crtYPos };
@@ -466,8 +477,9 @@ namespace EvoPdf_Next_AspNetDemo.Controllers.PDF_Editor
     {
         private const int leftMargin = 36;
         private const int topMargin = 36;
-        private const int contentWidth = 595 - 72;
-        private const int contentHeight = 842 - 72;
+        // The content area of the pages inside the demo margins, from the size of the first page of the loaded document
+        private int contentWidth;
+        private int contentHeight;
 
         private readonly IWebHostEnvironment m_hostingEnvironment;
 
@@ -536,15 +548,15 @@ namespace EvoPdf_Next_AspNetDemo.Controllers.PDF_Editor
                 }
             }
 
-            // Open the loaded PDF for editing.  PdfEditor inherits the
-            // standard (PDF/A, PDF/UA etc.) and Language from the source
-            // document, so no PdfDocumentCreateSettings is needed.  Page
-            // size and margins are also taken from the existing pages;
-            // we apply our own margins manually below via leftMargin /
-            // topMargin since PdfEditor draws at absolute page coordinates
+            // The pages of an edited document have no margins: the demo keeps its content inside its own margins
             string password = string.IsNullOrEmpty(model.OwnerPassword) ? model.UserPassword : model.OwnerPassword;
             using PdfEditor pdfEditor = new PdfEditor(inputPdfBytes, password);
-            pdfEditor.PdfDocumentInfo.Title = "PDF Link Annotations Demo";
+
+            PdfPageInfo firstPageInfo = pdfEditor.GetPdfPageInfo(1);
+            // A rotation of 90 or 270 degrees swaps the width and the height of the page as it is displayed
+            bool firstPageTurned = firstPageInfo.Rotation % 180 != 0;
+            contentWidth = (int)(firstPageTurned ? firstPageInfo.PageSize.Height : firstPageInfo.PageSize.Width) - 2 * leftMargin;
+            contentHeight = (int)(firstPageTurned ? firstPageInfo.PageSize.Width : firstPageInfo.PageSize.Height) - 2 * topMargin;
 
             string fontsPath = GetDemoFontsPath();
             string fontFilePath = Path.Combine(fontsPath, "DejaVuSerif.ttf");
@@ -873,7 +885,8 @@ namespace EvoPdf_Next_AspNetDemo.Controllers.PDF_Editor
         {
             if (crtYPos + requestedHeight > contentHeight + topMargin)
             {
-                currentPage = pdfEditor.AddPage();
+                // The content continues on the following page of the document, or on a new page after the last one
+                currentPage = currentPage < pdfEditor.PageCount ? currentPage + 1 : pdfEditor.AddPage();
                 crtYPos = topMargin;
             }
         }
@@ -917,9 +930,7 @@ namespace EvoPdf_Next_AspNetDemo.Controllers.PDF_Editor
 
 Topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/create-pdf-documents-with-text-annotations.htm
 
-### Author Identification and Initial Popup State
-
-**Reviewer comment with open popup**
+### Reviewer comment with open popup
 
 ```csharp
 PdfTextAnnotation ann = PdfTextAnnotation.Create(
@@ -929,6 +940,15 @@ ann.Icon = PdfTextAnnotationIcon.Comment;
 ann.Author = "Jane Reviewer";
 ann.Open = true;
 pdfDocument.AddTextAnnotation(ann);
+```
+
+### Add an Annotation with an Open Popup
+
+```csharp
+PdfTextAnnotation keyAnnotation = PdfTextAnnotation.Create("A key point", 1, 30, 300);
+keyAnnotation.Icon = PdfTextAnnotationIcon.Key;
+keyAnnotation.Open = true;
+pdfDocument.AddTextAnnotation(keyAnnotation);
 ```
 
 ### Code Sample - Create PDF Documents with Sticky Note Text Annotations
@@ -1030,6 +1050,7 @@ namespace EvoPdf_Next_AspNetDemo.Controllers.PDF_Creator
             // Four icons in a row, equally spaced across the content width.
             // Each icon is the default 24x24 sticky-note size; the caption
             // beneath identifies the PdfTextAnnotationIcon enum value.
+            m_openPopups = model.OpenPopups;
             const int iconSize = 24;
             int[] iconXs = { 30, 160, 290, 420 };
 
@@ -1056,6 +1077,25 @@ namespace EvoPdf_Next_AspNetDemo.Controllers.PDF_Creator
                 icon: PdfTextAnnotationIcon.Insert,
                 caption: "Insert",
                 x: iconXs[3], y: crtYPos, pageNumber: pageNumber, iconSize: iconSize);
+
+            crtYPos += iconSize + 25 + ySeparator;
+
+            // The other icons: a paragraph mark, a new paragraph mark and a key
+            AddIconSample(pdfDocument, iconCaptionFont,
+                contents: "PdfTextAnnotationIcon.Paragraph marks a paragraph",
+                icon: PdfTextAnnotationIcon.Paragraph,
+                caption: "Paragraph",
+                x: iconXs[0], y: crtYPos, pageNumber: pageNumber, iconSize: iconSize);
+            AddIconSample(pdfDocument, iconCaptionFont,
+                contents: "PdfTextAnnotationIcon.NewParagraph marks the start of a new paragraph",
+                icon: PdfTextAnnotationIcon.NewParagraph,
+                caption: "NewParagraph",
+                x: iconXs[1], y: crtYPos, pageNumber: pageNumber, iconSize: iconSize);
+            AddIconSample(pdfDocument, iconCaptionFont,
+                contents: "PdfTextAnnotationIcon.Key marks a key point",
+                icon: PdfTextAnnotationIcon.Key,
+                caption: "Key",
+                x: iconXs[2], y: crtYPos, pageNumber: pageNumber, iconSize: iconSize);
 
             crtYPos += iconSize + 25 + ySeparator;
 
@@ -1136,6 +1176,8 @@ namespace EvoPdf_Next_AspNetDemo.Controllers.PDF_Creator
         // plus a bold caption beneath it identifying the icon name.
         // Used by Section 1 to show all four PdfTextAnnotationIcon values
         // in a horizontal row
+        private bool m_openPopups;
+
         private void AddIconSample(
             PdfDocument doc, PdfFont captionFont,
             string contents, PdfTextAnnotationIcon icon, string caption,
@@ -1145,6 +1187,8 @@ namespace EvoPdf_Next_AspNetDemo.Controllers.PDF_Creator
             ann.Icon = icon;
             ann.Width = iconSize;
             ann.Height = iconSize;
+            // The popup of the annotation is open when the document is opened
+            ann.Open = m_openPopups;
             doc.AddTextAnnotation(ann);
 
             PdfTextElement label = new PdfTextElement(caption, captionFont)
@@ -1208,9 +1252,7 @@ namespace EvoPdf_Next_AspNetDemo.Controllers.PDF_Creator
 
 Topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/add-text-annotations-to-existing-pdf.htm
 
-### Author Identification and Initial Popup State
-
-**Reviewer comment with open popup, added to existing PDF**
+### Reviewer comment with open popup, added to existing PDF
 
 ```csharp
 PdfTextAnnotation ann = PdfTextAnnotation.Create(
@@ -1244,8 +1286,9 @@ namespace EvoPdf_Next_AspNetDemo.Controllers.PDF_Editor
     {
         private const int leftMargin = 36;
         private const int topMargin = 36;
-        private const int contentWidth = 595 - 72;
-        private const int contentHeight = 842 - 72;
+        // The content area of the pages inside the demo margins, from the size of the first page of the loaded document
+        private int contentWidth;
+        private int contentHeight;
 
         private readonly IWebHostEnvironment m_hostingEnvironment;
 
@@ -1314,15 +1357,15 @@ namespace EvoPdf_Next_AspNetDemo.Controllers.PDF_Editor
                 }
             }
 
-            // Open the loaded PDF for editing.  PdfEditor inherits the
-            // standard (PDF/A, PDF/UA etc.) and Language from the source
-            // document, so no PdfDocumentCreateSettings is needed.  Page
-            // size and margins are also taken from the existing pages;
-            // we apply our own margins manually below via leftMargin /
-            // topMargin since PdfEditor draws at absolute page coordinates
+            // The pages of an edited document have no margins: the demo keeps its content inside its own margins
             string password = string.IsNullOrEmpty(model.OwnerPassword) ? model.UserPassword : model.OwnerPassword;
             using PdfEditor pdfEditor = new PdfEditor(inputPdfBytes, password);
-            pdfEditor.PdfDocumentInfo.Title = "PDF Text Annotations Demo";
+
+            PdfPageInfo firstPageInfo = pdfEditor.GetPdfPageInfo(1);
+            // A rotation of 90 or 270 degrees swaps the width and the height of the page as it is displayed
+            bool firstPageTurned = firstPageInfo.Rotation % 180 != 0;
+            contentWidth = (int)(firstPageTurned ? firstPageInfo.PageSize.Height : firstPageInfo.PageSize.Width) - 2 * leftMargin;
+            contentHeight = (int)(firstPageTurned ? firstPageInfo.PageSize.Width : firstPageInfo.PageSize.Height) - 2 * topMargin;
 
             string fontsPath = GetDemoFontsPath();
             string fontFilePath = Path.Combine(fontsPath, "DejaVuSerif.ttf");
@@ -1591,7 +1634,8 @@ namespace EvoPdf_Next_AspNetDemo.Controllers.PDF_Editor
         {
             if (crtYPos + requestedHeight > contentHeight + topMargin)
             {
-                currentPage = pdfEditor.AddPage();
+                // The content continues on the following page of the document, or on a new page after the last one
+                currentPage = currentPage < pdfEditor.PageCount ? currentPage + 1 : pdfEditor.AddPage();
                 crtYPos = topMargin;
             }
         }

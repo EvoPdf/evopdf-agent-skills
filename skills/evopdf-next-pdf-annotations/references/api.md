@@ -7,7 +7,7 @@ Every public member of the types below is listed; the summaries are the shipped 
 
 Reference: https://www.evopdf.com/help/evopdf-next-dotnet/html/T_EvoPdf_Next_PdfLinkAnnotation.htm
 
-A clickable hyperlink annotation placed on a PDF page. Use one of the static factory methods (FromUrl, ToPage, ToPageLocation to build the link, then pass it to AddLinkAnnotation on the document, editor, merger or HTML-to-PDF document options. For PDF/UA compliance, set Description to a meaningful alternative description
+A clickable hyperlink annotation placed on a PDF page. Use one of the static factory methods (FromUrl, ToPage, ToPageLocation) to build the link, then pass it to AddLinkAnnotation on the document, the editor or the merger. For PDF/UA compliance, set Description to a meaningful alternative description
 
 ### Properties
 
@@ -61,9 +61,9 @@ Page-fit type used by PdfLinkPageLocation to describe how the target page is dis
 ### Fields and values
 
 - `AtCoordinates`: Position the page so that (Left, Top) is at the top-left of the viewport, optionally applying an explicit Zoom factor (PDF /XYZ destination)
-- `PageHeight`: Fit the page height in the viewport, scrolled to the specified Left position (PDF /FitV destination)
-- `PageWidth`: Fit the page width in the viewport, scrolled to the specified Top position (PDF /FitH destination)
-- `WholePage`: Display the entire page in the viewport (PDF /Fit destination)
+- `FitHeight`: Fit the page height in the viewport, scrolled to the specified Left position (PDF /FitV destination)
+- `FitPage`: Display the entire page in the viewport (PDF /Fit destination)
+- `FitWidth`: Fit the page width in the viewport, scrolled to the specified Top position (PDF /FitH destination)
 
 ## PdfLinkPageLocation
 
@@ -74,8 +74,8 @@ Describes how the target page is positioned and zoomed when a PdfLinkAnnotation 
 ### Properties
 
 - `Fit`: Fit type applied when the link is followed
-- `Left`: Distance in points from the LEFT edge of the page to the destination point. Used by PageHeight and AtCoordinates
-- `Top`: Distance in points from the TOP edge of the page to the destination point. Used by PageWidth and AtCoordinates
+- `Left`: Distance in points from the LEFT edge of the page to the destination point. Used by FitHeight and AtCoordinates
+- `Top`: Distance in points from the TOP edge of the page to the destination point. Used by FitWidth and AtCoordinates
 - `Zoom`: Zoom factor (1.0 = 100%) applied by AtCoordinates. When null, the viewer keeps the user's current zoom level
 
 ### Methods
@@ -118,4 +118,7 @@ Icon displayed on the page surface for a sticky-note text annotation
 - `Comment`: Speech bubble. Suggests a comment or discussion
 - `Help`: Question mark in a circle. Suggests a query or clarification needed
 - `Insert`: Caret pointing up. Suggests an editorial insertion at this position
+- `Key`: Key. Suggests a point of importance or a secured item
+- `NewParagraph`: Pilcrow sign with an insertion mark. Suggests that a new paragraph starts here
 - `Note`: Folded-corner note paper. Default icon used by Adobe Acrobat
+- `Paragraph`: Pilcrow sign. Marks a paragraph

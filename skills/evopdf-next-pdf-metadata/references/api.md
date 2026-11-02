@@ -15,9 +15,9 @@ This class encapsulates the options to control the PDF document description (aut
 - `CreatedDate`: Gets or sets the date and time when the PDF document was created
 - `Creator`: Gets or sets the name of the creator application of the PDF document
 - `Keywords`: Gets or sets the keywords of the PDF document
-- `Language`: Gets or sets the BCP 47 language tag for the PDF document, e.g. "en-US". The value is written to the PDF catalog /Lang entry and to the XMP metadata when a PDF/UA or PDF/A standard is active. Must be a valid BCP 47 language tag. The default is empty
-- `ModificationDate`: Gets the date and time when the PDF document was last modified, as read from the loaded PDF's /Info /ModDate entry. Returns MinValue when no modification date is set or when the document was not loaded from an existing PDF. This property is read-only and reflects only the loaded document. The modification date of generated PDFs is set automatically by the library at save time
-- `Producer`: Gets the producer string, as read from the loaded PDF's /Info /Producer entry. Returns an empty string when the document was not loaded from an existing PDF. This property is read-only. The producer of generated PDFs is set automatically by the library at save time
+- `Language`: Gets or sets the language of the PDF document as a BCP 47 language tag, for example "en-US". The value is written to the document catalog and, when a PDF/UA or PDF/A standard is active, to the XMP metadata. A value set here replaces the language declared by the HTML document; left empty, the language declared by the HTML document is used. The default is empty
+- `ModificationDate`: Gets the date and time when the loaded PDF document was last modified. The value is DateTime.MinValue when the document has no modification date or when it was not loaded from an existing PDF document. The modification date of the saved document is set by the library
+- `Producer`: Gets the producer of the loaded PDF document. The value is empty when the document was not loaded from an existing PDF document. The producer of the saved document is set by the library
 - `Subject`: Gets or sets the subject of the PDF document
 - `Title`: Gets or sets the title of the PDF document
 

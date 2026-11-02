@@ -12,7 +12,7 @@ Namespace `EvoPdf.Next`. Install one NuGet package for the target platform, for 
 
 ## Types covered here
 
-- **`PdfLinkAnnotation`**: A clickable hyperlink annotation placed on a PDF page. Use one of the static factory methods (FromUrl, ToPage, ToPageLocation to build the link, then ...
+- **`PdfLinkAnnotation`**: A clickable hyperlink annotation placed on a PDF page. Use one of the static factory methods (FromUrl, ToPage, ToPageLocation) to build the link, then...
 - **`PdfLinkBorderStyle`**: Border style drawn around a PdfLinkAnnotation hotspot. Default is None -- typical for text hyperlinks where the clickable area is implied by the under...
 - **`PdfLinkHighlightMode`**: Visual feedback shown when the user activates a PdfLinkAnnotation hotspot
 - **`PdfLinkPageFit`**: Page-fit type used by PdfLinkPageLocation to describe how the target page is displayed when the link is followed
@@ -20,7 +20,7 @@ Namespace `EvoPdf.Next`. Install one NuGet package for the target platform, for 
 - **`PdfTextAnnotation`**: Represents a sticky-note style annotation displayed as a clickable icon on a specific page of the PDF. Clicking the icon opens a popup with the note t...
 - **`PdfTextAnnotationIcon`**: Icon displayed on the page surface for a sticky-note text annotation
 
-7 types, 45 public members. The complete member list with the shipped
+7 types, 48 public members. The complete member list with the shipped
 summaries is in `references/api.md`; do not guess member names that are not there.
 
 ## Create PDF Documents with Link Annotations
@@ -42,13 +42,13 @@ link.BorderStyle = PdfLinkBorderStyle.None;
 pdfDocument.AddLinkAnnotation(link);
 ```
 
-All 2 samples of this topic, complete: `references/examples.md`.
+All 3 samples of this topic, complete: `references/examples.md`.
 
 Full topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/create-pdf-documents-with-link-annotations.htm
 
 ## Add Link Annotations to Existing PDF
 
-The `PdfEditor` class lets you add new content to an existing PDF without rewriting the rest of the document. The editor is instantiated with the source PDF bytes or file path and an optional password. The standard claimed by the source document and its existing page geometry are inherited by the editor. Content is added at absolute page coordinates using the dedicated Add methods. Every Add method takes the target page number as the first argument. If the rendered content overflows the available space a new page is created automatically by the engine. The resulting modified PDF is produced with `PdfEditor.Save`.
+The `PdfEditor` class lets you add new content to an existing PDF without rewriting the rest of the document. The editor is instantiated with the source PDF bytes or file path and an optional password. The standard claimed by the source document and its existing page geometry are inherited by the editor. Content is added at absolute page coordinates using the dedicated Add methods. The methods that draw page content, such as AddText, AddImage or AddHtml, take the target page number as the first argument. Content that does not fit in the page continues on the following pages of the document when the element is set to continue, or on pages inserted after the current one when InsertContinuationPages is true. The resulting modified PDF is produced with `PdfEditor.Save`.
 
 ### External URL Links
 
@@ -86,13 +86,13 @@ ann.Open = true;
 pdfDocument.AddTextAnnotation(ann);
 ```
 
-All 2 samples of this topic, complete: `references/examples.md`.
+All 3 samples of this topic, complete: `references/examples.md`.
 
 Full topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/create-pdf-documents-with-text-annotations.htm
 
 ## Add Text Annotations to Existing PDF
 
-The `PdfEditor` class lets you add new content to an existing PDF without rewriting the rest of the document. The editor is instantiated with the source PDF bytes or file path and an optional password. The standard claimed by the source document and its existing page geometry are inherited by the editor. Content is added at absolute page coordinates using the dedicated Add methods. Every Add method takes the target page number as the first argument. If the rendered content overflows the available space a new page is created automatically by the engine. The resulting modified PDF is produced with `PdfEditor.Save`.
+The `PdfEditor` class lets you add new content to an existing PDF without rewriting the rest of the document. The editor is instantiated with the source PDF bytes or file path and an optional password. The standard claimed by the source document and its existing page geometry are inherited by the editor. Content is added at absolute page coordinates using the dedicated Add methods. The methods that draw page content, such as AddText, AddImage or AddHtml, take the target page number as the first argument. Content that does not fit in the page continues on the following pages of the document when the element is set to continue, or on pages inserted after the current one when InsertContinuationPages is true. The resulting modified PDF is produced with `PdfEditor.Save`.
 
 ### Author Identification and Initial Popup State
 

@@ -49,8 +49,6 @@ Docs: https://www.evopdf.com/help/evopdf-next-dotnet/html/publish-to-docker-on-l
 
 ## Publish EvoPdf Next ASP.NET Demo to Docker on Linux
 
-This guide explains how to build and run a Docker container for a published ASP.NET Core application using EvoPdf Next on Linux.
-
 All 14 samples of this topic, complete: `references/examples.md`.
 
 Full topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/publish-to-docker-on-linux.htm

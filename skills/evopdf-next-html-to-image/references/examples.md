@@ -63,6 +63,10 @@ namespace EvoPdf_Next_AspNetDemo.Controllers.HTML_to_Image
             if (model.ConversionDelay.HasValue)
                 htmlToImageConverter.ConversionDelay = model.ConversionDelay.Value;
 
+            // Set the resolution of the image in dots per inch; 96 gives one pixel per CSS pixel
+            // and a larger value gives a sharper image of the same layout
+            htmlToImageConverter.Resolution = model.Resolution;
+
             byte[] outImageBuffer = null;
             if (model.HtmlPageSource == "Url")
             {
@@ -187,7 +191,7 @@ namespace EvoPdf_Next_AspNetDemo.Controllers.HTML_to_Image
 
 Topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/select-html-elements-to-exclude-from-image.htm
 
-### Code Sample - Select HTML Elements to Convert to Image
+### Code Sample - Select HTML Elements to Exclude from Image
 
 ```csharp
 using System.ComponentModel.DataAnnotations;

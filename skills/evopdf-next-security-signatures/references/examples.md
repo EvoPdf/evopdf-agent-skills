@@ -6,6 +6,13 @@ Every code sample of the documentation topics behind this skill, complete and in
 
 Topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/set-pdf-permissions-and-password.htm
 
+### Deny High Resolution Printing and Document Assembly
+
+```csharp
+htmlToPdfConverter.PdfSecurityOptions.CanPrintHighResolution = false;
+htmlToPdfConverter.PdfSecurityOptions.CanAssembleDocument = false;
+```
+
 ### Code Sample - Set Permissions and Password of the Generated PDF Document
 
 ```csharp
@@ -71,6 +78,10 @@ namespace EvoPdf_Next_AspNetDemo.Controllers.HTML_to_PDF
             htmlToPdfConverter.PdfSecurityOptions.CanEditContent = model.EditContentEnabled;
             htmlToPdfConverter.PdfSecurityOptions.CanEditAnnotations = model.EditAnnotationsEnabled;
             htmlToPdfConverter.PdfSecurityOptions.CanFillFormFields = model.FillFormFieldsEnabled;
+            // Printing at high resolution can be denied while printing at low resolution stays allowed
+            htmlToPdfConverter.PdfSecurityOptions.CanPrintHighResolution = model.PrintHighResolutionEnabled;
+            // Inserting, rotating and deleting pages and creating bookmarks
+            htmlToPdfConverter.PdfSecurityOptions.CanAssembleDocument = model.AssembleDocumentEnabled;
 
             if ((PermissionsChanged(htmlToPdfConverter) || htmlToPdfConverter.PdfSecurityOptions.UserPassword.Length > 0) &&
                 htmlToPdfConverter.PdfSecurityOptions.OwnerPassword.Length == 0)
@@ -95,15 +106,26 @@ namespace EvoPdf_Next_AspNetDemo.Controllers.HTML_to_PDF
             return !htmlToPdfConverter.PdfSecurityOptions.CanPrint ||
                     !htmlToPdfConverter.PdfSecurityOptions.CanCopyContent || !htmlToPdfConverter.PdfSecurityOptions.CanCopyAccessibilityContent ||
                     !htmlToPdfConverter.PdfSecurityOptions.CanEditContent || !htmlToPdfConverter.PdfSecurityOptions.CanEditAnnotations ||
-                    !htmlToPdfConverter.PdfSecurityOptions.CanFillFormFields;
+                    !htmlToPdfConverter.PdfSecurityOptions.CanFillFormFields ||
+                    !htmlToPdfConverter.PdfSecurityOptions.CanPrintHighResolution || !htmlToPdfConverter.PdfSecurityOptions.CanAssembleDocument;
         }
     }
 }
 ```
 
-## Add a Digital Signature to Generated PDF Document
+## Add a Digital Signature to Generated PDF Document 
 
 Topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/digitally-sign-the-generated-pdf.htm
+
+### Set the Signature Options
+
+```csharp
+digitalSignature.DigestAlgorithm = PdfSignatureDigestAlgorithm.Sha384;
+digitalSignature.TimestampServerUrl = "http://timestamp.example.com";
+digitalSignature.TimestampServerUsername = "user";
+digitalSignature.TimestampServerPassword = "password";
+digitalSignature.TrustedCaCertificates = new[] { caCertificate.RawData };
+```
 
 ### Code Sample - Add A Digital Signature to Generated PDF Document
 
@@ -193,9 +215,29 @@ namespace EvoPdf_Next_AspNetDemo.Controllers.HTML_to_PDF
             // changes the document accepts after signing: none, form filling and signing, or also annotations
             htmlToPdfConverter.DigitalSignature.CertificationLevel = model.CertificationLevel;
 
-            // The timestamp server, for example http://timestamp.digicert.com
+            // The digest algorithm of the signature
+            htmlToPdfConverter.DigitalSignature.DigestAlgorithm = model.DigestAlgorithm;
+
+            // The timestamp server, for example http://timestamp.digicert.com, with the credentials of a server
+            // that requires basic authentication
             if (!string.IsNullOrWhiteSpace(model.TimestampServerUrl))
+            {
                 htmlToPdfConverter.DigitalSignature.TimestampServerUrl = model.TimestampServerUrl.Trim();
+                if (!string.IsNullOrEmpty(model.TimestampServerUsername))
+                {
+                    htmlToPdfConverter.DigitalSignature.TimestampServerUsername = model.TimestampServerUsername;
+                    htmlToPdfConverter.DigitalSignature.TimestampServerPassword = model.TimestampServerPassword;
+                }
+            }
+
+            if (model.TrustPfxCertificate)
+            {
+                // Additional trusted certificate authority certificates complete the chain of a certificate whose
+                // issuers are not in the certificate stores and the chains embedded by the long term profiles.
+                // The self-signed sample certificate is given here as its own authority
+                X509Certificate2 trustedCertificate = LoadCertificate(certificateFilePath, "evopdf");
+                htmlToPdfConverter.DigitalSignature.TrustedCaCertificates = new[] { trustedCertificate.RawData };
+            }
 
             // enable signature appearance in PDF page
             htmlToPdfConverter.DigitalSignature.AppearanceEnabled = model.EnableAppearance;
@@ -208,7 +250,7 @@ namespace EvoPdf_Next_AspNetDemo.Controllers.HTML_to_PDF
                     // set the appearance to be displayed at the bottom of the last page
                     htmlToPdfConverter.DigitalSignature.Appearance.DisplayOnLastPage = true;
                     htmlToPdfConverter.DigitalSignature.Appearance.BoundsRectangle =
-                            new PdfRectangle(0, htmlToPdfConverter.PdfDocumentOptions.PdfPageSize.Height - 50, 200, 50);
+                            new PdfRectangleF(0, htmlToPdfConverter.PdfDocumentOptions.PdfPageSize.Height - 50, 200, 50);
 
                     // optionally reserve space for signature appearance at the bottom of the PDF page
                     htmlToPdfConverter.PdfDocumentOptions.BottomMargin = 50;
@@ -217,7 +259,7 @@ namespace EvoPdf_Next_AspNetDemo.Controllers.HTML_to_PDF
                 {
                     // set the appearance to be displayed at the top of the first page
                     htmlToPdfConverter.DigitalSignature.Appearance.PageNumber = 1;
-                    htmlToPdfConverter.DigitalSignature.Appearance.BoundsRectangle = new PdfRectangle(0, 0, 200, 50);
+                    htmlToPdfConverter.DigitalSignature.Appearance.BoundsRectangle = new PdfRectangleF(0, 0, 200, 50);
 
                     // optionally reserve space for signature appearance at the top of the PDF page
                     htmlToPdfConverter.PdfDocumentOptions.TopMargin = 50;
@@ -231,7 +273,8 @@ namespace EvoPdf_Next_AspNetDemo.Controllers.HTML_to_PDF
                 if (model.AddSignatureImage)
                 {
                     string imageFilePath = m_hostingEnvironment.ContentRootPath + "/wwwroot" + "/DemoAppFiles/Input/Images/evologo.png";
-                    htmlToPdfConverter.DigitalSignature.Appearance.SetImage(imageFilePath, true);
+                    // The image fills the appearance rectangle or keeps its aspect ratio inside it
+                    htmlToPdfConverter.DigitalSignature.Appearance.SetImage(imageFilePath, model.KeepImageAspect);
                 }
             }
 
@@ -339,11 +382,31 @@ namespace EvoPdf_Next_AspNetDemo.Controllers.HTML_to_PDF
 
 Topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/digitally-sign-existing-pdf.htm
 
+### Set the Signature Options
+
+```csharp
+digitalSignature.DigestAlgorithm = PdfSignatureDigestAlgorithm.Sha384;
+digitalSignature.TimestampServerUrl = "http://timestamp.example.com";
+digitalSignature.TimestampServerUsername = "user";
+digitalSignature.TimestampServerPassword = "password";
+digitalSignature.TrustedCaCertificates = new[] { caCertificate.RawData };
+```
+
+### Add the Long Term Validation Data
+
+```csharp
+PdfLongTermValidationOptions ltvOptions = new PdfLongTermValidationOptions();
+ltvOptions.TimestampServerUrl = "http://timestamp.example.com";
+pdfEditor.AddLongTermValidation(ltvOptions);
+byte[] outPdfBuffer = pdfEditor.Save();
+```
+
 ### Code Sample - Digitally Sign Existing PDF
 
 ```csharp
 using System;
 using System.IO;
+using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
 using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Hosting;
@@ -442,9 +505,27 @@ namespace EvoPdf_Next_AspNetDemo.Controllers.PDF_Editor
             // applies to documents that are not signed yet
             digitalSignature.CertificationLevel = model.CertificationLevel;
 
-            // The timestamp server, for example http://timestamp.digicert.com
+            // The digest algorithm of the signature
+            digitalSignature.DigestAlgorithm = model.DigestAlgorithm;
+
+            // The timestamp server, for example http://timestamp.digicert.com, with the credentials of a server
+            // that requires basic authentication
             if (!string.IsNullOrWhiteSpace(model.TimestampServerUrl))
+            {
                 digitalSignature.TimestampServerUrl = model.TimestampServerUrl.Trim();
+                if (!string.IsNullOrEmpty(model.TimestampServerUsername))
+                {
+                    digitalSignature.TimestampServerUsername = model.TimestampServerUsername;
+                    digitalSignature.TimestampServerPassword = model.TimestampServerPassword;
+                }
+            }
+
+            if (model.TrustPfxCertificate)
+            {
+                // Additional trusted certificate authority certificates complete the chains embedded by the long term
+                // profiles. The self-signed sample certificate is given here as its own authority
+                digitalSignature.TrustedCaCertificates = new[] { LoadCertificate(certificateFilePath, "evopdf").RawData };
+            }
 
             // When the document already has an empty signature field with this name, for example a form
             // prepared with a field for each signer, the signature is placed in that field, on its page and
@@ -464,13 +545,20 @@ namespace EvoPdf_Next_AspNetDemo.Controllers.PDF_Editor
                 if (!string.IsNullOrEmpty(model.SignatureText))
                     digitalSignature.Appearance.Text = model.SignatureText;
 
+                if (model.AddSignatureImage)
+                {
+                    // The image drawn in the appearance, filling its rectangle or keeping its aspect ratio inside it
+                    string imageFilePath = m_hostingEnvironment.ContentRootPath + "/wwwroot" + "/DemoAppFiles/Input/Images/evologo.png";
+                    digitalSignature.Appearance.SetImage(imageFilePath, model.KeepImageAspect);
+                }
+
                 // Position of a new signature field: the bottom of the first page, to the right of the
                 // signatures already there. An existing signature field keeps its own position
                 PdfPageInfo pageInfo = pdfEditor.GetPdfPageInfo(1);
-                int signatureCount = pdfEditor.PdfSignatureInfo.SignatureCount;
+                int signatureCount = pdfEditor.SignatureInfo.SignatureCount;
                 int x = 20 + 210 * (signatureCount % 2);
                 digitalSignature.Appearance.PageNumber = 1;
-                digitalSignature.Appearance.BoundsRectangle = new PdfRectangle(x, (int)pageInfo.MediaBox.Height - 70, 200, 50);
+                digitalSignature.Appearance.BoundsRectangle = new PdfRectangleF(x, pageInfo.MediaBox.Height - 70, 200, 50);
             }
 
             byte[] outPdfBuffer = pdfEditor.Save();
@@ -502,6 +590,20 @@ namespace EvoPdf_Next_AspNetDemo.Controllers.PDF_Editor
             model.PdfFileUrl = rootUrl + "/DemoAppFiles/Input/PDF_Files/Signed_Document.pdf";
 
             return model;
+        }
+
+        // Loads the sample PFX as a certificate object. On Windows the private key goes to the machine key
+        // store, which needs no user profile, so the code runs in IIS application pools and in Azure App Service;
+        // macOS does not support in-memory keys and uses its default key storage
+        private static X509Certificate2 LoadCertificate(string certificateFilePath, string password)
+        {
+            X509KeyStorageFlags keyStorageFlags = OperatingSystem.IsWindows() ? X509KeyStorageFlags.MachineKeySet :
+                OperatingSystem.IsMacOS() ? X509KeyStorageFlags.DefaultKeySet : X509KeyStorageFlags.EphemeralKeySet;
+#if NET9_0_OR_GREATER
+            return X509CertificateLoader.LoadPkcs12FromFile(certificateFilePath, password, keyStorageFlags);
+#else
+            return new X509Certificate2(certificateFilePath, password, keyStorageFlags);
+#endif
         }
     }
 }

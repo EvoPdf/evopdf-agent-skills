@@ -32,12 +32,12 @@ Restriction for both: the software is used as part of your application, not offe
 ## Products and prices (USD)
 | Product | Deployment | Company | Covers |
 |---|---|---|---|
-| EVO HTML to PDF Converter | 450 | 1200 | HTML to PDF, Next **and** Classic editions |
+| EVO HTML to PDF Converter | 450 | 1200 | HTML to PDF, Next **and** Classic editions, including the Classic API on the Next engine (`EvoPdf.HtmlToPdf.<Platform>`) |
 | EVO PDF Toolkit | 650 | 1400 | every component on evopdf.com: all EvoPdf Next components and the complete Classic suite |
 Word, Excel, RTF, Markdown to PDF and the PDF tools are licensed only through the Toolkit.
 
 ## What you get
-Evaluation: the full product, unlimited in time, no registration; output watermarked until a key is set; technical support is free while evaluating. After purchase: a license key string by e-mail (usually within minutes), set in code (`Licensing.LicenseKey` for Next); no activation, no online check. Keys are perpetual for the versions released during the maintenance period.
+Evaluation: the full product, unlimited in time, no registration; output watermarked until a key is set; technical support is free while evaluating. After purchase: a license key string by e-mail (usually within minutes), set in code (`Licensing.LicenseKey` for Next, the `LicenseKey` property of the converter in the Classic API, also on the `EvoPdf.HtmlToPdf.<Platform>` packages); no activation, no online check. The HTML to PDF license key of version 15 is the same for Classic and Next. Keys are perpetual for the versions released during the maintenance period.
 
 ## Maintenance and renewals
 First year of updates and support included. Renewal (optional; applications keep working without it): Toolkit 300 / 650 USD, HTML to PDF 250 / 550 USD (Deployment / Company), within maintenance or the 15-day grace period. Late renewal up to one year after expiration at 20% off the full license price (520 / 1120 and 360 / 960). After one year: a new license. Published renewal prices assume auto-renewal; one-time payments via sales.

@@ -6,9 +6,7 @@ Every code sample of the documentation topics behind this skill, complete and in
 
 Topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/add-attachments-to-generated-pdf.htm
 
-### Embed In-Memory Data with FromBytes
-
-**Embed an in-memory XML payload**
+### Embed an in-memory XML payload
 
 ```csharp
 byte[] xmlBytes = Encoding.UTF8.GetBytes(BuildSampleXml());
@@ -20,9 +18,7 @@ xmlAttachment.Relationship = PdfAttachmentRelationship.Source;
 htmlToPdfConverter.PdfDocumentOptions.AddFileAttachment(xmlAttachment);
 ```
 
-### Embed a File from Disk with FromFile
-
-**Embed a file from disk**
+### Embed a file from disk
 
 ```csharp
 string alphabetFilePath = Path.Combine(GetDemoTextsPath(), "Alphabet.txt");
@@ -186,9 +182,7 @@ namespace EvoPdf_Next_AspNetDemo.Controllers.HTML_to_PDF
 
 Topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/add-file-attachments-to-existing-pdf.htm
 
-### Document-Level Attachments
-
-**Embed an in-memory XML payload during editing**
+### Embed an in-memory XML payload during editing
 
 ```csharp
 byte[] xmlBytes = Encoding.UTF8.GetBytes(BuildSampleXml());
@@ -199,9 +193,7 @@ xmlAttachment.Relationship = PdfAttachmentRelationship.Source;
 pdfEditor.AddFileAttachment(xmlAttachment);
 ```
 
-### Page-Level Annotations
-
-**Page-level icon for an in-memory CSV**
+### Page-level icon for an in-memory CSV
 
 ```csharp
 byte[] csvBytes = Encoding.UTF8.GetBytes(BuildSampleCsv());
@@ -240,8 +232,9 @@ namespace EvoPdf_Next_AspNetDemo.Controllers.PDF_Editor
     {
         private const int leftMargin = 36;
         private const int topMargin = 36;
-        private const int contentWidth = 595 - 72;
-        private const int contentHeight = 842 - 72;
+        // The content area of the pages inside the demo margins, from the size of the first page of the loaded document
+        private int contentWidth;
+        private int contentHeight;
 
         private readonly IWebHostEnvironment m_hostingEnvironment;
 
@@ -313,7 +306,12 @@ namespace EvoPdf_Next_AspNetDemo.Controllers.PDF_Editor
             // Open the loaded PDF for editing.  PdfEditor inherits the standard (PDF/A, PDF/UA etc.)
             string password = string.IsNullOrEmpty(model.OwnerPassword) ? model.UserPassword : model.OwnerPassword;
             using PdfEditor pdfEditor = new PdfEditor(inputPdfBytes, password);
-            pdfEditor.PdfDocumentInfo.Title = "PDF File Attachments Demo";
+
+            PdfPageInfo firstPageInfo = pdfEditor.GetPdfPageInfo(1);
+            // A rotation of 90 or 270 degrees swaps the width and the height of the page as it is displayed
+            bool firstPageTurned = firstPageInfo.Rotation % 180 != 0;
+            contentWidth = (int)(firstPageTurned ? firstPageInfo.PageSize.Height : firstPageInfo.PageSize.Width) - 2 * leftMargin;
+            contentHeight = (int)(firstPageTurned ? firstPageInfo.PageSize.Width : firstPageInfo.PageSize.Height) - 2 * topMargin;
 
             // Open the Attachments panel on document load
             pdfEditor.PdfViewerPreferences.PageMode = ViewerPageMode.UseAttachments;
@@ -587,7 +585,8 @@ namespace EvoPdf_Next_AspNetDemo.Controllers.PDF_Editor
         {
             if (crtYPos + requestedHeight > contentHeight + topMargin)
             {
-                currentPage = pdfEditor.AddPage();
+                // The content continues on the following page of the document, or on a new page after the last one
+                currentPage = currentPage < pdfEditor.PageCount ? currentPage + 1 : pdfEditor.AddPage();
                 crtYPos = topMargin;
             }
         }
@@ -688,9 +687,7 @@ namespace EvoPdf_Next_AspNetDemo.Controllers.PDF_Editor
 
 Topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/create-pdf-documents-with-file-attachments.htm
 
-### Document-Level Attachments
-
-**Embed an in-memory XML payload**
+### Embed an in-memory XML payload
 
 ```csharp
 byte[] xmlBytes = Encoding.UTF8.GetBytes(BuildSampleXml());
@@ -701,7 +698,7 @@ xmlAttachment.Relationship = PdfAttachmentRelationship.Source;
 pdfDocument.AddFileAttachment(xmlAttachment);
 ```
 
-**Embed a file from disk**
+### Embed a file from disk
 
 ```csharp
 string alphabetFilePath = Path.Combine(GetDemoTextsPath(), "Alphabet.txt");
@@ -709,6 +706,15 @@ var textAttachment = PdfFileAttachment.FromFile(alphabetFilePath);
 textAttachment.MimeType = "text/plain";
 textAttachment.Description = "Sample alphabet text";
 pdfDocument.AddFileAttachment(textAttachment);
+```
+
+### Set the Icon Color and List the File in the Attachments Panel
+
+```csharp
+PdfFileAttachmentAnnotation annotation = PdfFileAttachmentAnnotation.FromBytes(data, "inventory.csv", 1, 30, 100);
+annotation.IconColor = PdfColor.Blue;
+annotation.AddToAttachmentsPanel = true;
+pdfDocument.AddFileAttachmentAnnotation(annotation);
 ```
 
 ### Code Sample - Create PDF Documents with File Attachments
@@ -730,6 +736,8 @@ namespace EvoPdf_Next_AspNetDemo.Controllers.PDF_Creator
     public class Create_PDF_Documents_with_File_AttachmentsController : Controller
     {
         private readonly IWebHostEnvironment m_hostingEnvironment;
+        private PdfColor m_iconColor;
+        private bool m_addToAttachmentsPanel;
 
         public Create_PDF_Documents_with_File_AttachmentsController(IWebHostEnvironment hostingEnvironment)
         {
@@ -860,6 +868,15 @@ namespace EvoPdf_Next_AspNetDemo.Controllers.PDF_Creator
             const int iconSize = 24;
             int[] iconXs = { 30, 160, 290, 420 };
 
+            switch (model.IconColor)
+            {
+                case "Red": m_iconColor = PdfColor.Red; break;
+                case "Green": m_iconColor = PdfColor.Green; break;
+                case "Blue": m_iconColor = PdfColor.Blue; break;
+                default: m_iconColor = null; break;
+            }
+            m_addToAttachmentsPanel = model.AddToAttachmentsPanel;
+
             // Paperclip (default) -- attaches a CSV inventory snippet
             byte[] csvBytes = Encoding.UTF8.GetBytes(BuildSampleCsv());
             AddIconSample(pdfDocument, iconCaptionFont,
@@ -979,6 +996,10 @@ namespace EvoPdf_Next_AspNetDemo.Controllers.PDF_Creator
             ann.Description = description;
             ann.TooltipText = tooltip;
             ann.Icon = icon;
+            // The color of the icon, or null for the color of the viewer
+            ann.IconColor = m_iconColor;
+            // The file is also listed in the attachments panel of the viewer
+            ann.AddToAttachmentsPanel = m_addToAttachmentsPanel;
             doc.AddFileAttachmentAnnotation(ann);
 
             PdfTextElement label = new PdfTextElement(caption, captionFont)

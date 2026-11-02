@@ -59,7 +59,7 @@ Full topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/html-to-pdf-rend
 
 ## Convert Multiple HTML Pages to PDF in Parallel
 
-EvoPdf Next can convert multiple HTML documents to PDF in parallel tasks using the asynchronous HTML to PDF methods such as `HtmlToPdfConverter.ConvertUrlAsync` and merge the resulted PDFs using the `PdfMerge.AddPdf` method of `PdfMerge` class. The PdfMerge class allows you to set security options, configure PDF viewer preferences and apply a digital signature to the resulting PDF.
+EvoPdf Next can convert multiple HTML documents to PDF in parallel tasks using the asynchronous HTML to PDF methods such as `HtmlToPdfConverter.ConvertUrlAsync(String, CancellationToken)` and merge the resulted PDFs using the `PdfMerge.AddPdf(Byte[], String)` method of `PdfMerge` class. The PdfMerge class allows you to set security options, configure PDF viewer preferences and apply a digital signature to the resulting PDF.
 
 All 1 samples of this topic, complete: `references/examples.md`.
 

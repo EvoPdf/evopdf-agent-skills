@@ -1,28 +1,85 @@
 ---
 name: evopdf-classic-to-next-migration
-description: "Migrate .NET applications from EvoPdf Classic (EvoPdf namespace) to EvoPdf Next: packages and namespace, license key, the complete map from the Classic page setup and scaling options to the Next layout methods, the header and footer model, and engine behaviour differences."
+description: "Migrate .NET applications from EvoPdf Classic (EvoPdf namespace) to EvoPdf Next in one of two ways: keep the Classic code on the EvoPdf.HtmlToPdf platform packages, the Classic API on the Next engine for Windows, Linux and macOS, with the Next converter behind each Classic converter for PDF/UA and electronic invoices, or port to the Next API: packages and namespace, license key, the complete map from the Classic page setup and scaling options to the Next layout methods, the header and footer model, and engine behaviour differences."
 ---
 
 # EvoPdf Next: migrating from EvoPdf Classic
 
 EvoPdf Classic and EvoPdf Next share the `HtmlToPdfConverter` class name, the conversion methods and most option names, but the two rendering engines place the HTML on the PDF page in different ways and describe headers and footers differently. This topic covers the two areas where an integration moved from Classic changes its output or its code: the page setup with its scaling rules and the headers and footers. The namespace, package and license key changes are covered in the Classic to Next migration guide on the website.
 
+## Two ways to migrate
+
+| | Option 1: keep the Classic code | Option 2: port to the Next API |
+|---|---|---|
+| Package | `EvoPdf.HtmlToPdf.Windows`, `.Windows.Arm64`, `.Linux`, `.Linux.Arm64`, `.MacOS` | `EvoPdf.Next.HtmlToPdf.<Platform>` or `EvoPdf.Next.<Platform>` |
+| Namespace | `EvoPdf`, unchanged | `EvoPdf.Next` |
+| Code | unchanged | license key, page sizing, headers and footers change |
+| Output | the Classic page layout, rendered by the Next engine | the Next page model |
+| New options (PDF/UA, PDF/A-3, electronic invoices, ...) | through the Next converter behind each Classic converter | directly |
+| Suited to | PDF code spread over many projects, a quick move | new code, applications developed further |
+
+Both run on Windows, Linux (x64 and ARM64) and macOS (Apple Silicon), also in Azure App Service for Windows. They
+combine: start with option 1 and port one file at a time, since Classic and Next code produce plain PDF bytes and work
+side by side in the same application. The HTML to PDF license covers both.
+
+## Option 1: the platform packages with the Classic API
+
+```bash
+dotnet remove package EvoPdf.HtmlToPdf
+dotnet add package EvoPdf.HtmlToPdf.Windows
+```
+
+```csharp
+using EvoPdf;   // unchanged
+
+HtmlToPdfConverter converter = new HtmlToPdfConverter();
+converter.LicenseKey = "your-license-key";
+
+// The Next converter behind the Classic one, created for each conversion: options without a Classic counterpart
+converter.NextConverterCreated += next =>
+{
+    next.PdfDocumentOptions.PdfStandard = EvoPdf.Next.PdfStandard.PdfUa1;
+};
+
+byte[] pdf = converter.ConvertUrl(url);
+```
+
+- Every Classic class and member is there; the assembly is `EvoPdf.Classic.dll`. `HtmlToPdfConverter` and
+  `HtmlToImageConverter` expose the Next converter as `Next` and raise `NextConverterCreated` when they create it.
+- A multi-platform application references two packages, for example `EvoPdf.HtmlToPdf.Windows` and
+  `EvoPdf.HtmlToPdf.Linux`. The platform-less `EvoPdf.HtmlToPdf` package stays the Classic engine on Windows.
+- An electronic invoice from the Classic code: `next.PdfDocumentOptions.PdfStandard = EvoPdf.Next.PdfStandard.PdfA3b;`
+  and `next.PdfDocumentOptions.AddElectronicInvoice(EvoPdf.Next.ElectronicInvoice.FromXml(xml));` in the handler.
+- Repeated table headers and footers come from the print rendering of the page: set `MediaType = "print"` with
+  `TableHeaderRepeatEnabled` or `TableFooterRepeatEnabled`.
+- The options specific to the Classic rendering engine are accepted and have no effect. The Next engine does not
+  produce PDF/X (`PdfStandardSubset.Pdf_X_1a`), the gray scale and CMYK color spaces of `Document` or Flash content.
+- On Linux and macOS, the fonts and images created from `System.Drawing` objects (a system font, a
+  `System.Drawing.Image`, `HtmlToImageConverter` returning an image) need libgdiplus, the native library of
+  System.Drawing (`apt-get install libgdiplus`, `brew install mono-libgdiplus`); the fonts created from a file, from
+  font data or from a standard font and the images given by file path do not use it.
+- The Classic demo application on the Next engine shows the packages at work:
+  https://www.evopdf.com/downloaded?prodCode=evoPdfClassicOnNext and the `classic-demo` folder of
+  https://github.com/EvoPdf/evopdf-next-samples
+
+## Option 2: port to the Next API
+
 Namespace `EvoPdf.Next`. Install one NuGet package for the target platform, for example
 `EvoPdf.Next.Windows`, `EvoPdf.Next.Linux` or `EvoPdf.Next.MacOS`.
 
 Read `references/option-map.md` for the full property table before editing option code.
 
-## What stays the same
+### What stays the same
 `ConvertUrl`, `ConvertHtml(html, baseUrl)`, `...ToFile`; the option groups (`PdfDocumentOptions`, `PdfSecurityOptions`, `PdfViewerPreferences`, `HtmlViewerWidth`, `ConversionDelay`, `NavigationTimeout`, `JavaScriptEnabled`, authentication, headers, cookies); the license covers both.
 
-## What changes
+### What changes
 1. **Package and namespace**: `EvoPdf.HtmlToPdf` becomes `EvoPdf.Next.HtmlToPdf.<Platform>`; `using EvoPdf;` becomes `using EvoPdf.Next;`. Classic tools had sub-namespaces (`EvoPdf.PdfMerge`, `EvoPdf.PdfToText`, `EvoWordToPdf`, `EvoExcelToPdf`, `EvoPdfClient`); Next has one namespace.
 2. **License key**: the instance property `converter.LicenseKey = "..."` becomes the static `Licensing.LicenseKey = "..."`, set once per process.
-3. **Page sizing**: Classic `FitWidth` (default true) laid the page out at 1024 pixels and shrank it to the page width. A new Next converter does the same through `FitBrowserWindowToPage(PdfPageSize.A4)`: the page is laid out in a 1024 pixel browser window and drawn at 77.47 percent on A4. `FitWidth = false` with `AutoSizePdfPage = true` becomes `PageWidthFromBrowserWindow()`; `StretchToFit` becomes a zoom above 100; `SinglePage` becomes `PageWidthFromBrowserWindow(1024, singlePage: true)`. `FitHeight`, `ClipHtmlView` and the destination rectangle have no equivalent. The complete map is in the page setup migration section of this skill.
+3. **Page sizing**: Classic `FitWidth` (default true) laid the page out at 1024 pixels and shrank it to the page width. A new Next converter does the same through `FitBrowserWindowToPage(PdfPageSize.A4)`: the page is laid out in a 1024 pixel browser window and drawn at 77.47 percent on A4. `FitWidth = false` with `AutoSizePdfPage = true` becomes `PageWidthFromBrowserWindow()`; `StretchToFit` becomes a zoom above 100; `SinglePage` becomes `PageWidthFromBrowserWindow(1024, singlePage: true)`. `FitHeight`, `ClipHtmlView` and the destination rectangle have no equivalent; the Classic `Y` offset of the first page becomes `PdfDocumentOptions.FirstPageTopMargin`. The complete map is in the page setup migration section of this skill.
 4. **Headers and footers**: Classic composed `PdfHeaderOptions` from `HtmlToPdfElement`, `TextElement` (`&p;`, `&P;`), `LineElement`, `HeaderHeight`, `HeaderBackColor`; Next describes each header/footer as **one HTML template**: `PdfDocumentOptions.PdfHtmlHeader.Html`/`HtmlSourceUrl`, `Height` or `AutoSizeContentHeight`, `{page_number}`/`{total_pages}`, `ShowInFirstPage`/`OddPages`/`EvenPages`, `ReserveSpaceAlways`, `AutoResizePdfMargins`; `PageNumberingStartIndex` becomes `PageNumberOffset`/`TotalPagesOffset`; `PrepareRenderPdfPageEvent` (per-page header on/off) becomes `ShowIn...` flags.
 5. **Engine behaviour**: Chromium renders modern CSS/JS exactly as Chrome: flexbox/grid/custom properties, ES2015+, `@page` and `break-*` rules are honoured; fonts and line breaks follow Chrome; lazy images load by default; `LocalFilesEnabled`/`AllowInsecureContent` govern local and mixed content; HTTP/2 and TLS 1.3 sites load directly.
 
-## Before / after
+### Before / after
 ```csharp
 // Classic
 using EvoPdf;
@@ -43,11 +100,12 @@ c.PdfDocumentOptions.PdfHtmlFooter.Height = 30;
 byte[] pdf = c.ConvertUrl(url);
 ```
 
-## Procedure
-1. Swap package and `using`; move the license key to `Licensing.LicenseKey` at startup.
-2. Build; fix the members flagged in `option-map.md`.
-3. Convert two or three representative documents; settle page sizing first, then port headers/footers.
-4. Only then touch CSS: drop workarounds written for the old engine.
+### Procedure
+1. Decide between option 1 and option 2; the steps below are for option 2.
+2. Swap package and `using`; move the license key to `Licensing.LicenseKey` at startup.
+3. Build; fix the members flagged in `option-map.md`.
+4. Convert two or three representative documents; settle page sizing first, then port headers/footers.
+5. Only then touch CSS: drop workarounds written for the old engine.
 
 Reference: https://www.evopdf.com/evopdf-classic-to-next-migration
 
@@ -173,7 +231,7 @@ footer.Height = 40;
 </html>
 ```
 
-All 13 samples of this topic, complete: `references/examples.md`.
+All 15 samples of this topic, complete: `references/examples.md`.
 
 Full topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/migrate-html-to-pdf-from-classic.htm
 

@@ -42,8 +42,10 @@ This class offers the necessary methods to create a raster image from a web page
 - `MediaType`: Gets or sets the media type of the HTML document used by the HTML to Image converter. By default is not set to any value and the rendering will be for 'screen' CSS media
 - `NavigationTimeout`: The HTML to Image converter navigation timeout in seconds. Default value is 120
 - `PersistentHttpRequestHeaders`: This property can be set to `true` to instruct the HTML to PDF converter to send the custom headers defined by the `HttpRequestHeaders` property whenever an external resource (e.g., images, CSS, etc.) referenced by the web page is requested. The default value of this property is `false`
+- `ProxyOptions`: The network proxy used to load the HTML page and its resources. By default no proxy is set and the network settings of the system are used
 - `RemoveExcludedElements`: Gets or sets a value indicating whether elements matched by ExcludedElementsSelector should be completely removed from the layout rather than just hidden. The default value is true
 - `RemoveUnselectedElements`: Gets or sets a value indicating whether elements that are not matched by ConvertedElementsSelector should be completely removed from the layout rather than just hidden. The default value is true
+- `Resolution`: The resolution of the generated image in DPI. The image has the content size in pixels multiplied by Resolution / 96, with the layout of the page unchanged; PNG and JPEG files record the resolution. The default value is 96
 - `ScriptToExecuteAfterLoad`: A JavaScript code to execute immediately after the page was loaded. It can be used to automatically click buttons or for other operations before conversion. By default this property is null
 - `TriggeringMode`: The conversion triggering mode used by the HTML to Image converter. The default value is Auto.
 - `UncPathEnabled`: This property controls if the converter can convert files from local network. The default value is true

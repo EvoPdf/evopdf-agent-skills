@@ -27,15 +27,16 @@ Represents a file attached to a PDF document. The attachment is added to the doc
 
 Reference: https://www.evopdf.com/help/evopdf-next-dotnet/html/T_EvoPdf_Next_PdfFileAttachmentAnnotation.htm
 
-Represents a file attachment displayed as a clickable icon on a specific page of the PDF. Clicking the icon opens or extracts the attached file. The file is also added to the Attachments panel alongside any other attachments. Use one of the static factory methods (FromBytes, FromFile, FromExternalPath, FromUrl) to create an instance, then pass it to AddFileAttachmentAnnotation on the document, editor, merger, or HTML-to-PDF options
+Represents a file attachment displayed as a clickable icon on a specific page of the PDF. Clicking the icon opens or extracts the attached file. The file is also listed in the Attachments panel when AddToAttachmentsPanel is true. Use one of the static factory methods (FromBytes, FromFile, FromExternalPath, FromUrl) to create an instance, then pass it to AddFileAttachmentAnnotation on the document, the editor or the merger
 
 ### Properties
 
-- `AddToAttachmentsPanel`: When true, also adds the file to the document-level /Names /EmbeddedFiles tree, producing a separate entry in the viewer's Attachments panel alongside the page annotation. Default is false
+- `AddToAttachmentsPanel`: When true, the file is also listed in the Attachments panel of the viewer, besides the annotation in the page. Default is false
 - `Description`: Optional description displayed in the Attachments panel
 - `FileName`: File name shown in the Attachments panel, including extension (for example, "invoice.xml"). Ignored for URL attachments
 - `Height`: Height of the icon, in points. Default is 24
 - `Icon`: Icon used for the attachment annotation. Default is Paperclip
+- `IconColor`: The color of the icon, or null for the default color of the viewer
 - `MimeType`: Optional MIME type of the file (for example, "application/xml")
 - `PageNumber`: 1-based page number on which the attachment icon is placed
 - `Relationship`: Relationship between the attached file and the PDF document. Required for PDF/A-3 and PDF/A-4f compliance, ignored for other standards. Default is Unspecified

@@ -56,6 +56,11 @@ namespace EvoPdf_Next_AspNetDemo.Controllers.HTML_to_PDF
             // Leave as None to generate a plain PDF without an accessibility structure tree or archival metadata
             htmlToPdfConverter.PdfDocumentOptions.PdfStandard = model.PdfStandard;
 
+            // The language of the document, a BCP 47 tag; it replaces the language declared by the HTML page.
+            // Left empty, the language of the HTML page is used
+            if (!string.IsNullOrWhiteSpace(model.DocumentLanguage))
+                htmlToPdfConverter.PdfDocumentInfo.Language = model.DocumentLanguage;
+
             // PDF/A-4f is the PDF/A-4 variant for documents with embedded files and requires at least one
             if (model.PdfStandard == PdfStandard.PdfA4f || model.PdfStandard == PdfStandard.PdfUa2PdfA4f
                 || model.PdfStandard == PdfStandard.Wtpdf1PdfA4f)
@@ -121,9 +126,7 @@ namespace EvoPdf_Next_AspNetDemo.Controllers.HTML_to_PDF
 
 Topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/create-pdf-documents-with-standards.htm
 
-### Configure Standard, Language and Page Setup
-
-**Create a PDF/UA-2 plus PDF/A-4 document**
+### Create a PDF/UA-2 plus PDF/A-4 document
 
 ```csharp
 PdfDocumentCreateSettings settings = new PdfDocumentCreateSettings
@@ -178,7 +181,6 @@ namespace EvoPdf_Next_AspNetDemo.Controllers.PDF_Creator
                 throw new ValidationException(errorMessage);
             }
 
-            // Set license key received after purchase to use the library in licensed mode
             // Set the license key received after purchase to use the library in licensed mode; leave it commented for demo mode
             // Licensing.LicenseKey = "your-license-key";
 
@@ -316,8 +318,7 @@ namespace EvoPdf_Next_AspNetDemo.Controllers.PDF_Creator
             pdfDocument.AddText(pdfText1);
 
             // ===== Section 4: Same text on landscape pages, centered =====
-            pdfDocument.SetPageSize(PdfPageSize.A4, PdfPageOrientation.Landscape);
-            pdfDocument.AddPage();
+            pdfDocument.AddPage(PdfPageSize.A4, PdfPageOrientation.Landscape);
             crtYPos = 0;
 
             crtYPos = AddSectionLabel(pdfDocument, sectionFont,

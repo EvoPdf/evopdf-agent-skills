@@ -15,9 +15,7 @@ az aks get-credentials --resource-group pdf-app-rg --name pdf-aks
 kubectl get nodes
 ```
 
-### Deploy the Application
-
-**pdf-app.yaml**
+### pdf-app.yaml
 
 ```yaml
 apiVersion: apps/v1
@@ -58,6 +56,8 @@ spec:
   - port: 80
     targetPort: 8080
 ```
+
+### Deploy the Application
 
 ```bash
 kubectl apply -f pdf-app.yaml

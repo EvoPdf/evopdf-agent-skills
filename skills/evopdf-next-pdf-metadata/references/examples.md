@@ -6,9 +6,20 @@ Every code sample of the documentation topics behind this skill, complete and in
 
 Topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/set-pdf-viewer-preferences.htm
 
+### Set the Window and Reading Options
+
+```csharp
+htmlToPdfConverter.PdfViewerPreferences.CenterWindow = true;
+htmlToPdfConverter.PdfViewerPreferences.FitWindow = true;
+htmlToPdfConverter.PdfViewerPreferences.PageMode = ViewerPageMode.FullScreen;
+htmlToPdfConverter.PdfViewerPreferences.NonFullScreenPageMode = ViewerFullScreenExitMode.UseOutlines;
+htmlToPdfConverter.PdfViewerPreferences.Direction = ViewerTextOrder.R2L;
+```
+
 ### Code Sample - Set PDF Viewer Preferences for the Generated PDF Document
 
 ```csharp
+using System;
 using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Mvc;
 using EvoPdf_Next_AspNetDemo.Models;
@@ -58,6 +69,16 @@ namespace EvoPdf_Next_AspNetDemo.Controllers.HTML_to_PDF
 
             // Display the document title in viewer title bar
             htmlToPdfConverter.PdfViewerPreferences.DisplayDocTitle = model.DisplayDocTitle;
+
+            // Center the viewer window on the screen and resize it to fit the first page
+            htmlToPdfConverter.PdfViewerPreferences.CenterWindow = model.CenterWindow;
+            htmlToPdfConverter.PdfViewerPreferences.FitWindow = model.FitWindow;
+
+            // The panels displayed when the viewer leaves the full screen mode
+            htmlToPdfConverter.PdfViewerPreferences.NonFullScreenPageMode = (ViewerFullScreenExitMode)Enum.Parse(typeof(ViewerFullScreenExitMode), model.NonFullScreenPageMode);
+
+            // The reading order of the pages, left to right or right to left
+            htmlToPdfConverter.PdfViewerPreferences.Direction = model.Direction == "R2L" ? ViewerTextOrder.R2L : ViewerTextOrder.L2R;
 
             // Convert the HTML page to a PDF document in a memory buffer
             byte[] outPdfBuffer = htmlToPdfConverter.ConvertUrl(model.Url);

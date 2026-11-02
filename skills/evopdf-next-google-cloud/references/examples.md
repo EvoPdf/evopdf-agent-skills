@@ -12,6 +12,8 @@ Topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/publish-to-google-clo
 dotnet publish -c Release -r linux-x64 --self-contained false -o publish
 ```
 
+### Dockerfile
+
 ```dockerfile
 FROM mcr.microsoft.com/dotnet/aspnet:10.0
 
@@ -43,6 +45,8 @@ EXPOSE 8080
 # Start the application
 ENTRYPOINT ["dotnet", "MyApp.dll"]
 ```
+
+### Build the Container Image
 
 ```bash
 docker build --platform linux/amd64 -t pdf-app .

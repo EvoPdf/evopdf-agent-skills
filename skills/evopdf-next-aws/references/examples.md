@@ -6,9 +6,7 @@ Every code sample of the documentation topics behind this skill, complete and in
 
 Topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/publish-to-aws-elastic-beanstalk-linux.htm
 
-### Install the Required Packages
-
-**.ebextensions/evopdf.config**
+### .ebextensions/evopdf.config
 
 ```yaml
 packages:
@@ -39,9 +37,7 @@ container_commands:
     command: "chmod +x evopdf_runtimes/linux-x64/native/evopdf_pdfprocessor"
 ```
 
-### Raise the Proxy Limits
-
-**.platform/nginx/conf.d/evopdf.conf**
+### .platform/nginx/conf.d/evopdf.conf
 
 ```nginx
 proxy_read_timeout 300;
@@ -73,7 +69,7 @@ Topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/publish-to-aws-elasti
 dotnet publish -c Release -r win-x64 --self-contained false -o publish
 ```
 
-**aws-windows-deployment-manifest.json**
+### aws-windows-deployment-manifest.json
 
 ```json
 {
@@ -97,9 +93,7 @@ dotnet publish -c Release -r win-x64 --self-contained false -o publish
 
 Topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/publish-to-aws-lambda.htm
 
-### Create the Lambda Function Project
-
-**Project file**
+### Project file
 
 ```xml
 <Project Sdk="Microsoft.NET.Sdk">
@@ -113,12 +107,12 @@ Topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/publish-to-aws-lambda
     <PackageReference Include="Amazon.Lambda.Core" Version="2.5.0" />
     <PackageReference Include="Amazon.Lambda.APIGatewayEvents" Version="2.7.1" />
     <PackageReference Include="Amazon.Lambda.Serialization.SystemTextJson" Version="2.4.4" />
-    <PackageReference Include="EvoPdf.Next.HtmlToPdf.Linux" Version="14.86.0" />
+    <PackageReference Include="EvoPdf.Next.HtmlToPdf.Linux" Version="15.0.3" />
   </ItemGroup>
 </Project>
 ```
 
-**Function.cs**
+### Function.cs
 
 ```csharp
 using Amazon.Lambda.APIGatewayEvents;
@@ -159,6 +153,8 @@ public class Function
 dotnet publish -c Release -r linux-x64 --self-contained false -o publish
 ```
 
+### Dockerfile
+
 ```dockerfile
 FROM public.ecr.aws/lambda/dotnet:10
 
@@ -179,6 +175,8 @@ ENV HOME=/tmp
 
 CMD ["PdfFunction::PdfFunction.Function::FunctionHandler"]
 ```
+
+### Build the Container Image
 
 ```bash
 docker build --platform linux/amd64 --provenance=false --sbom=false -t pdf-function .
@@ -207,6 +205,8 @@ Topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/publish-to-amazon-ecs
 ```bash
 dotnet publish -c Release -r linux-x64 --self-contained false -o publish
 ```
+
+### Dockerfile
 
 ```dockerfile
 FROM mcr.microsoft.com/dotnet/aspnet:10.0
@@ -240,6 +240,8 @@ EXPOSE 8080
 ENTRYPOINT ["dotnet", "MyApp.dll"]
 ```
 
+### Build the Container Image
+
 ```bash
 docker build --platform linux/amd64 -t pdf-app .
 ```
@@ -262,7 +264,7 @@ aws ecs create-cluster --cluster-name pdf-cluster
 aws logs create-log-group --log-group-name /ecs/pdf-app
 ```
 
-**task.json**
+### task.json
 
 ```json
 {
@@ -283,6 +285,8 @@ aws logs create-log-group --log-group-name /ecs/pdf-app
   }]
 }
 ```
+
+### Create the Cluster and the Task Definition
 
 ```bash
 aws ecs register-task-definition --cli-input-json file://task.json

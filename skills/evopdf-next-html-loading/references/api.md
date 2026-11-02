@@ -51,3 +51,30 @@ This enumeration defines the possible options for the lazy image loading mode
 
 - `Browser`: Browser mode
 - `Custom`: Custom mode
+
+## ProxyOptions
+
+Reference: https://www.evopdf.com/help/evopdf-next-dotnet/html/T_EvoPdf_Next_ProxyOptions.htm
+
+The network proxy used to load the HTML page and its resources. The proxy is used when Type is not None and a host name is set
+
+### Properties
+
+- `BypassedHosts`: The hosts accessed directly, without the proxy. An entry can be a host name, an IP address, a domain with its subdomains ("*.example.com") or a CIDR range ("10.0.0.0/8"). The local machine is always accessed directly
+- `HostName`: The host name or the IP address of the proxy
+- `Password`: The password sent when a HTTP proxy requires authentication
+- `PortNumber`: The port number of the proxy
+- `Type`: The type of the proxy. The default value is None
+- `Username`: The username sent when a HTTP proxy requires authentication
+
+## NetworkProxyType
+
+Reference: https://www.evopdf.com/help/evopdf-next-dotnet/html/T_EvoPdf_Next_NetworkProxyType.htm
+
+The type of the network proxy used to load the HTML page and its resources
+
+### Fields and values
+
+- `Http`: A HTTP proxy
+- `None`: No proxy is set in the converter and the network settings of the system are used
+- `Socks5`: A SOCKS5 proxy

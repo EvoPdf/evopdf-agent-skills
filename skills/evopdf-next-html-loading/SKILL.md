@@ -1,6 +1,6 @@
 ---
 name: evopdf-next-html-loading
-description: "Control how EvoPdf Next fetches the HTML: authentication, cookies, custom HTTP headers, GET and POST, the current ASP.NET session, local files, UNC paths, localhost, lazy images, web fonts, redirects and navigation timeout."
+description: "Control how EvoPdf Next fetches the HTML: authentication, cookies, custom HTTP headers, GET and POST, HTTP and SOCKS5 proxy servers with authentication and bypassed hosts, the current ASP.NET session, local files, UNC paths, localhost, lazy images, web fonts, redirects and navigation timeout."
 ---
 
 # EvoPdf Next: loading the HTML page
@@ -16,9 +16,16 @@ Namespace `EvoPdf.Next`. Install one NuGet package for the target platform, for 
 - **`NameValuePair`**: Represents a name value pair
 - **`NameValuePairsCollection`**: Represents a collection of NameValuePair objects
 - **`LazyImagesLoadMode`**: This enumeration defines the possible options for the lazy image loading mode
+- **`ProxyOptions`**: The network proxy used to load the HTML page and its resources. The proxy is used when Type is not None and a host name is set
+- **`NetworkProxyType`**: The type of the network proxy used to load the HTML page and its resources
 
-4 types, 10 public members. The complete member list with the shipped
+6 types, 19 public members. The complete member list with the shipped
 summaries is in `references/api.md`; do not guess member names that are not there.
+
+A proxy server is set on `ProxyOptions` (`HtmlToPdfConverter.ProxyOptions`, `HtmlToImageConverter.ProxyOptions`):
+`Type` (`NetworkProxyType.Http` or `Socks5`), `HostName`, `PortNumber`, `Username` and `Password` for an HTTP proxy
+that requires authentication, and `BypassedHosts` for the hosts reached directly. Without a proxy set, the network
+settings of the system are used.
 
 ## Convert HTML Pages with Authentication
 
@@ -29,7 +36,7 @@ summaries is in `references/api.md`; do not guess member names that are not ther
 HtmlToPdfConverter htmlToPdfConverter = new HtmlToPdfConverter();
 // Set authentication options
 htmlToPdfConverter.AuthenticationOptions.Username = username;
-htmlToPdfConverter.AuthenticationOptions.Password = password;            
+htmlToPdfConverter.AuthenticationOptions.Password = password;
 
 // Create the HTML to Image converter
 HtmlToImageConverter htmlToImageConverter = new HtmlToImageConverter();
@@ -82,6 +89,7 @@ EVO HTML to PDF Converter allows you to convert another page of the same applica
 ### Code Sample - Display Session Variables in Converted HTML Page
 
 ```html
+@model EvoPdf_Next_AspNetDemo.Models.HTML_to_PDF.Convert_Page_in_Same_Session_ViewModel
 @{
     Layout = null;
 }
@@ -100,14 +108,14 @@ EVO HTML to PDF Converter allows you to convert another page of the same applica
     <div>
         <b style="font-size: 16px">The session variables</b><br />
         <br />
-        <b>First Name:</b>&nbsp;<span id="firstNameLabel">@(ViewData["firstName"] != null ? ViewData["firstName"].ToString() : String.Empty)</span><br />
-        <b>Last Name:</b>&nbsp;<span id="lastNameLabel">@(ViewData["lastName"] != null ? ViewData["lastName"].ToString() : String.Empty)</span><br />
-        <b>Gender:</b>&nbsp;<span id="genderLabel">@(ViewData["gender"] != null && ViewData["gender"].ToString() == "maleRadioButton" ? "Male" : "Female")</span><br />
-        <b>I have a car:</b>&nbsp;<span id="haveCarLabel">@(ViewData["haveCar"] != null && ViewData["haveCar"].ToString() != "false" ? "Yes" : "No")</span><br />
-        <div id="carTypePanel" style="display : @(ViewData["haveCar"] != null && ViewData["haveCar"].ToString() == "false" ? "none" : "inline")">
-            <b>Car Type:</b>&nbsp;<span id="carTypeLabel">@(ViewData["carType"] != null ? ViewData["carType"].ToString() : String.Empty)</span><br />
+        <b>First Name:</b>&nbsp;<span id="firstNameLabel">@Model.FirstName</span><br />
+        <b>Last Name:</b>&nbsp;<span id="lastNameLabel">@Model.LastName</span><br />
+        <b>Gender:</b>&nbsp;<span id="genderLabel">@((Model.Gender == "Male") ? "Male" : "Female")</span><br />
+        <b>I have a car:</b>&nbsp;<span id="haveCarLabel">@(Model.HaveCar ? "Yes" : "No")</span><br />
+        <div id="carTypePanel" style="display : @(Model.HaveCar ? "inline" : "none")">
+            <b>Car Type:</b>&nbsp;<span id="carTypeLabel">@Model.CarType</span><br />
         </div>
-        <b>Comments:</b>&nbsp;<span id="commentsLabel">@(ViewData["comments"] != null ? ViewData["comments"].ToString() : String.Empty)</span><br />
+        <b>Comments:</b>&nbsp;<span id="commentsLabel">@Model.Comments</span><br />
     </div>
 </body>
 </html>
@@ -124,6 +132,14 @@ EVO HTML to PDF Converter offers full support for web fonts. The web fonts are r
 All 1 samples of this topic, complete: `references/examples.md`.
 
 Full topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/convert-html-with-web-fonts-to-pdf.htm
+
+## Convert HTML through a Proxy Server
+
+EVO HTML to PDF Converter can load the HTML page and its resources through a HTTP or a SOCKS5 proxy server. The proxy is configured with the `ProxyOptions` object exposed by the `HtmlToPdfConverter.ProxyOptions` property. By default no proxy is set and the network settings of the system are used.
+
+All 1 samples of this topic, complete: `references/examples.md`.
+
+Full topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/convert-html-through-proxy-server.htm
 
 ## Rules that apply to every sample here
 

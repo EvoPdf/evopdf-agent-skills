@@ -32,17 +32,6 @@ Specifies the PDF standards compliance level for the generated PDF document
 - `Wtpdf1PdfA4`: Well-Tagged PDF 1.0 conformance levels for accessibility and for reuse combined with PDF/UA-2 (ISO 14289-2) and PDF/A-4 (ISO 19005-4) base long-term archival conformance
 - `Wtpdf1PdfA4f`: Well-Tagged PDF 1.0 conformance levels for accessibility and for reuse combined with PDF/UA-2 (ISO 14289-2) and PDF/A-4f (ISO 19005-4 Files) long-term archival with support for embedded files of arbitrary type. The document must contain at least one embedded file
 
-## PdfAccessibilityOptions
-
-Reference: https://www.evopdf.com/help/evopdf-next-dotnet/html/T_EvoPdf_Next_PdfAccessibilityOptions.htm
-
-Controls the accessibility settings of the generated PDF document. These settings take effect only when a PDF/UA or PDF/A standard requiring a tagged structure tree is selected using the PdfStandard property
-
-### Properties
-
-- `AddMissingImageAlternateText`: Gets or sets a value indicating whether images referenced in the PDF structure that do not have alternate text receive a default value. The default value is true
-- `InsertMissingTableHeaders`: Gets or sets a value indicating whether an artificial header row is inserted at the top of tables that do not contain header cells in the generated PDF document. The default value is true
-
 ## PdfAccessibilityProperties
 
 Reference: https://www.evopdf.com/help/evopdf-next-dotnet/html/T_EvoPdf_Next_PdfAccessibilityProperties.htm

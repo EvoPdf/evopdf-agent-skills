@@ -1,6 +1,6 @@
 ---
 name: evopdf-next-troubleshooting
-description: "Diagnose EvoPdf Next failures: startup and native runtime errors, permission problems, blank or incomplete output, timeouts, missing fonts and images, and the reusable-instance exception."
+description: "Diagnose EvoPdf Next failures: the PdfException messages, startup and native runtime errors, permission problems, blank or incomplete output, timeouts, proxies, missing fonts and images, and the reusable-instance exception."
 ---
 
 # EvoPdf Next: troubleshooting
@@ -9,6 +9,8 @@ This troubleshooting guide for EvoPdf Next for .NET contains the necessary infor
 
 Namespace `EvoPdf.Next`. Install one NuGet package for the target platform, for example
 `EvoPdf.Next.Windows`, `EvoPdf.Next.Linux` or `EvoPdf.Next.MacOS`.
+
+The errors of the library are reported as `PdfException` objects. The message says what failed and, when the cause is in the input or in the environment, what was wrong, so it is the first thing to check.
 
 Ask for: the call used (`ConvertUrl` / `ConvertHtml`), the platform, whether the page renders correctly in Chrome, and the exception text. Then match the symptom below. All members are on `HtmlToPdfConverter` unless stated; `o` = `converter.PdfDocumentOptions`.
 
@@ -26,6 +28,7 @@ Ask for: the call used (`ConvertUrl` / `ConvertHtml`), the platform, whether the
 | Fonts replaced / Unicode boxes | the font is not installed on the server | install the fonts on the server or embed web fonts (`@font-face`, WOFF2) in the HTML; the converter embeds used fonts as subsets automatically |
 | Right-to-left, Arabic, Indic, Thai | - | supported by the Chromium engine; use `dir="rtl"` / correct `lang` and fonts that contain the glyphs |
 | HTTPS page fails with a certificate error | self-signed or internal CA | `IgnoreCertificateErrors = true` (development) or install the CA on the server |
+| Page loads only through a proxy | no proxy set | `converter.ProxyOptions.Type = NetworkProxyType.Http`, `HostName`, `PortNumber`, and `Username`/`Password` when the proxy requires authentication |
 | Page behind a login | no credentials | `AuthenticationOptions` with the user name and password, or forward the session: `HttpRequestCookies.Add(...)`, `HttpRequestHeaders.Add("Authorization", ...)`; the converter does **not** share the browser's session automatically |
 | Mixed content blocked | HTTPS page loading HTTP resources | `AllowInsecureContent = true` |
 | Links in the PDF undesired | - | remove or neutralise the anchors in CSS/HTML before conversion (links come from the HTML) |

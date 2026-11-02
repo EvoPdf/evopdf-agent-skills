@@ -107,9 +107,9 @@ namespace EvoPdf_Next_AspNetDemo.Controllers.HTML_to_PDF
             string currentPageUrl = uriBuilder.Uri.AbsoluteUri;
             string rootUrl = currentPageUrl.Substring(0, currentPageUrl.Length - "Select_HTML_Elements_to_Convert_to_PDF".Length);
 
-            model.HtmlString = System.IO.File.ReadAllText(Path.Combine(contentRootPath, "DemoAppFiles/Input/HTML_Files/Partially_Converterted.html"));
+            model.HtmlString = System.IO.File.ReadAllText(Path.Combine(contentRootPath, "DemoAppFiles/Input/HTML_Files/Partially_Converted.html"));
             model.BaseUrl = rootUrl + "DemoAppFiles/Input/HTML_Files/";
-            model.Url = rootUrl + "DemoAppFiles/Input/HTML_Files/Partially_Converterted.html";
+            model.Url = rootUrl + "DemoAppFiles/Input/HTML_Files/Partially_Converted.html";
 
             return model;
         }
@@ -121,7 +121,7 @@ namespace EvoPdf_Next_AspNetDemo.Controllers.HTML_to_PDF
 
 Topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/select-html-elements-to-exclude-from-pdf.htm
 
-### Code Sample - Select HTML Elements to Convert to PDF
+### Code Sample - Select HTML Elements to Exclude from PDF
 
 ```csharp
 using System;
@@ -235,6 +235,14 @@ namespace EvoPdf_Next_AspNetDemo.Controllers.HTML_to_PDF
 
 Topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/retrieve-html-element-positions-in-pdf.htm
 
+### Collect the Elements of IFrames and Hide Elements
+
+```csharp
+htmlToPdfConverter.HtmlElementsInfoSelector = "h1, h2, h3, h4";
+htmlToPdfConverter.HtmlElementsInfoIncludeIFrames = true;
+htmlToPdfConverter.HtmlElementsInfoHiddenElementsSelector = "h4";
+```
+
 ### Code Sample - Retrieve HTML Element Positions in PDF
 
 ```csharp
@@ -288,6 +296,13 @@ namespace EvoPdf_Next_AspNetDemo.Controllers.HTML_to_PDF
                 // The retrieved information will be available in the HtmlElementsInfo object,
                 // which is exposed by htmlToPdfConverter after the conversion
                 htmlToPdfConverter.HtmlElementsInfoSelector = model.RetrieveElementsInfoSelector;
+
+                if (model.HideElements)
+                {
+                    // The collected elements matching this selector are hidden in the generated document; their
+                    // positions are still reported
+                    htmlToPdfConverter.HtmlElementsInfoHiddenElementsSelector = model.HiddenElementsSelector;
+                }
             }
 
             // Optionally generate a table of contents for the PDF document

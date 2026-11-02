@@ -1,5 +1,8 @@
 # Changelog
 
+## 3.0.0
+- Skills updated for EvoPdf Next 15.0.
+
 ## 2.1.0
 - Skills updated for EvoPdf Next 14.86.
 - New skills: electronic invoices (Factur-X, ZUGFeRD, XRechnung, Order-X), AWS, Google Cloud and Kubernetes.

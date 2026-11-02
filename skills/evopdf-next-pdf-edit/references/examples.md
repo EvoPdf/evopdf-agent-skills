@@ -6,24 +6,38 @@ Every code sample of the documentation topics behind this skill, complete and in
 
 Topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/add-text-to-existing-pdf.htm
 
-### Open the Source PDF
-
-**Open an existing PDF for editing**
+### Open an existing PDF for editing
 
 ```csharp
 string password = string.IsNullOrEmpty(ownerPassword) ? userPassword : ownerPassword;
 using PdfEditor pdfEditor = new PdfEditor(inputPdfBytes, password);
 ```
 
-### AddText, Page Cursor and Multi-Page Flow
-
-**Page cursor discipline**
+### Page cursor discipline
 
 ```csharp
 PdfTextElement element = new PdfTextElement(text, font) { X = 0, Y = crtYPos, Width = contentWidth };
 var info = pdfEditor.AddText(currentPage, element);
 currentPage = info.LastPageRectangle.PageNumber;        // follow the engine if it overflowed
 crtYPos = (int)info.LastPageRectangle.Bounds.Bottom + ySeparator;
+```
+
+### Continue the Text on Inserted Pages
+
+```csharp
+PdfTextElement longText = new PdfTextElement(text, font)
+{
+    X = 36,
+    Y = crtYPos,
+    Width = contentWidth,
+    ContinueOnNextPage = true,
+    // The pages where the text continues are inserted after the current page
+    InsertContinuationPages = true,
+    ContinuationTopMargin = 36,
+    ContinuationBottomMargin = 36
+};
+PdfTextRenderInfo info = pdfEditor.AddText(currentPage, longText);
+currentPage = info.LastPageRectangle.PageNumber;
 ```
 
 ### Code Sample - Add Text to Existing PDF
@@ -49,8 +63,9 @@ namespace EvoPdf_Next_AspNetDemo.Controllers.PDF_Editor
     {
         private const int leftMargin = 36;
         private const int topMargin = 36;
-        private const int contentWidth = 595 - 72;
-        private const int contentHeight = 842 - 72;
+        // The content area of the pages inside the demo margins, from the size of the first page of the loaded document
+        private int contentWidth;
+        private int contentHeight;
 
         private readonly IWebHostEnvironment m_hostingEnvironment;
 
@@ -74,7 +89,6 @@ namespace EvoPdf_Next_AspNetDemo.Controllers.PDF_Editor
                 throw new ValidationException(errorMessage);
             }
 
-            // Set license key received after purchase to use the library in licensed mode
             // Set the license key received after purchase to use the library in licensed mode; leave it commented for demo mode
             // Licensing.LicenseKey = "your-license-key";
 
@@ -120,15 +134,15 @@ namespace EvoPdf_Next_AspNetDemo.Controllers.PDF_Editor
                 }
             }
 
-            // Open the loaded PDF for editing.  PdfEditor inherits the
-            // standard (PDF/A, PDF/UA etc.) and Language from the source
-            // document, so no PdfDocumentCreateSettings is needed.  Page
-            // size and margins are also taken from the existing pages;
-            // we apply our own margins manually below via leftMargin /
-            // topMargin since PdfEditor draws at absolute page coordinates
+            // The pages of an edited document have no margins: the demo keeps its content inside its own margins
             string password = string.IsNullOrEmpty(model.OwnerPassword) ? model.UserPassword : model.OwnerPassword;
             using PdfEditor pdfEditor = new PdfEditor(inputPdfBytes, password);
-            pdfEditor.PdfDocumentInfo.Title = "PDF Text Demo";
+
+            PdfPageInfo firstPageInfo = pdfEditor.GetPdfPageInfo(1);
+            // A rotation of 90 or 270 degrees swaps the width and the height of the page as it is displayed
+            bool firstPageTurned = firstPageInfo.Rotation % 180 != 0;
+            contentWidth = (int)(firstPageTurned ? firstPageInfo.PageSize.Height : firstPageInfo.PageSize.Width) - 2 * leftMargin;
+            contentHeight = (int)(firstPageTurned ? firstPageInfo.PageSize.Width : firstPageInfo.PageSize.Height) - 2 * topMargin;
 
             string fontsPath = GetDemoFontsPath();
             string fontFilePath = Path.Combine(fontsPath, "DejaVuSerif.ttf");
@@ -172,9 +186,8 @@ namespace EvoPdf_Next_AspNetDemo.Controllers.PDF_Editor
             crtYPos = (int)sectionLabel1Info.LastPageRectangle.Bounds.Bottom + ySeparator;
 
             PdfTextElement highlighted = new PdfTextElement(
-                "This paragraph has a yellow highlight background drawn behind the text as an " +
-                "Artifact (it does not appear in the structure tree). The background covers the " +
-                "full column width and the actual used height.",
+                "This paragraph has a yellow highlight background drawn behind the text. The background " +
+                "covers the full column width and the height used by the text.",
                 bodyFont)
             {
                 X = xLeft,
@@ -199,9 +212,9 @@ namespace EvoPdf_Next_AspNetDemo.Controllers.PDF_Editor
             PdfTextElement decoratedText = new PdfTextElement(
                 "Below text is drawn an under-layer rectangle in the OnBeforePageRender callback, " +
                 "while the OnAfterPageRender callback adds a thin border around the rendered area. " +
-                "Both callbacks receive the same PdfTextPageRenderInfo type but the rectangle in " +
-                "OnBeforePageRender is the predicted column area while in OnAfterPageRender it is " +
-                "the actual rendered area.",
+                "Both callbacks receive the same PdfTextPageRenderInfo type: the rectangle in " +
+                "OnBeforePageRender is the area the text is about to use and in OnAfterPageRender " +
+                "it is the area the text used.",
                 bodyFont)
             {
                 X = xLeft,
@@ -283,7 +296,7 @@ namespace EvoPdf_Next_AspNetDemo.Controllers.PDF_Editor
             // Advance Y past the rotated area's axis-aligned bounding box.
             crtYPos = (int)rotatedInfo.LastPageRectangle.Bounds.Bottom + ySeparator * 2;
 
-            // ===== Section 5: Multi-page continuation + per-page RenderedText =====
+            // ===== Section 4: Multi-page continuation + per-page RenderedText =====
             currentPage = pdfEditor.AddPage();
             crtYPos = topMargin;
 
@@ -295,12 +308,23 @@ namespace EvoPdf_Next_AspNetDemo.Controllers.PDF_Editor
             currentPage = sectionLabel4Info.LastPageRectangle.PageNumber;
             crtYPos = (int)sectionLabel4Info.LastPageRectangle.Bounds.Bottom + ySeparator;
 
-            // Build a long text that will overflow several pages.
+            // A page added after the pages of the document: the text continues over it, or the pages where the
+            // text continues are inserted before it and it keeps its content, as the option asks
+            int pageAfterText = pdfEditor.AddPage();
+            pdfEditor.AddText(pageAfterText, new PdfTextElement("The page that followed the text", smallFont)
+            {
+                X = xLeft,
+                Y = topMargin
+            });
+
+            // A long text that takes several pages
             string longTextSource = LoadAlphabetText();
             StringBuilder longBuilder = new StringBuilder();
             for (int i = 0; i < 8; i++) longBuilder.AppendLine(longTextSource);
             string longText = longBuilder.ToString();
 
+            // The pages of an edited document have no margins, so the continuation margins give the area of the
+            // pages where the text continues
             PdfTextElement multipage = new PdfTextElement(longText, bodyFont)
             {
                 X = xLeft,
@@ -308,6 +332,9 @@ namespace EvoPdf_Next_AspNetDemo.Controllers.PDF_Editor
                 Width = contentWidth,
                 Alignment = PdfTextAlignment.Left,
                 ContinueOnNextPage = true,
+                InsertContinuationPages = model.InsertContinuationPages,
+                ContinuationTopMargin = topMargin,
+                ContinuationBottomMargin = topMargin,
                 BackgroundColor = PdfColor.WhiteSmoke,
                 BackgroundOpacity = 1f
             };
@@ -334,7 +361,7 @@ namespace EvoPdf_Next_AspNetDemo.Controllers.PDF_Editor
 
             currentPage = multipageInfo.LastPageRectangle.PageNumber;
 
-            // ===== Section 6: Summary of pages rendered =====
+            // ===== Section 5: Summary of pages rendered =====
             currentPage = pdfEditor.AddPage();
             crtYPos = topMargin;
 
@@ -386,21 +413,15 @@ namespace EvoPdf_Next_AspNetDemo.Controllers.PDF_Editor
         {
             string textsPath = GetDemoTextsPath();
             string alphabetFilePath = Path.Combine(textsPath, "Alphabet.txt");
-            if (System.IO.File.Exists(alphabetFilePath))
-                return System.IO.File.ReadAllText(alphabetFilePath);
-
-            // Fallback so the demo runs even without the alphabet file.
-            return "The quick brown fox jumps over the lazy dog. " +
-                   "Pack my box with five dozen liquor jugs. " +
-                   "Sphinx of black quartz, judge my vow. " +
-                   "How vexingly quick daft zebras jump. ";
+            return System.IO.File.ReadAllText(alphabetFilePath);
         }
 
         private void EnsureSpaceOnPage(ref int crtYPos, ref int currentPage, int requestedHeight, PdfEditor pdfEditor, int contentHeight, int topMargin)
         {
             if (crtYPos + requestedHeight > contentHeight + topMargin)
             {
-                currentPage = pdfEditor.AddPage();
+                // The content continues on the following page of the document, or on a new page after the last one
+                currentPage = currentPage < pdfEditor.PageCount ? currentPage + 1 : pdfEditor.AddPage();
                 crtYPos = topMargin;
             }
         }
@@ -466,8 +487,9 @@ namespace EvoPdf_Next_AspNetDemo.Controllers.PDF_Editor
     {
         private const int leftMargin = 36;
         private const int topMargin = 36;
-        private const int contentWidth = 595 - 72;
-        private const int contentHeight = 842 - 72;
+        // The content area of the pages inside the demo margins, from the size of the first page of the loaded document
+        private int contentWidth;
+        private int contentHeight;
 
         private readonly IWebHostEnvironment m_hostingEnvironment;
 
@@ -536,15 +558,15 @@ namespace EvoPdf_Next_AspNetDemo.Controllers.PDF_Editor
                 }
             }
 
-            // Open the loaded PDF for editing.  PdfEditor inherits the
-            // standard (PDF/A, PDF/UA etc.) and Language from the source
-            // document, so no PdfDocumentCreateSettings is needed.  Page
-            // size and margins are also taken from the existing pages;
-            // we apply our own margins manually below via leftMargin /
-            // topMargin since PdfEditor draws at absolute page coordinates
+            // The pages of an edited document have no margins: the demo keeps its content inside its own margins
             string password = string.IsNullOrEmpty(model.OwnerPassword) ? model.UserPassword : model.OwnerPassword;
             using PdfEditor pdfEditor = new PdfEditor(inputPdfBytes, password);
-            pdfEditor.PdfDocumentInfo.Title = "PDF Image Demo";
+
+            PdfPageInfo firstPageInfo = pdfEditor.GetPdfPageInfo(1);
+            // A rotation of 90 or 270 degrees swaps the width and the height of the page as it is displayed
+            bool firstPageTurned = firstPageInfo.Rotation % 180 != 0;
+            contentWidth = (int)(firstPageTurned ? firstPageInfo.PageSize.Height : firstPageInfo.PageSize.Width) - 2 * leftMargin;
+            contentHeight = (int)(firstPageTurned ? firstPageInfo.PageSize.Width : firstPageInfo.PageSize.Height) - 2 * topMargin;
 
             string fontsPath = GetDemoFontsPath();
             string fontFilePath = Path.Combine(fontsPath, "DejaVuSerif.ttf");
@@ -565,6 +587,7 @@ namespace EvoPdf_Next_AspNetDemo.Controllers.PDF_Editor
             string imagesPath = GetDemoImagesPath();
             string transparentPngPath = Path.Combine(imagesPath, "transparent.png");
             string jpegPath = Path.Combine(imagesPath, "image.jpg");
+            string tallImagePath = Path.Combine(imagesPath, "Tall_Report.png");
 
             // ===== Title =====
             PdfTextElement titleElement = new PdfTextElement(
@@ -732,6 +755,62 @@ namespace EvoPdf_Next_AspNetDemo.Controllers.PDF_Editor
                 pdfEditor.AddText(currentPage, pivotLabel);
             }
 
+            if (model.AddTallImage)
+            {
+                // ===== Section 5: Image taller than a page =====
+                currentPage = pdfEditor.AddPage();
+                crtYPos = topMargin;
+                crtYPos = AddSectionLabel(pdfEditor, ref currentPage, sectionFont,
+                    "5. Image taller than a page" + (model.ContinueOnNextPage ? ", continued on the next pages" : ", cut at the bottom of the page"),
+                    xLeft, crtYPos, ySeparator);
+
+                // A page added after the pages of the document: the image continues over it, or the pages where the
+                // image continues are inserted before it and it keeps its content, as the option asks
+                int pageAfterImage = pdfEditor.AddPage();
+                pdfEditor.AddText(pageAfterImage, new PdfTextElement("The page that followed the image", smallFont)
+                {
+                    X = xLeft,
+                    Y = topMargin
+                });
+
+                // The image is scaled to the content width. The pages of an edited document have no margins, so the
+                // continuation margins give the area of the pages where the image continues
+                PdfImageElement tallImage = new PdfImageElement(tallImagePath)
+                {
+                    X = xLeft,
+                    Y = crtYPos,
+                    Width = contentWidth,
+                    ContinueOnNextPage = model.ContinueOnNextPage,
+                    InsertContinuationPages = model.InsertContinuationPages,
+                    ContinuationTopMargin = topMargin,
+                    ContinuationBottomMargin = topMargin
+                };
+                tallImage.Accessibility.AlternateText = "Annual activity report table";
+
+                PdfImageRenderInfo tallInfo = pdfEditor.AddImage(currentPage, tallImage);
+
+                // The rectangle of each part of the image, one per page; the content that follows the image is
+                // placed below the part drawn on its last page, or below the visible part when the image is cut
+                var partsText = new System.Text.StringBuilder(
+                    "The image was drawn on " + tallInfo.RenderedRectangles.Count + " page(s):");
+                foreach (PdfRenderedRectangle part in tallInfo.RenderedRectangles)
+                {
+                    partsText.AppendFormat(" page {0} ({1:F0}, {2:F0}, {3:F0}x{4:F0});", part.PageNumber,
+                        part.Bounds.X, part.Bounds.Y, part.Bounds.Width, part.Bounds.Height);
+                }
+
+                currentPage = tallInfo.LastPage;
+                PdfRectangleF lastPart = tallInfo.LastPageRectangle.VisibleBounds ?? tallInfo.LastPageRectangle.Bounds;
+                PdfTextElement partsLabel = new PdfTextElement(partsText.ToString(), smallFont)
+                {
+                    X = xLeft,
+                    Y = (int)lastPart.Bottom + ySeparator,
+                    Width = contentWidth
+                };
+                partsLabel.Accessibility.StructureType = PdfStructureType.Artifact;
+                pdfEditor.AddText(currentPage, partsLabel);
+            }
+
             byte[] outPdfBuffer = pdfEditor.Save();
             FileResult fileResult = new FileContentResult(outPdfBuffer, "application/pdf");
             fileResult.FileDownloadName = "PdfImageEditDemo.pdf";
@@ -752,7 +831,8 @@ namespace EvoPdf_Next_AspNetDemo.Controllers.PDF_Editor
         {
             if (crtYPos + requestedHeight > contentHeight + topMargin)
             {
-                currentPage = pdfEditor.AddPage();
+                // The content continues on the following page of the document, or on a new page after the last one
+                currentPage = currentPage < pdfEditor.PageCount ? currentPage + 1 : pdfEditor.AddPage();
                 crtYPos = topMargin;
             }
         }
@@ -818,8 +898,9 @@ namespace EvoPdf_Next_AspNetDemo.Controllers.PDF_Editor
     {
         private const int leftMargin = 36;
         private const int topMargin = 36;
-        private const int contentWidth = 595 - 72;
-        private const int contentHeight = 842 - 72;
+        // The content area of the pages inside the demo margins, from the size of the first page of the loaded document
+        private int contentWidth;
+        private int contentHeight;
 
         private readonly IWebHostEnvironment m_hostingEnvironment;
 
@@ -888,15 +969,15 @@ namespace EvoPdf_Next_AspNetDemo.Controllers.PDF_Editor
                 }
             }
 
-            // Open the loaded PDF for editing.  PdfEditor inherits the
-            // standard (PDF/A, PDF/UA etc.) and Language from the source
-            // document, so no PdfDocumentCreateSettings is needed.  Page
-            // size and margins are also taken from the existing pages;
-            // we apply our own margins manually below via leftMargin /
-            // topMargin since PdfEditor draws at absolute page coordinates
+            // The pages of an edited document have no margins: the demo keeps its content inside its own margins
             string password = string.IsNullOrEmpty(model.OwnerPassword) ? model.UserPassword : model.OwnerPassword;
             using PdfEditor pdfEditor = new PdfEditor(inputPdfBytes, password);
-            pdfEditor.PdfDocumentInfo.Title = "PDF Geometric Shapes Demo";
+
+            PdfPageInfo firstPageInfo = pdfEditor.GetPdfPageInfo(1);
+            // A rotation of 90 or 270 degrees swaps the width and the height of the page as it is displayed
+            bool firstPageTurned = firstPageInfo.Rotation % 180 != 0;
+            contentWidth = (int)(firstPageTurned ? firstPageInfo.PageSize.Height : firstPageInfo.PageSize.Width) - 2 * leftMargin;
+            contentHeight = (int)(firstPageTurned ? firstPageInfo.PageSize.Width : firstPageInfo.PageSize.Height) - 2 * topMargin;
 
             string fontsPath = GetDemoFontsPath();
             string fontFilePath = Path.Combine(fontsPath, "DejaVuSerif.ttf");
@@ -1138,8 +1219,8 @@ namespace EvoPdf_Next_AspNetDemo.Controllers.PDF_Editor
                     Closure = closures[i],
                     FillColor = PdfColor.LightSkyBlue,
                     FillOpacity = 0.4f,
-                    LineColor = PdfColor.MediumBlue,
-                    LineStyle = new PdfLineStyle { LineWidth = 1.5f }
+                    BorderColor = PdfColor.MediumBlue,
+                    Border = new PdfLineStyle { LineWidth = 1.5f }
                 });
                 int capBottom = AddCaption(pdfEditor, ref currentPage, labelFont, closureLabels[i], arcX,
                     (int)arcInfo.LastPageRectangle.Bounds.Bottom + 5, 140);
@@ -1177,7 +1258,8 @@ namespace EvoPdf_Next_AspNetDemo.Controllers.PDF_Editor
         {
             if (crtYPos + requestedHeight > contentHeight + topMargin)
             {
-                currentPage = pdfEditor.AddPage();
+                // The content continues on the following page of the document, or on a new page after the last one
+                currentPage = currentPage < pdfEditor.PageCount ? currentPage + 1 : pdfEditor.AddPage();
                 crtYPos = topMargin;
             }
         }
@@ -1244,8 +1326,9 @@ namespace EvoPdf_Next_AspNetDemo.Controllers.PDF_Editor
     {
         private const int leftMargin = 36;
         private const int topMargin = 36;
-        private const int contentWidth = 595 - 72;
-        private const int contentHeight = 842 - 72;
+        // The content area of the pages inside the demo margins, from the size of the first page of the loaded document
+        private int contentWidth;
+        private int contentHeight;
 
         private readonly IWebHostEnvironment m_hostingEnvironment;
 
@@ -1314,15 +1397,15 @@ namespace EvoPdf_Next_AspNetDemo.Controllers.PDF_Editor
                 }
             }
 
-            // Open the loaded PDF for editing.  PdfEditor inherits the
-            // standard (PDF/A, PDF/UA etc.) and Language from the source
-            // document, so no PdfDocumentCreateSettings is needed.  Page
-            // size and margins are also taken from the existing pages;
-            // we apply our own margins manually below via leftMargin /
-            // topMargin since PdfEditor draws at absolute page coordinates
+            // The pages of an edited document have no margins: the demo keeps its content inside its own margins
             string password = string.IsNullOrEmpty(model.OwnerPassword) ? model.UserPassword : model.OwnerPassword;
             using PdfEditor pdfEditor = new PdfEditor(inputPdfBytes, password);
-            pdfEditor.PdfDocumentInfo.Title = "PDF Polyline, Polygon and Path Demo";
+
+            PdfPageInfo firstPageInfo = pdfEditor.GetPdfPageInfo(1);
+            // A rotation of 90 or 270 degrees swaps the width and the height of the page as it is displayed
+            bool firstPageTurned = firstPageInfo.Rotation % 180 != 0;
+            contentWidth = (int)(firstPageTurned ? firstPageInfo.PageSize.Height : firstPageInfo.PageSize.Width) - 2 * leftMargin;
+            contentHeight = (int)(firstPageTurned ? firstPageInfo.PageSize.Width : firstPageInfo.PageSize.Height) - 2 * topMargin;
 
             string fontsPath = GetDemoFontsPath();
             string fontFilePath = Path.Combine(fontsPath, "DejaVuSerif.ttf");
@@ -1470,8 +1553,8 @@ namespace EvoPdf_Next_AspNetDemo.Controllers.PDF_Editor
             {
                 FillColor = PdfColor.Crimson,
                 FillOpacity = 0.8f,
-                LineColor = PdfColor.DarkRed,
-                LineStyle = new PdfLineStyle { LineWidth = 1.5f, LineJoin = PdfLineJoinStyle.Round }};
+                BorderColor = PdfColor.DarkRed,
+                Border = new PdfLineStyle { LineWidth = 1.5f, LineJoin = PdfLineJoinStyle.Round }};
 
             heart
                 .MoveTo(cx, cy + s * 0.25f)
@@ -1495,8 +1578,8 @@ namespace EvoPdf_Next_AspNetDemo.Controllers.PDF_Editor
             // Wave
             PdfPathElement wave = new PdfPathElement
             {
-                LineColor = PdfColor.SteelBlue,
-                LineStyle = new PdfLineStyle { LineWidth = 2f, LineCap = PdfLineCapStyle.Round }};
+                BorderColor = PdfColor.SteelBlue,
+                Border = new PdfLineStyle { LineWidth = 2f, LineCap = PdfLineCapStyle.Round }};
 
             float waveStartX = xLeft + 200;
             float waveY = crtYPos + 70;
@@ -1526,8 +1609,8 @@ namespace EvoPdf_Next_AspNetDemo.Controllers.PDF_Editor
             {
                 FillColor = PdfColor.LightSeaGreen,
                 FillOpacity = 0.6f,
-                LineColor = PdfColor.Teal,
-                LineStyle = new PdfLineStyle { LineWidth = 1.2f }
+                BorderColor = PdfColor.Teal,
+                Border = new PdfLineStyle { LineWidth = 1.2f }
             };
             var triangleInfo3 = pdfEditor.AddPath(currentPage, staticTriangle);
             int triangle3CapBottom = AddCaption(pdfEditor, ref currentPage, labelFont,
@@ -1553,8 +1636,8 @@ namespace EvoPdf_Next_AspNetDemo.Controllers.PDF_Editor
                 {
                     FillColor = PdfColor.MediumPurple,
                     FillOpacity = 0.7f,
-                    LineColor = PdfColor.Indigo,
-                    LineStyle = new PdfLineStyle { LineWidth = 1f },
+                    BorderColor = PdfColor.Indigo,
+                    Border = new PdfLineStyle { LineWidth = 1f },
                     RotationDegrees = angles[i],
                     RotationPivot = PdfRotationPivot.Center
                 };
@@ -1637,7 +1720,8 @@ namespace EvoPdf_Next_AspNetDemo.Controllers.PDF_Editor
         {
             if (crtYPos + requestedHeight > contentHeight + topMargin)
             {
-                currentPage = pdfEditor.AddPage();
+                // The content continues on the following page of the document, or on a new page after the last one
+                currentPage = currentPage < pdfEditor.PageCount ? currentPage + 1 : pdfEditor.AddPage();
                 crtYPos = topMargin;
             }
         }
@@ -1674,5 +1758,975 @@ namespace EvoPdf_Next_AspNetDemo.Controllers.PDF_Editor
         private string GetDemoFontsPath() => Path.Combine(GetDemoFilesPath(), "Font_Files");
         private string GetDemoTextsPath() => Path.Combine(GetDemoFilesPath(), "Text_Files");
     }
+}
+```
+
+## Add HTML to Existing PDF
+
+Topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/add-html-to-existing-pdf.htm
+
+### Render HTML Content in an Edited Document
+
+```csharp
+using PdfEditor pdfEditor = new PdfEditor(inputPdfBytes, null);
+
+PdfHtmlElement htmlElement = new PdfHtmlElement(htmlString, baseUrl)
+{
+    X = 36,
+    Y = 120,
+    Width = 523,
+    // The pages where the content continues are inserted after the first page
+    InsertContinuationPages = true,
+    ContinuationTopMargin = 72,
+    ContinuationBottomMargin = 72
+};
+PdfHtmlRenderInfo htmlRenderInfo = pdfEditor.AddHtml(1, htmlElement);
+
+// The elements added after the content go below it, in its last page
+int lastPage = htmlRenderInfo.LastPageNumber;
+float crtYPos = htmlRenderInfo.LastPageRectangle.Bounds.Bottom + 15;
+```
+
+### Set the Converter and Retrieve the Positions of the HTML Elements
+
+```csharp
+htmlElement.Converter.MediaType = "print";
+htmlElement.Converter.PdfDocumentOptions.GenerateDocumentOutline = true;
+htmlElement.HtmlElementsInfoSelector = "h1, h2";
+
+PdfHtmlRenderInfo htmlRenderInfo = pdfEditor.AddHtml(1, htmlElement);
+foreach (HtmlElementInfo elementInfo in htmlRenderInfo.HtmlElementsInfo.Elements)
+{
+    foreach (PdfRenderedRectangle rectangle in elementInfo.RenderedRectangles)
+        Console.WriteLine("{0} on page {1} at {2}", elementInfo.TagName, rectangle.PageNumber, rectangle.Bounds);
+}
+```
+
+### Code Sample - Add HTML to Existing PDF
+
+```csharp
+using System;
+using System.IO;
+using System.Text;
+using System.Threading.Tasks;
+using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Http;
+using EvoPdf_Next_AspNetDemo.Models;
+using EvoPdf_Next_AspNetDemo.Models.PDF_Editor;
+
+// Use EVO PDF Namespace
+using EvoPdf.Next;
+
+namespace EvoPdf_Next_AspNetDemo.Controllers.PDF_Editor
+{
+    public class Add_HTML_to_Existing_PDFController : Controller
+    {
+        // The area of the letterhead pages left free by their header and footer
+        private const int leftMargin = 36;
+        private const int topMargin = 90;
+        private const int bottomMargin = 70;
+        // The content area of the pages inside the demo margins, from the size of the first page of the loaded document
+        private int contentWidth;
+
+        private readonly IWebHostEnvironment m_hostingEnvironment;
+
+        public Add_HTML_to_Existing_PDFController(IWebHostEnvironment hostingEnvironment)
+        {
+            m_hostingEnvironment = hostingEnvironment;
+        }
+
+        public IActionResult Index()
+        {
+            var model = SetViewModel();
+            return View(model);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> EditPdf(Add_HTML_to_Existing_PDF_ViewModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                var errorMessage = ModelStateHelper.GetModelErrors(ModelState);
+                throw new ValidationException(errorMessage);
+            }
+
+            // Set the license key received after purchase to use the library in licensed mode; leave it commented for demo mode
+            // Licensing.LicenseKey = "your-license-key";
+
+            byte[] inputPdfBytes = null;
+
+            // If an uploaded file exists, use it with priority
+            if (model.PdfFile != null && model.PdfFile.Length > 0)
+            {
+                try
+                {
+                    using var ms = new MemoryStream();
+                    await model.PdfFile.CopyToAsync(ms);
+                    inputPdfBytes = ms.ToArray();
+                }
+                catch (Exception ex)
+                {
+                    throw new Exception("Failed to read the uploaded PDF file", ex);
+                }
+            }
+            else
+            {
+                string pdfUrl = model.PdfFileUrl?.Trim();
+                if (string.IsNullOrWhiteSpace(pdfUrl))
+                    throw new Exception("No PDF file provided: upload a file or specify a URL");
+
+                try
+                {
+                    if (pdfUrl.StartsWith("file://", StringComparison.OrdinalIgnoreCase))
+                    {
+                        string localPath = new Uri(pdfUrl).LocalPath;
+                        inputPdfBytes = await System.IO.File.ReadAllBytesAsync(localPath);
+                    }
+                    else
+                    {
+                        using var httpClient = new System.Net.Http.HttpClient();
+                        inputPdfBytes = await httpClient.GetByteArrayAsync(pdfUrl);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    throw new Exception("Could not download the PDF file from URL", ex);
+                }
+            }
+
+            string password = string.IsNullOrEmpty(model.OwnerPassword) ? model.UserPassword : model.OwnerPassword;
+            using PdfEditor pdfEditor = new PdfEditor(inputPdfBytes, password);
+
+            PdfPageInfo firstPageInfo = pdfEditor.GetPdfPageInfo(1);
+            // A rotation of 90 or 270 degrees swaps the width and the height of the page as it is displayed
+            bool firstPageTurned = firstPageInfo.Rotation % 180 != 0;
+            contentWidth = (int)(firstPageTurned ? firstPageInfo.PageSize.Height : firstPageInfo.PageSize.Width) - 2 * leftMargin;
+
+            string fontFilePath = Path.Combine(GetDemoFontsPath(), "DejaVuSerif.ttf");
+            PdfBaseFont baseFont = PdfFontManager.CreateBaseFont(fontFilePath);
+            PdfFont titleFont = PdfFontManager.CreateFont(baseFont, 16f, PdfFontStyle.Bold, PdfColor.DarkBlue);
+            PdfFont textFont = PdfFontManager.CreateFont(baseFont, 10f, PdfFontStyle.Normal, PdfColor.Black);
+            PdfFont smallFont = PdfFontManager.CreateFont(baseFont, 8f, PdfFontStyle.Normal, PdfColor.DarkGray);
+
+            // The title and the HTML content go to the first page of the document, below its header
+            int currentPage = 1;
+            int crtYPos = topMargin;
+
+            PdfTextElement titleElement = new PdfTextElement("HTML Content in an Existing PDF Document", titleFont)
+            {
+                X = leftMargin,
+                Y = crtYPos,
+                Width = contentWidth,
+                Alignment = PdfTextAlignment.Center
+            };
+            titleElement.Accessibility.StructureType = PdfStructureType.Heading1;
+            var titleInfo = pdfEditor.AddText(currentPage, titleElement);
+            currentPage = titleInfo.LastPageRectangle.PageNumber;
+            crtYPos = (int)titleInfo.LastPageRectangle.Bounds.Bottom + 15;
+
+            // A page added after the pages of the document: the content continues over it and over the pages before
+            // it, or the pages where the content continues are inserted before them and they keep their content, as
+            // the option asks
+            int pageAfterContent = pdfEditor.AddPage();
+            pdfEditor.AddText(pageAfterContent, new PdfTextElement("The page that followed the HTML content", smallFont)
+            {
+                X = leftMargin,
+                Y = topMargin
+            });
+
+            // The HTML content rendered from the given position of the page, relative to the top left corner of the
+            // page. The pages of an edited document have no margins, so the continuation margins give the area of the
+            // pages where the content continues
+            PdfHtmlElement htmlElement = model.HtmlPageSource == "Url"
+                ? new PdfHtmlElement(model.Url)
+                : new PdfHtmlElement(model.HtmlStringTextBox ?? string.Empty, model.BaseUrlTextBox);
+            htmlElement.X = leftMargin + model.ElementX;
+            // The content starts at the given distance below the title
+            htmlElement.Y = crtYPos + model.ElementY;
+            // 0 extends the content to the right edge of the page
+            htmlElement.Width = model.ElementWidth;
+            // The pages where the content continues are inserted after the current one, so the pages that follow in
+            // the document keep their content; when false, the content continues on the following pages of the document
+            htmlElement.InsertContinuationPages = model.InsertContinuationPages;
+            htmlElement.ContinuationTopMargin = topMargin;
+            htmlElement.ContinuationBottomMargin = bottomMargin;
+
+            // The converter of the element takes the page size and the margins from the page; its other settings are
+            // set as for a HTML to PDF conversion
+            htmlElement.Converter.MediaType = model.MediaType;
+            // The headings of the HTML content join the bookmarks of the document
+            htmlElement.Converter.PdfDocumentOptions.GenerateDocumentOutline = model.GenerateDocumentOutline;
+
+            if (model.RetrieveElementPositions)
+            {
+                // The positions of the elements matching the selector are reported in the render information
+                htmlElement.HtmlElementsInfoSelector = model.HtmlElementsSelector;
+            }
+
+            PdfHtmlRenderInfo htmlRenderInfo = pdfEditor.AddHtml(currentPage, htmlElement);
+
+            // The elements after the HTML content are placed below it, at the end of the content on its last page
+            currentPage = htmlRenderInfo.LastPageNumber;
+            crtYPos = (int)htmlRenderInfo.LastPageRectangle.Bounds.Bottom + 15;
+
+            PdfRectangleElement separator = new PdfRectangleElement(leftMargin, crtYPos, contentWidth, 1)
+            {
+                FillColor = PdfColor.DarkBlue,
+                BorderColor = null
+            };
+            pdfEditor.AddRectangle(currentPage, separator);
+
+            PdfTextElement closingElement = new PdfTextElement(
+                string.Format("The HTML content was rendered on {0} page(s), from page {1} to page {2}. This text was added after it.",
+                    htmlRenderInfo.PagesCount, htmlRenderInfo.FirstPageNumber, htmlRenderInfo.LastPageNumber), textFont)
+            {
+                X = leftMargin,
+                Y = crtYPos + 8,
+                Width = contentWidth
+            };
+            var closingInfo = pdfEditor.AddText(currentPage, closingElement);
+            currentPage = closingInfo.LastPageRectangle.PageNumber;
+            crtYPos = (int)closingInfo.LastPageRectangle.Bounds.Bottom + 10;
+
+            if (model.RetrieveElementPositions)
+            {
+                // The page and the rectangle of each matching element; an element split by a page break has a rectangle for each page
+                StringBuilder positions = new StringBuilder();
+                foreach (HtmlElementInfo elementInfo in htmlRenderInfo.HtmlElementsInfo.Elements)
+                {
+                    positions.Append(elementInfo.TagName);
+                    if (!string.IsNullOrEmpty(elementInfo.Id))
+                        positions.Append(" #").Append(elementInfo.Id);
+                    positions.Append(" \"").Append(Shorten(elementInfo.Text)).Append("\":");
+                    foreach (PdfRenderedRectangle rectangle in elementInfo.RenderedRectangles)
+                    {
+                        positions.Append(string.Format(" page {0} ({1:0}, {2:0}, {3:0}, {4:0})", rectangle.PageNumber,
+                            rectangle.Bounds.X, rectangle.Bounds.Y, rectangle.Bounds.Width, rectangle.Bounds.Height));
+                    }
+                    positions.Append('\n');
+                }
+
+                PdfTextElement positionsElement = new PdfTextElement(
+                    "Positions of the elements matching \"" + model.HtmlElementsSelector + "\":\n" + positions, smallFont)
+                {
+                    X = leftMargin,
+                    Y = crtYPos,
+                    Width = contentWidth,
+                    ContinueOnNextPage = true,
+                    ContinuationTopMargin = topMargin,
+                    ContinuationBottomMargin = bottomMargin
+                };
+                pdfEditor.AddText(currentPage, positionsElement);
+            }
+
+            byte[] outPdfBuffer = pdfEditor.Save();
+            FileResult fileResult = new FileContentResult(outPdfBuffer, "application/pdf");
+            fileResult.FileDownloadName = "HTML_in_Existing_Pdf_Document.pdf";
+            return fileResult;
+        }
+
+        private static string Shorten(string text)
+        {
+            text = (text ?? string.Empty).Replace('\n', ' ').Replace('\r', ' ').Trim();
+            return text.Length > 40 ? text.Substring(0, 40) + "..." : text;
+        }
+
+        private Add_HTML_to_Existing_PDF_ViewModel SetViewModel()
+        {
+            var model = new Add_HTML_to_Existing_PDF_ViewModel();
+
+            HttpRequest request = ControllerContext.HttpContext.Request;
+            UriBuilder uriBuilder = new UriBuilder
+            {
+                Scheme = request.Scheme,
+                Host = request.Host.Host,
+                Path = request.PathBase.ToString() + request.Path.ToString(),
+                Query = request.QueryString.ToString()
+            };
+            if (request.Host.Port != null)
+                uriBuilder.Port = (int)request.Host.Port;
+
+            string currentPageUrl = uriBuilder.Uri.AbsoluteUri;
+            string rootUrl = currentPageUrl.Substring(
+                0, currentPageUrl.Length - "Add_HTML_to_Existing_PDF".Length);
+            string contentRootPath = m_hostingEnvironment.ContentRootPath + "/wwwroot/";
+
+            // A one-page document with a letterhead; the content goes between its header and footer
+            model.PdfFileUrl = rootUrl + "DemoAppFiles/Input/PDF_Files/Letterhead.pdf";
+            model.HtmlStringTextBox = System.IO.File.ReadAllText(Path.Combine(contentRootPath, "DemoAppFiles/Input/HTML_Files/Auto_Bookmarks.html"));
+            model.BaseUrlTextBox = rootUrl + "DemoAppFiles/Input/HTML_Files/";
+            return model;
+        }
+
+        private string GetDemoFilesPath() => m_hostingEnvironment.ContentRootPath + "/wwwroot" + "/DemoAppFiles/Input/";
+        private string GetDemoFontsPath() => Path.Combine(GetDemoFilesPath(), "Font_Files");
+    }
+}
+```
+
+## Add HTML as Image to Existing PDF
+
+Topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/add-html-as-image-to-existing-pdf.htm
+
+### Render HTML as an Image in an Edited Document
+
+```csharp
+using PdfEditor pdfEditor = new PdfEditor(inputPdfBytes, null);
+
+int pageNumber = pdfEditor.AddPage();
+PdfHtmlImageElement htmlImage = new PdfHtmlImageElement(htmlCode, baseUrl)
+{
+    X = 36,
+    Y = 72,
+    Resolution = 150,
+    ContinueOnNextPage = true,
+    // The pages where the image continues are inserted after the current page
+    InsertContinuationPages = true,
+    ContinuationTopMargin = 36,
+    ContinuationBottomMargin = 36
+};
+PdfImageRenderInfo htmlImageInfo = pdfEditor.AddHtmlImage(pageNumber, htmlImage);
+
+byte[] outPdfBuffer = pdfEditor.Save();
+```
+
+### Code Sample - Add HTML as Image to Existing PDF
+
+```csharp
+using System;
+using System.IO;
+using System.Threading.Tasks;
+using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Http;
+using EvoPdf_Next_AspNetDemo.Models;
+using EvoPdf_Next_AspNetDemo.Models.PDF_Editor;
+
+// Use EVO PDF Namespace
+using EvoPdf.Next;
+
+namespace EvoPdf_Next_AspNetDemo.Controllers.PDF_Editor
+{
+    public class Add_HTML_as_Image_to_Existing_PDFController : Controller
+    {
+        // The area of the letterhead pages left free by their header and footer
+        private const int leftMargin = 36;
+        private const int topMargin = 90;
+        private const int bottomMargin = 70;
+        // The content area of the pages inside the demo margins, from the size of the first page of the loaded document
+        private int contentWidth;
+
+        private readonly IWebHostEnvironment m_hostingEnvironment;
+
+        public Add_HTML_as_Image_to_Existing_PDFController(IWebHostEnvironment hostingEnvironment)
+        {
+            m_hostingEnvironment = hostingEnvironment;
+        }
+
+        public IActionResult Index()
+        {
+            var model = SetViewModel();
+            return View(model);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> EditPdf(Add_HTML_as_Image_to_Existing_PDF_ViewModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                var errorMessage = ModelStateHelper.GetModelErrors(ModelState);
+                throw new ValidationException(errorMessage);
+            }
+
+            // Set the license key received after purchase to use the library in licensed mode; leave it commented for demo mode
+            // Licensing.LicenseKey = "your-license-key";
+
+            byte[] inputPdfBytes = null;
+
+            // If an uploaded file exists, use it with priority
+            if (model.PdfFile != null && model.PdfFile.Length > 0)
+            {
+                try
+                {
+                    using var ms = new MemoryStream();
+                    await model.PdfFile.CopyToAsync(ms);
+                    inputPdfBytes = ms.ToArray();
+                }
+                catch (Exception ex)
+                {
+                    throw new Exception("Failed to read the uploaded PDF file", ex);
+                }
+            }
+            else
+            {
+                string pdfUrl = model.PdfFileUrl?.Trim();
+                if (string.IsNullOrWhiteSpace(pdfUrl))
+                    throw new Exception("No PDF file provided: upload a file or specify a URL");
+
+                try
+                {
+                    if (pdfUrl.StartsWith("file://", StringComparison.OrdinalIgnoreCase))
+                    {
+                        string localPath = new Uri(pdfUrl).LocalPath;
+                        inputPdfBytes = await System.IO.File.ReadAllBytesAsync(localPath);
+                    }
+                    else
+                    {
+                        using var httpClient = new System.Net.Http.HttpClient();
+                        inputPdfBytes = await httpClient.GetByteArrayAsync(pdfUrl);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    throw new Exception("Could not download the PDF file from URL", ex);
+                }
+            }
+
+            string password = string.IsNullOrEmpty(model.OwnerPassword) ? model.UserPassword : model.OwnerPassword;
+            using PdfEditor pdfEditor = new PdfEditor(inputPdfBytes, password);
+
+            PdfPageInfo firstPageInfo = pdfEditor.GetPdfPageInfo(1);
+            // A rotation of 90 or 270 degrees swaps the width and the height of the page as it is displayed
+            bool firstPageTurned = firstPageInfo.Rotation % 180 != 0;
+            contentWidth = (int)(firstPageTurned ? firstPageInfo.PageSize.Height : firstPageInfo.PageSize.Width) - 2 * leftMargin;
+
+            string fontFilePath = Path.Combine(GetDemoFontsPath(), "DejaVuSerif.ttf");
+            PdfBaseFont baseFont = PdfFontManager.CreateBaseFont(fontFilePath);
+            PdfFont titleFont = PdfFontManager.CreateFont(baseFont, 16f, PdfFontStyle.Bold, PdfColor.DarkBlue);
+            PdfFont smallFont = PdfFontManager.CreateFont(baseFont, 8f, PdfFontStyle.Normal, PdfColor.DarkGray);
+
+            // The title and the HTML image go to the first page of the document, below its header
+            int currentPage = 1;
+            int crtYPos = topMargin;
+
+            PdfTextElement titleElement = new PdfTextElement("HTML Rendered as an Image", titleFont)
+            {
+                X = leftMargin,
+                Y = crtYPos,
+                Alignment = PdfTextAlignment.Center,
+                Width = contentWidth
+            };
+            titleElement.Accessibility.StructureType = PdfStructureType.Heading1;
+            var titleInfo = pdfEditor.AddText(currentPage, titleElement);
+            currentPage = titleInfo.LastPageRectangle.PageNumber;
+            crtYPos = (int)titleInfo.LastPageRectangle.Bounds.Bottom + 15;
+
+            // A page added after the pages of the document: the image continues over it and over the pages before it,
+            // or the pages where the image continues are inserted before them and they keep their content, as the
+            // option asks
+            int pageAfterImage = pdfEditor.AddPage();
+            pdfEditor.AddText(pageAfterImage, new PdfTextElement("The page that followed the HTML image", smallFont)
+            {
+                X = leftMargin,
+                Y = topMargin
+            });
+
+            // The HTML content rendered as an image, from a URL or from a HTML string with a base URL. The pages
+            // of an edited document have no margins, so the continuation margins give the area of the following
+            // pages where the image continues
+            PdfHtmlImageElement htmlImage = model.HtmlPageSource == "Url"
+                ? new PdfHtmlImageElement(model.Url)
+                : new PdfHtmlImageElement(model.HtmlStringTextBox ?? string.Empty, model.BaseUrlTextBox);
+            htmlImage.X = leftMargin + model.ElementX;
+            htmlImage.Y = crtYPos + model.ElementY;
+            htmlImage.Width = model.ElementWidth;
+            htmlImage.Height = model.ElementHeight;
+            htmlImage.Resolution = model.Resolution;
+            htmlImage.ContinueOnNextPage = model.ContinueOnNextPage;
+            // The pages where the image continues are inserted after the current one, so the pages that follow in
+            // the document keep their content; when false, the image continues on the following pages of the document
+            htmlImage.InsertContinuationPages = model.InsertContinuationPages;
+            htmlImage.ContinuationTopMargin = topMargin;
+            htmlImage.ContinuationBottomMargin = bottomMargin;
+            htmlImage.Converter.HtmlViewerWidth = model.HtmlViewerWidth;
+            htmlImage.Accessibility.AlternateText = "HTML content rendered as an image";
+
+            PdfImageRenderInfo htmlImageInfo = pdfEditor.AddHtmlImage(currentPage, htmlImage);
+
+            var partsText = new System.Text.StringBuilder(
+                "The image was drawn on " + htmlImageInfo.RenderedRectangles.Count + " page(s):");
+            foreach (PdfRenderedRectangle part in htmlImageInfo.RenderedRectangles)
+            {
+                partsText.AppendFormat(" page {0} ({1:F0}, {2:F0}, {3:F0}x{4:F0});", part.PageNumber,
+                    part.Bounds.X, part.Bounds.Y, part.Bounds.Width, part.Bounds.Height);
+            }
+
+            currentPage = htmlImageInfo.LastPage;
+            // The part of the image drawn on its last page: the whole image, or the part that fits when it is cut
+            PdfRectangleF lastPart = htmlImageInfo.LastPageRectangle.VisibleBounds ?? htmlImageInfo.LastPageRectangle.Bounds;
+            PdfTextElement partsLabel = new PdfTextElement(partsText.ToString(), smallFont)
+            {
+                X = leftMargin,
+                Y = (int)lastPart.Bottom + 10,
+                Width = contentWidth
+            };
+            partsLabel.Accessibility.StructureType = PdfStructureType.Artifact;
+            pdfEditor.AddText(currentPage, partsLabel);
+
+            byte[] outPdfBuffer = pdfEditor.Save();
+            FileResult fileResult = new FileContentResult(outPdfBuffer, "application/pdf");
+            fileResult.FileDownloadName = "HTML_as_Image_Edit_Demo.pdf";
+            return fileResult;
+        }
+
+        private Add_HTML_as_Image_to_Existing_PDF_ViewModel SetViewModel()
+        {
+            var model = new Add_HTML_as_Image_to_Existing_PDF_ViewModel();
+
+            HttpRequest request = ControllerContext.HttpContext.Request;
+            UriBuilder uriBuilder = new UriBuilder
+            {
+                Scheme = request.Scheme,
+                Host = request.Host.Host,
+                Path = request.PathBase.ToString() + request.Path.ToString(),
+                Query = request.QueryString.ToString()
+            };
+            if (request.Host.Port != null)
+                uriBuilder.Port = (int)request.Host.Port;
+
+            string currentPageUrl = uriBuilder.Uri.AbsoluteUri;
+            string rootUrl = currentPageUrl.Substring(
+                0, currentPageUrl.Length - "Add_HTML_as_Image_to_Existing_PDF".Length);
+
+            // A one-page document with a letterhead; the image goes between its header and footer
+            model.PdfFileUrl = rootUrl + "DemoAppFiles/Input/PDF_Files/Letterhead.pdf";
+            model.HtmlStringTextBox = GetSampleHtml();
+            return model;
+        }
+
+        // A styled table of 40 rows, taller than a page at the size it has on screen
+        private static string GetSampleHtml()
+        {
+            var html = new System.Text.StringBuilder();
+            html.Append("<html>\n<head>\n<style>\n" +
+                "body { margin: 0; font-family: Arial, sans-serif; font-size: 15px; color: #1f2937; }\n" +
+                ".sheet { width: 660px; padding: 14px; background: linear-gradient(180deg, #f8fafc, #ffffff); " +
+                "border: 1px solid #cbd5e1; border-radius: 8px; }\n" +
+                "h2 { margin: 0 0 10px 0; font-size: 22px; color: #1e3a8a; }\n" +
+                "table { width: 100%; border-collapse: collapse; }\n" +
+                "th { background: #1e3a8a; color: #ffffff; padding: 7px 10px; text-align: left; }\n" +
+                "td { padding: 6px 10px; border-bottom: 1px solid #e2e8f0; }\n" +
+                "tr:nth-child(even) td { background: #eff6ff; }\n" +
+                ".num { text-align: right; font-variant-numeric: tabular-nums; }\n" +
+                "</style>\n</head>\n<body>\n<div class=\"sheet\">\n<h2>Monthly Sales by Region</h2>\n<table>\n" +
+                "<tr><th>Month</th><th>Region</th><th class=\"num\">Units</th><th class=\"num\">Revenue</th></tr>\n");
+
+            string[] months = { "January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December" };
+            string[] regions = { "North", "South", "East", "West" };
+            int row = 0;
+            foreach (string month in months)
+            {
+                foreach (string region in regions)
+                {
+                    int units = 120 + (row * 37) % 95;
+                    html.AppendFormat("<tr><td>{0}</td><td>{1}</td><td class=\"num\">{2}</td><td class=\"num\">{3:N2}</td></tr>\n",
+                        month, region, units, units * 24.5);
+                    row++;
+                }
+            }
+
+            html.Append("</table>\n</div>\n</body>\n</html>");
+            return html.ToString();
+        }
+
+        private string GetDemoFilesPath() => m_hostingEnvironment.ContentRootPath + "/wwwroot" + "/DemoAppFiles/Input/";
+        private string GetDemoFontsPath() => Path.Combine(GetDemoFilesPath(), "Font_Files");
+    }
+}
+```
+
+## Add Pages of Other PDF Documents to Existing PDF
+
+Topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/add-pdf-pages-to-existing-pdf.htm
+
+### Draw a Letterhead Page under the Content
+
+```csharp
+using PdfEditor pdfEditor = new PdfEditor(inputPdfBytes, null);
+
+for (int pageNumber = 1; pageNumber <= pdfEditor.PageCount; pageNumber++)
+{
+    // The letterhead page under the content of each page, at its own size
+    PdfPageElement pageElement = new PdfPageElement(letterheadPdfBytes, 1)
+    {
+        X = 0,
+        Y = 0,
+        Opacity = 1,
+        RenderUnderContent = true,
+        IncludeAnnotations = true
+    };
+    PdfElementRenderInfo renderInfo = pdfEditor.AddPdfPage(pageNumber, pageElement);
+}
+
+byte[] outPdfBuffer = pdfEditor.Save();
+```
+
+### Code Sample - Add Pages of Other PDF Documents to Existing PDF
+
+```csharp
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Threading.Tasks;
+using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Http;
+using EvoPdf_Next_AspNetDemo.Models;
+using EvoPdf_Next_AspNetDemo.Models.PDF_Editor;
+
+// Use EVO PDF Namespace
+using EvoPdf.Next;
+
+namespace EvoPdf_Next_AspNetDemo.Controllers.PDF_Editor
+{
+    public class Add_PDF_Pages_to_Existing_PDFController : Controller
+    {
+        private readonly IWebHostEnvironment m_hostingEnvironment;
+
+        public Add_PDF_Pages_to_Existing_PDFController(IWebHostEnvironment hostingEnvironment)
+        {
+            m_hostingEnvironment = hostingEnvironment;
+        }
+
+        public IActionResult Index()
+        {
+            var model = SetViewModel();
+            return View(model);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> EditPdf(Add_PDF_Pages_to_Existing_PDF_ViewModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                var errorMessage = ModelStateHelper.GetModelErrors(ModelState);
+                throw new ValidationException(errorMessage);
+            }
+
+            // Set the license key received after purchase to use the library in licensed mode; leave it commented for demo mode
+            // Licensing.LicenseKey = "your-license-key";
+
+            byte[] inputPdfBytes = await ReadInputPdf(model.PdfFile, model.PdfFileUrl);
+            byte[] sourcePdfBytes = await ReadInputPdf(model.SourcePdfFile, model.SourcePdfFileUrl);
+            string password = !string.IsNullOrEmpty(model.OwnerPassword) ? model.OwnerPassword :
+                !string.IsNullOrEmpty(model.UserPassword) ? model.UserPassword : null;
+            string sourcePassword = string.IsNullOrEmpty(model.SourcePassword) ? null : model.SourcePassword;
+
+            using PdfEditor pdfEditor = new PdfEditor(inputPdfBytes, password);
+            int pageCount = pdfEditor.PageCount;
+
+            List<int> targetPages = new List<int>();
+            switch (model.TargetPages)
+            {
+                case "First":
+                    targetPages.Add(1);
+                    break;
+                case "Last":
+                    targetPages.Add(pageCount);
+                    break;
+                case "Odd":
+                    for (int i = 1; i <= pageCount; i += 2)
+                        targetPages.Add(i);
+                    break;
+                case "Even":
+                    for (int i = 2; i <= pageCount; i += 2)
+                        targetPages.Add(i);
+                    break;
+                default:
+                    for (int i = 1; i <= pageCount; i++)
+                        targetPages.Add(i);
+                    break;
+            }
+
+            PdfFont captionFont = null;
+            if (model.AddCaption)
+                captionFont = PdfFontManager.CreateFont(Path.Combine(GetDemoFontsPath(), "DejaVuSerif.ttf"), 8f, PdfFontStyle.Normal, PdfColor.DarkGray);
+
+            foreach (int pageNumber in targetPages)
+            {
+                // The source page drawn in the target page. The position is relative to the top left corner of the page;
+                // the page is scaled to fit the given width and height when they are set, otherwise it keeps its size
+                PdfPageElement pageElement = new PdfPageElement(sourcePdfBytes, model.SourcePageNumber)
+                {
+                    Password = sourcePassword,
+                    X = model.ElementX,
+                    Y = model.ElementY,
+                    Width = model.ElementWidth,
+                    Height = model.ElementHeight,
+                    Opacity = model.Opacity,
+                    RotationDegrees = model.RotationDegrees,
+                    RotationPivot = model.RotationPivot,
+                    // The page goes under the existing content, as a letterhead or a watermark, or over it, as a stamp
+                    RenderUnderContent = model.RenderUnderContent,
+                    // The links and form fields of the source page are added to the target page
+                    IncludeAnnotations = model.IncludeAnnotations
+                };
+                PdfElementRenderInfo renderInfo = pdfEditor.AddPdfPage(pageNumber, pageElement);
+
+                if (model.AddCaption)
+                {
+                    PdfRectangleF bounds = renderInfo.LastPageRectangle.Bounds;
+                    pdfEditor.AddText(pageNumber, new PdfTextElement(
+                        string.Format("Page {0} of the source document drawn at ({1:0}, {2:0}), {3:0} x {4:0} points",
+                            model.SourcePageNumber, bounds.X, bounds.Y, bounds.Width, bounds.Height), captionFont)
+                    {
+                        X = 20,
+                        Y = pdfEditor.GetPdfPageInfo(pageNumber).PageSize.Height - 16
+                    });
+                }
+            }
+
+            byte[] outPdfBuffer = pdfEditor.Save();
+
+            FileResult fileResult = new FileContentResult(outPdfBuffer, "application/pdf");
+            fileResult.FileDownloadName = "Add_PDF_Pages_to_Existing_PDF.pdf";
+            return fileResult;
+        }
+
+        private async Task<byte[]> ReadInputPdf(IFormFile pdfFile, string pdfFileUrl)
+        {
+            // If an uploaded file exists, use it with priority
+            if (pdfFile != null && pdfFile.Length > 0)
+            {
+                try
+                {
+                    using var ms = new MemoryStream();
+                    await pdfFile.CopyToAsync(ms);
+                    return ms.ToArray();
+                }
+                catch (Exception ex)
+                {
+                    throw new Exception("Failed to read the uploaded PDF file", ex);
+                }
+            }
+
+            // Otherwise, fall back to the URL
+            string pdfUrl = pdfFileUrl?.Trim();
+            if (string.IsNullOrWhiteSpace(pdfUrl))
+                throw new Exception("No PDF file provided: upload a file or specify a URL");
+
+            try
+            {
+                if (pdfUrl.StartsWith("file://", StringComparison.OrdinalIgnoreCase))
+                {
+                    string localPath = new Uri(pdfUrl).LocalPath;
+                    return await System.IO.File.ReadAllBytesAsync(localPath);
+                }
+
+                using var httpClient = new System.Net.Http.HttpClient();
+                return await httpClient.GetByteArrayAsync(pdfUrl);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Could not download the PDF file from URL", ex);
+            }
+        }
+
+        private Add_PDF_Pages_to_Existing_PDF_ViewModel SetViewModel()
+        {
+            var model = new Add_PDF_Pages_to_Existing_PDF_ViewModel();
+
+            HttpRequest request = ControllerContext.HttpContext.Request;
+            UriBuilder uriBuilder = new UriBuilder
+            {
+                Scheme = request.Scheme,
+                Host = request.Host.Host,
+                Path = request.PathBase.ToString() + request.Path.ToString(),
+                Query = request.QueryString.ToString()
+            };
+            if (request.Host.Port != null)
+                uriBuilder.Port = (int)request.Host.Port;
+
+            string currentPageUrl = uriBuilder.Uri.AbsoluteUri;
+            string rootUrl = currentPageUrl.Substring(0, currentPageUrl.Length - "Add_PDF_Pages_to_Existing_PDF".Length);
+
+            model.PdfFileUrl = rootUrl + "/DemoAppFiles/Input/PDF_Files/Multi_Page_Document.pdf";
+            model.SourcePdfFileUrl = rootUrl + "/DemoAppFiles/Input/PDF_Files/Letterhead.pdf";
+
+            return model;
+        }
+
+        private string GetDemoFilesPath() => m_hostingEnvironment.ContentRootPath + "/wwwroot" + "/DemoAppFiles/Input/";
+        private string GetDemoFontsPath() => Path.Combine(GetDemoFilesPath(), "Font_Files");
+    }
+}
+```
+
+## Add, Insert, Move, Rotate and Remove PDF Pages
+
+Topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/add-insert-move-rotate-and-remove-pdf-pages.htm
+
+### Insert a Cover Page and Add a Last Page
+
+```csharp
+// Insert a blank page of the chosen size before the first page. The existing pages
+// are shifted and keep their content, links and bookmarks
+int coverPageNumber = pdfEditor.InsertPage(1, PdfPageSize.A4, PdfPageOrientation.Portrait);
+
+// Add a blank page at the end of the document, with the size of the last page
+int lastPageNumber = pdfEditor.AddPage();
+```
+
+### Move a Page
+
+```csharp
+// Move a page to another position; the pages in between are shifted
+pdfEditor.MovePage(movePageNumber, moveToPageNumber);
+```
+
+### Rotate a Page and Add Text to It
+
+```csharp
+// Rotate the page clockwise by a multiple of 90 degrees. The rotation is added to the
+// current rotation of the page; SetPageRotation would set an absolute rotation instead.
+// A page is rotated before content is added to it
+pdfEditor.RotatePage(rotatePageNumber, 90);
+
+// A note at the bottom of the rotated page, placed in the page as it is displayed:
+// a rotation of 90 or 270 degrees swaps its width and height
+PdfPageInfo rotatedPageInfo = pdfEditor.GetPdfPageInfo(rotatePageNumber);
+bool turned = rotatedPageInfo.Rotation % 180 != 0;
+float displayedWidth = turned ? rotatedPageInfo.PageSize.Height : rotatedPageInfo.PageSize.Width;
+float displayedHeight = turned ? rotatedPageInfo.PageSize.Width : rotatedPageInfo.PageSize.Height;
+PdfTextElement rotatedPageText = new PdfTextElement("This page was rotated by 90 degrees", noteFont)
+{
+    X = 36,
+    Y = displayedHeight - 60,
+    Width = displayedWidth - 72
+};
+pdfEditor.AddText(rotatePageNumber, rotatedPageText);
+```
+
+### Remove Pages
+
+```csharp
+// The pages are removed first, so the ranges refer to the pages of the loaded document. The
+// ranges are 1-based, for example "2,4-5" or "3-" for the pages from the third one to the end
+pdfEditor.RemovePages("2,4-5");
+```
+
+### Code Sample - Add, Insert, Move, Rotate and Remove PDF Pages
+
+```csharp
+using System;
+
+// Use EVO PDF Namespace
+using EvoPdf.Next;
+
+public byte[] EditPdfPages(byte[] inputPdfBytes, string password, string fontFilePath,
+    int movePageNumber, int moveToPageNumber, int rotatePageNumber, int rotateDegrees, string removePageRanges)
+{
+    // Set the license key received after purchase to use the library in licensed mode; leave it commented for demo mode
+    // Licensing.LicenseKey = "your-license-key";
+
+    byte[] outPdfBuffer;
+
+    using (PdfEditor pdfEditor = new PdfEditor(inputPdfBytes, password))
+    {
+        PdfBaseFont baseFont = PdfFontManager.CreateBaseFont(fontFilePath);
+        PdfFont titleFont = PdfFontManager.CreateFont(baseFont, 16f, PdfFontStyle.Bold, PdfColor.DarkBlue);
+        PdfFont textFont = PdfFontManager.CreateFont(baseFont, 10f, PdfFontStyle.Normal, PdfColor.Black);
+        PdfFont noteFont = PdfFontManager.CreateFont(baseFont, 12f, PdfFontStyle.Bold, PdfColor.DarkRed);
+
+        // The page operations come first; the text drawn afterwards goes to the pages at their
+        // final position and rotation
+        if (!string.IsNullOrWhiteSpace(removePageRanges))
+        {
+            // The pages are removed first, so the ranges refer to the pages of the loaded document. The
+            // ranges are 1-based, for example "2,4-5" or "3-" for the pages from the third one to the end
+            pdfEditor.RemovePages(removePageRanges.Trim());
+        }
+
+        // Insert a blank page of the chosen size before the first page. The existing pages
+        // are shifted and keep their content, links and bookmarks
+        int coverPageNumber = pdfEditor.InsertPage(1, PdfPageSize.A4, PdfPageOrientation.Portrait);
+
+        // Add a blank page at the end of the document, with the size of the last page
+        int lastPageNumber = pdfEditor.AddPage();
+
+        // Move a page to another position; the pages in between are shifted
+        pdfEditor.MovePage(movePageNumber, moveToPageNumber);
+
+        // The pages added above follow the move
+        coverPageNumber = PageNumberAfterMove(coverPageNumber, movePageNumber, moveToPageNumber);
+        lastPageNumber = PageNumberAfterMove(lastPageNumber, movePageNumber, moveToPageNumber);
+
+        // Rotate the page clockwise by a multiple of 90 degrees. The rotation is added to the
+        // current rotation of the page; SetPageRotation would set an absolute rotation instead.
+        // A page is rotated before content is added to it
+        pdfEditor.RotatePage(rotatePageNumber, rotateDegrees);
+
+        PdfTextElement lastPageText = new PdfTextElement("This page was added at the end of the document with PdfEditor.AddPage()", textFont)
+        {
+            X = 36,
+            Y = 36,
+            Width = pdfEditor.GetPdfPageInfo(lastPageNumber).PageSize.Width - 72
+        };
+        pdfEditor.AddText(lastPageNumber, lastPageText);
+
+        // A note at the bottom of the rotated page, placed in the page as it is displayed:
+        // a rotation of 90 or 270 degrees swaps its width and height
+        PdfPageInfo rotatedPageInfo = pdfEditor.GetPdfPageInfo(rotatePageNumber);
+        bool turned = rotatedPageInfo.Rotation % 180 != 0;
+        float displayedWidth = turned ? rotatedPageInfo.PageSize.Height : rotatedPageInfo.PageSize.Width;
+        float displayedHeight = turned ? rotatedPageInfo.PageSize.Width : rotatedPageInfo.PageSize.Height;
+        PdfTextElement rotatedPageText = new PdfTextElement(
+            "This page was rotated by " + rotateDegrees + " degrees with PdfEditor.RotatePage()", noteFont)
+        {
+            X = 36,
+            Y = displayedHeight - 60,
+            Width = displayedWidth - 72
+        };
+        pdfEditor.AddText(rotatePageNumber, rotatedPageText);
+
+        // The cover page lists the pages of the edited document with the size and
+        // rotation reported by GetPdfPageInfo
+        PdfPageInfo coverPageInfo = pdfEditor.GetPdfPageInfo(coverPageNumber);
+        float textWidth = coverPageInfo.PageSize.Width - 72;
+
+        PdfTextElement coverTitle = new PdfTextElement("Pages of the edited document", titleFont)
+        {
+            X = 36,
+            Y = 36,
+            Width = textWidth
+        };
+        float crtYPos = pdfEditor.AddText(coverPageNumber, coverTitle).LastPageRectangle.Bounds.Bottom + 12;
+
+        int pageCount = pdfEditor.PageCount;
+        for (int pageNumber = 1; pageNumber <= pageCount; pageNumber++)
+        {
+            PdfPageInfo pageInfo = pdfEditor.GetPdfPageInfo(pageNumber);
+            string pageLine = string.Format("Page {0}: {1} x {2} pt, rotation {3} degrees",
+                pageInfo.PageNumber, pageInfo.PageSize.Width, pageInfo.PageSize.Height, pageInfo.Rotation);
+
+            PdfTextElement pageText = new PdfTextElement(pageLine, textFont)
+            {
+                X = 54,
+                Y = crtYPos,
+                Width = textWidth - 18
+            };
+            crtYPos = pdfEditor.AddText(coverPageNumber, pageText).LastPageRectangle.Bounds.Bottom + 4;
+        }
+
+        outPdfBuffer = pdfEditor.Save();
+    }
+
+    return outPdfBuffer;
+}
+
+// The number of a page after another page was moved
+private static int PageNumberAfterMove(int pageNumber, int movedPage, int newPage)
+{
+    if (pageNumber == movedPage)
+        return newPage;
+    if (movedPage < pageNumber && pageNumber <= newPage)
+        return pageNumber - 1;
+    if (newPage <= pageNumber && pageNumber < movedPage)
+        return pageNumber + 1;
+    return pageNumber;
 }
 ```

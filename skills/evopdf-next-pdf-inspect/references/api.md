@@ -7,18 +7,18 @@ Every public member of the types below is listed; the summaries are the shipped 
 
 Reference: https://www.evopdf.com/help/evopdf-next-dotnet/html/T_EvoPdf_Next_PdfPageInfo.htm
 
-Represents page-specific information extracted from a loaded PDF document. Includes details like page size, rotation, crop box, media box, and other boundaries. All dimensions are expressed in points (1 point = 1/72 inch)
+The information of a page of a loaded document: its size, its rotation and its boxes. The dimensions are in points and the boxes are relative to the top left corner of the media box of the page
 
 ### Properties
 
-- `ArtBox`: Gets the art box, which defines the meaningful content area.
-- `BleedBox`: Gets the bleed box, indicating the region to which the contents should be clipped when printed.
-- `CropBox`: Gets the crop box, which defines the visible area of the page.
-- `MediaBox`: Gets the media box, which defines the physical dimensions of the page.
-- `PageNumber`: Gets the page number (1-based).
-- `PageSize`: Gets the page size
-- `Rotation`: Gets the rotation angle of the page (0, 90, 180, 270).
-- `TrimBox`: Gets the trim box, representing the intended dimensions of the finished page after trimming.
+- `ArtBox`: The art box, the area of the meaningful content, or null when the page does not define it
+- `BleedBox`: The bleed box, the area the content is clipped to when the page is printed, or null when the page does not define it
+- `CropBox`: The crop box, the displayed area of the page, or null when the page does not define it
+- `MediaBox`: The media box, the whole area of the page
+- `PageNumber`: The 1-based number of the page
+- `PageSize`: The size of the page, before its rotation
+- `Rotation`: The rotation of the page: 0, 90, 180 or 270 degrees
+- `TrimBox`: The trim box, the size of the finished page after trimming, or null when the page does not define it
 
 ## PdfSecurityInfo
 
@@ -35,6 +35,7 @@ Represents security-related information extracted from a loaded PDF document. In
 - `CanEditContent`: Indicates whether editing existing content is allowed
 - `CanFillFormFields`: Indicates whether filling in form fields is allowed
 - `CanPrint`: Indicates whether printing is allowed
+- `CanPrintHighResolution`: Indicates whether printing at high resolution is allowed
 - `EncryptionAlgorithm`: The encryption algorithm used (e.g., RC4, AES)
 - `IsEncrypted`: Indicates whether the PDF document is encrypted
 - `IsOwnerPasswordUsed`: Indicates whether the document was opened using the owner password (full permissions)

@@ -1,6 +1,6 @@
 ---
 name: evopdf-next-pdf-standards
-description: "Produce standards-compliant PDF with EvoPdf Next: all PdfStandard values including PDF/UA-1, PDF/UA-2, Well-Tagged PDF (WTPDF 1.0), PDF/A-2, PDF/A-3, PDF/A-4 and the combined profiles, automatic accessibility fixes, and per-element tagging with structure roles, alternate text, actual text, language and role maps."
+description: "Produce standards-compliant PDF with EvoPdf Next: all PdfStandard values including PDF/UA-1, PDF/UA-2, Well-Tagged PDF (WTPDF 1.0), PDF/A-2, PDF/A-3, PDF/A-4 and the combined profiles, the document structure taken from the HTML, and per-element tagging with structure roles, alternate text, actual text, language and role maps."
 ---
 
 # EvoPdf Next: PDF/UA and PDF/A compliance
@@ -13,11 +13,10 @@ Namespace `EvoPdf.Next`. Install one NuGet package for the target platform, for 
 ## Types covered here
 
 - **`PdfStandard`**: Specifies the PDF standards compliance level for the generated PDF document
-- **`PdfAccessibilityOptions`**: Controls the accessibility settings of the generated PDF document. These settings take effect only when a PDF/UA or PDF/A standard requiring a tagged ...
 - **`PdfAccessibilityProperties`**: Accessibility metadata controlling how an element is inserted into the structure tree of a tagged PDF
 - **`PdfStructureType`**: Identifies the PDF logical structure role attached to a content element when the document is tagged
 
-4 types, 51 public members. The complete member list with the shipped
+3 types, 49 public members. The complete member list with the shipped
 summaries is in `references/api.md`; do not guess member names that are not there.
 
 ## PDF/UA and PDF/A from HTML
@@ -34,9 +33,10 @@ byte[] pdf = converter.ConvertUrl(url);
 ```
 
 `PdfStandard.None`, the default, produces a plain PDF without a structure tree. With a tagged
-standard selected, `PdfDocumentOptions.AccessibilityOptions` adds a default alternate text to images
-that have none (`AddMissingImageAlternateText`) and a header row to tables without header cells
-(`InsertMissingTableHeaders`); both are on by default.
+standard selected, the structure of the document comes from the HTML: the headings, paragraphs,
+lists, tables with their header cells, links and the alternate text of the images carry over to the
+PDF, together with the document language and title. Write the HTML with that structure (`th` cells,
+`alt` attributes, a `lang` attribute) to get a complete accessible document.
 
 `PdfStandard.Wtpdf1`, `Wtpdf1PdfA4` and `Wtpdf1PdfA4f` produce Well-Tagged PDF 1.0 documents, also identified as
 PDF/UA-2 and written as PDF 2.0. `PdfA4f`, `PdfUa2PdfA4f` and `Wtpdf1PdfA4f` require at least one embedded file.
@@ -50,7 +50,7 @@ Full topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/create-pdfua-and
 
 ## Create PDF/UA and PDF/A Documents
 
-A PDF created from scratch with `PdfDocument` can target an accessibility (PDF/UA) or archival (PDF/A) standard simply by setting the `PdfDocumentCreateSettings.PdfStandard` property on the `PdfDocumentCreateSettings` passed to the constructor. The library then handles the standard-mandated artefacts. These include embedded fonts, color profiles, the structure tree, namespaces, document metadata and viewer preferences.
+A PDF created from scratch with `PdfDocument` can target an accessibility (PDF/UA) or archival (PDF/A) standard simply by setting the `PdfDocumentCreateSettings.PdfStandard` property on the `PdfDocumentCreateSettings` passed to the constructor. The library produces a document that conforms to the selected standard.
 
 ### Configure Standard, Language and Page Setup
 

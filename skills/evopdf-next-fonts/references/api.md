@@ -12,6 +12,7 @@ Provides methods for loading, registering and creating PDF fonts
 ### Methods
 
 - `CreateBaseFont`: Creates a base font from a font file with optional Unicode range restrictions. When ranges are specified, only the glyphs in those ranges are included in the ToUnicode CMap, reducing file size for fonts with large character sets (e.g. CJK). The result is cached per unique combination of path, subset and unicodeRanges
+- `CreateBaseFont`: Creates a base font from the content of a TrueType or OpenType font file kept in memory, for fonts loaded from resources, databases or streams
 - `CreateCjkBaseFont`: Creates a standard CJK base font built into Adobe Reader. These fonts do not require embedding - they are available in Adobe Reader when the CJK font pack is installed. Use for form fields that need to remain editable in Adobe Reader with CJK text. Supported names: STSong-Light, STHeiti-Regular (Simplified Chinese), MSung-Light, MHei-Medium (Traditional Chinese), HeiseiMin-W3, HeiseiKakuGo-W5 (Japanese), HYSMyeongJo-Medium, HYGoThic-Medium (Korean)
 - `CreateFont`: Creates a font from a font file
 - `CreateFont`: Creates a font from a font file using black as the font color
@@ -48,8 +49,10 @@ Represents a font used to render text in a PDF document
 
 ### Properties
 
+- `Ascent`: The ascent of the font in points at the size of the font: the distance from the baseline to the top of the line box of the font
 - `BaseFont`: Gets the base font used to create this font
 - `Color`: Gets the font color
+- `Descent`: The descent of the font in points at the size of the font: the distance from the baseline to the bottom of the line box of the font, as a positive value
 - `Size`: Gets the font size in points
 - `Style`: Gets the font style flags
 
@@ -59,6 +62,7 @@ Represents a font used to render text in a PDF document
 - `CreateWithColor`: Creates a new font using the same base font, size, and style with a different color
 - `CreateWithSize`: Creates a new font using the same base font and color with a different size
 - `CreateWithStyle`: Creates a new font using the same base font, size, and color with a different style
+- `GetTextWidth`: Measures the width in points of a text written on one line with this font
 
 ## PdfBaseFont
 

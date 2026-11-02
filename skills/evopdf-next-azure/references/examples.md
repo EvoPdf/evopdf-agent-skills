@@ -2,7 +2,7 @@
 
 Every code sample of the documentation topics behind this skill, complete and in the order of the topic.
 
-## Using EvoPdf Next for .NET on Azure App Service for Linux
+## Using EvoPdf Next for .NET on  Azure App Service for Linux
 
 Topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/publish-to-azure-app-service-linux.htm
 
@@ -111,6 +111,8 @@ az functionapp deployment source config-zip --name pdf-func --resource-group pdf
 dotnet publish -c Release -r linux-x64 --self-contained false -o publish
 ```
 
+### Dockerfile
+
 ```dockerfile
 FROM mcr.microsoft.com/azure-functions/dotnet-isolated:4-dotnet-isolated10.0
 
@@ -134,6 +136,8 @@ RUN chmod +x /home/site/wwwroot/evopdf_runtimes/linux-x64/native/evopdf_loadhtml
     /home/site/wwwroot/evopdf_runtimes/linux-x64/native/evopdf_pdfprocessor
 ```
 
+### Alternative: Deploy the Function App as a Container Image
+
 ```bash
 docker build --platform linux/amd64 -t pdf-func .
 
@@ -153,6 +157,8 @@ Topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/publish-to-azure-cont
 ```bash
 dotnet publish -c Release -r linux-x64 --self-contained false -o publish
 ```
+
+### Dockerfile
 
 ```dockerfile
 FROM mcr.microsoft.com/dotnet/aspnet:10.0
@@ -185,6 +191,8 @@ EXPOSE 8080
 # Start the application
 ENTRYPOINT ["dotnet", "MyApp.dll"]
 ```
+
+### Build the Container Image
 
 ```bash
 docker build --platform linux/amd64 -t pdf-app .

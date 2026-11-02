@@ -104,7 +104,7 @@ namespace EvoPdf_Next_AspNetDemo.Controllers.HTML_to_PDF
 }
 ```
 
-## Add HTTP Headers to HTML Page Request
+## Add HTTP Headers to HTML Page Request 
 
 Topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/add-http-headers-to-html-page-request.htm
 
@@ -389,6 +389,7 @@ namespace EvoPdf_Next_AspNetDemo.Controllers.HTML_to_PDF
 ### Code Sample - Display Session Variables in Converted HTML Page
 
 ```html
+@model EvoPdf_Next_AspNetDemo.Models.HTML_to_PDF.Convert_Page_in_Same_Session_ViewModel
 @{
     Layout = null;
 }
@@ -407,20 +408,20 @@ namespace EvoPdf_Next_AspNetDemo.Controllers.HTML_to_PDF
     <div>
         <b style="font-size: 16px">The session variables</b><br />
         <br />
-        <b>First Name:</b>&nbsp;<span id="firstNameLabel">@(ViewData["firstName"] != null ? ViewData["firstName"].ToString() : String.Empty)</span><br />
-        <b>Last Name:</b>&nbsp;<span id="lastNameLabel">@(ViewData["lastName"] != null ? ViewData["lastName"].ToString() : String.Empty)</span><br />
-        <b>Gender:</b>&nbsp;<span id="genderLabel">@(ViewData["gender"] != null && ViewData["gender"].ToString() == "maleRadioButton" ? "Male" : "Female")</span><br />
-        <b>I have a car:</b>&nbsp;<span id="haveCarLabel">@(ViewData["haveCar"] != null && ViewData["haveCar"].ToString() != "false" ? "Yes" : "No")</span><br />
-        <div id="carTypePanel" style="display : @(ViewData["haveCar"] != null && ViewData["haveCar"].ToString() == "false" ? "none" : "inline")">
-            <b>Car Type:</b>&nbsp;<span id="carTypeLabel">@(ViewData["carType"] != null ? ViewData["carType"].ToString() : String.Empty)</span><br />
+        <b>First Name:</b>&nbsp;<span id="firstNameLabel">@Model.FirstName</span><br />
+        <b>Last Name:</b>&nbsp;<span id="lastNameLabel">@Model.LastName</span><br />
+        <b>Gender:</b>&nbsp;<span id="genderLabel">@((Model.Gender == "Male") ? "Male" : "Female")</span><br />
+        <b>I have a car:</b>&nbsp;<span id="haveCarLabel">@(Model.HaveCar ? "Yes" : "No")</span><br />
+        <div id="carTypePanel" style="display : @(Model.HaveCar ? "inline" : "none")">
+            <b>Car Type:</b>&nbsp;<span id="carTypeLabel">@Model.CarType</span><br />
         </div>
-        <b>Comments:</b>&nbsp;<span id="commentsLabel">@(ViewData["comments"] != null ? ViewData["comments"].ToString() : String.Empty)</span><br />
+        <b>Comments:</b>&nbsp;<span id="commentsLabel">@Model.Comments</span><br />
     </div>
 </body>
 </html>
 ```
 
-## Convert HTML with Web Fonts to PDF
+## Convert HTML with Web Fonts to PDF 
 
 Topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/convert-html-with-web-fonts-to-pdf.htm
 
@@ -477,5 +478,54 @@ namespace EvoPdf_Next_AspNetDemo.Controllers.HTML_to_PDF
             return model;
         }
     }
+}
+```
+
+## Convert HTML through a Proxy Server
+
+Topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/convert-html-through-proxy-server.htm
+
+### Code Sample - Convert HTML through a Proxy Server
+
+```csharp
+// Use EVO PDF Namespace
+using EvoPdf.Next;
+
+public byte[] ConvertHtmlThroughProxy(string url, string proxyHostName, int proxyPortNumber,
+    string proxyUsername, string proxyPassword, string[] bypassedHosts)
+{
+    // Set the license key received after purchase to use the library in licensed mode; leave it commented for demo mode
+    // Licensing.LicenseKey = "your-license-key";
+
+    // Create a HTML to PDF converter object with default settings
+    HtmlToPdfConverter htmlToPdfConverter = new HtmlToPdfConverter();
+
+    // The type of the proxy used to load the HTML page and its resources. With the None type
+    // the network settings of the system are used, as when no proxy is configured
+    htmlToPdfConverter.ProxyOptions.Type = NetworkProxyType.Http;
+
+    // The address of the proxy server
+    htmlToPdfConverter.ProxyOptions.HostName = proxyHostName;
+    htmlToPdfConverter.ProxyOptions.PortNumber = proxyPortNumber;
+
+    // The credentials for a proxy which requires authentication
+    if (!string.IsNullOrEmpty(proxyUsername))
+    {
+        htmlToPdfConverter.ProxyOptions.Username = proxyUsername;
+        htmlToPdfConverter.ProxyOptions.Password = proxyPassword;
+    }
+
+    // The hosts accessed directly, without the proxy: host names, IP addresses, domains with
+    // their subdomains (*.example.com) or CIDR ranges (10.0.0.0/8). The local machine is
+    // always accessed directly
+    if (bypassedHosts != null)
+        htmlToPdfConverter.ProxyOptions.BypassedHosts = bypassedHosts;
+
+    // The same proxy options are available in the HTML to image converter
+
+    // Convert the HTML page to a PDF document in a memory buffer
+    byte[] outPdfBuffer = htmlToPdfConverter.ConvertUrl(url);
+
+    return outPdfBuffer;
 }
 ```

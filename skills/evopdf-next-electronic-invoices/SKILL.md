@@ -1,6 +1,6 @@
 ---
 name: evopdf-next-electronic-invoices
-description: "Create Factur-X, ZUGFeRD and XRechnung electronic invoices and Order-X electronic orders with EvoPdf Next: a PDF/A-3 document that shows the invoice from HTML and embeds the invoice XML, in all the profiles and document types (credit notes, corrected and self-billed invoices), accessible with PDF/UA-1, from HTML, from code or added to an existing PDF/A-3."
+description: "Create Factur-X, ZUGFeRD and XRechnung electronic invoices and Order-X electronic orders with EvoPdf Next: a PDF/A-3 document that shows the invoice from HTML or from a Word document and embeds the invoice XML, in all the profiles and document types (credit notes, corrected and self-billed invoices), accessible with PDF/UA-1, from HTML, from Word, from code or added to an existing PDF/A-3."
 ---
 
 # EvoPdf Next: electronic invoices
@@ -39,8 +39,9 @@ byte[] pdf = converter.ConvertHtml(invoiceHtml, baseUrl);
 - `Relationship` defaults to `PdfAttachmentRelationship.Alternative`; MINIMUM and BASIC WL are always attached as `Data`.
 - One electronic invoice per document. Other attachments can be added with `PdfDocumentOptions.AddFileAttachment`.
 - `PdfViewerPreferences.PageMode = ViewerPageMode.UseAttachments` opens the Attachments panel, so the reader sees the XML.
-- The same `AddElectronicInvoice` method exists on `PdfDocument` (documents created from code) and on `PdfEditor`
-  (an existing document that is already PDF/A-3).
+- The same `AddElectronicInvoice` method exists on `PdfDocument` (documents created from code), on `PdfEditor`
+  (an existing document that is already PDF/A-3) and on the document options of the Word, Excel, RTF and Markdown
+  converters (the invoice page from a document, with `PdfStandard` set to a PDF/A-3 level on the same options).
 - A digital signature can be added to the same converter; the document keeps its PDF/A-3 conformance.
 
 ## Create Factur-X, ZUGFeRD and XRechnung Electronic Invoices
@@ -48,6 +49,14 @@ byte[] pdf = converter.ConvertHtml(invoiceHtml, baseUrl);
 All 1 samples of this topic, complete: `references/examples.md`.
 
 Full topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/create-electronic-invoice-pdf.htm
+
+## Create Electronic Invoices from Word
+
+The Word to PDF Converter creates electronic invoices in the Factur-X and ZUGFeRD formats (including the XRechnung profile) and electronic orders in the Order-X format from a Word document. An electronic invoice is a PDF/A-3 document that shows the invoice as a page a person reads and carries the same invoice as an XML file that accounting software reads automatically. The Word document gives the visible page and the invoice XML is embedded as given.
+
+All 1 samples of this topic, complete: `references/examples.md`.
+
+Full topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/create-electronic-invoices-from-word.htm
 
 ## Rules that apply to every sample here
 

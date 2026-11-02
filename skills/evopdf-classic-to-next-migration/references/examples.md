@@ -6,6 +6,24 @@ Every code sample of the documentation topics behind this skill, complete and in
 
 Topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/migrate-html-to-pdf-from-classic.htm
 
+### Keeping the Classic Code: the Platform Packages
+
+```bash
+dotnet remove package EvoPdf.HtmlToPdf
+dotnet add package EvoPdf.HtmlToPdf.Windows
+```
+
+```csharp
+using EvoPdf;
+
+HtmlToPdfConverter converter = new HtmlToPdfConverter();
+converter.LicenseKey = "...";
+converter.NextConverterCreated += next =>
+    next.PdfDocumentOptions.PdfStandard = EvoPdf.Next.PdfStandard.PdfUa1;
+
+byte[] pdf = converter.ConvertUrl(url);
+```
+
 ### The Classic Default: 1024 Pixel Layout Fitted to an A4 Page
 
 ```csharp
@@ -61,7 +79,6 @@ converter.PdfDocumentOptions.SinglePage = true;
 
 // Next
 converter.PageWidthFromBrowserWindow(1024, singlePage: true);
-converter.HtmlViewerHeight = 1;
 ```
 
 ### StretchToFit
@@ -190,7 +207,8 @@ section1.PdfDocumentOptions.PdfHtmlHeader.HtmlBaseUrl = baseUrl;
 section1.PdfDocumentOptions.PdfHtmlHeader.Height = 120;
 section1.PdfDocumentOptions.PdfHtmlFooter.Html = "<div>Page {page_number}</div>";
 section1.PdfDocumentOptions.PdfHtmlFooter.HtmlBaseUrl = baseUrl;
-int section1Pages = pdfMerge.AddPdf(section1.ConvertHtml(section1Html, baseUrl));
+pdfMerge.AddPdf(section1.ConvertHtml(section1Html, baseUrl));
+int section1Pages = pdfMerge.PageCount;
 
 // Section 2: a one line header, page numbers continue after section 1
 HtmlToPdfConverter section2 = new HtmlToPdfConverter();

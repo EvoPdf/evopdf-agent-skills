@@ -24,7 +24,7 @@ summaries is in `references/api.md`; do not guess member names that are not ther
 
 ## Set PDF Viewer Preferences for the Generated PDF Document
 
-All 1 samples of this topic, complete: `references/examples.md`.
+All 2 samples of this topic, complete: `references/examples.md`.
 
 Full topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/set-pdf-viewer-preferences.htm
 

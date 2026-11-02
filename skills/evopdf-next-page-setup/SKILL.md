@@ -20,6 +20,9 @@ Namespace `EvoPdf.Next`. Install one NuGet package for the target platform, for 
 4 types, 45 public members. The complete member list with the shipped
 summaries is in `references/api.md`; do not guess member names that are not there.
 
+`PdfDocumentOptions.FirstPageTopMargin` gives the first page a different top margin in points, for a letterhead or a
+cover; the default, a negative value, keeps the top margin of the other pages.
+
 ## HTML to PDF Page Setup and Scaling
 
 ### FitBrowserWindowToPage
@@ -165,7 +168,7 @@ HtmlToPdfConverter converter = new HtmlToPdfConverter();
 // A4 landscape, the HTML laid out at its 1123 pixel content width
 converter.LayoutAtPageWidth(PdfPageSize.A4, PdfPageOrientation.Landscape);
 
-// A table built for 1280 pixels: a 1280 pixel window scaled to the page, zoom 87.73
+// A table built for 1280 pixels: a 1280 pixel window scaled to the page, zoom 87.71
 // converter.FitBrowserWindowToPage(PdfPageSize.A4, PdfPageOrientation.Landscape, 1280);
 
 byte[] pdf = converter.ConvertUrl(url);
@@ -190,8 +193,8 @@ converter.PdfDocumentOptions.TopMargin = 28;
 converter.PdfDocumentOptions.BottomMargin = 28;
 converter.MediaType = "print";
 converter.PdfDocumentOptions.PrintBackgrounds = false;
-// Viewer width equal to the content width: (595 - 56) * 4 / 3 = 719 pixels
-converter.HtmlViewerWidth = 719;
+// Viewer width equal to the content width: (595 - 56) * 4 / 3, rounded down = 718 pixels
+converter.HtmlViewerWidth = 718;
 ```
 
 ### A Page in Its Mobile Layout

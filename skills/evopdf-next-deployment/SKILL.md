@@ -27,6 +27,8 @@ summaries is in `references/api.md`; do not guess member names that are not ther
 | macOS (Apple Silicon) | `EvoPdf.Next.MacOS` | `EvoPdf.Next.HtmlToPdf.MacOS` |
 | Windows x64 + Linux x64 | `EvoPdf.Next` | `EvoPdf.Next.HtmlToPdf` |
 Other components follow the same naming (`WordToPdf`, `ExcelToPdf`, `RtfToPdf`, `MarkdownToPdf`, `Core`, `PdfProcessor`). Several platform packages can be referenced in one project.
+An application written for EvoPdf Classic keeps its code with the `EvoPdf.HtmlToPdf.<Platform>` packages, the Classic API on
+the Next engine, with the same platform names (`evopdf-classic-to-next-migration`).
 
 ```
 dotnet add package EvoPdf.Next.Windows
@@ -180,8 +182,6 @@ System.IO.File.WriteAllBytes("UrlToMemory.pdf", urlToPdfBuffer);
 Full topic: https://www.evopdf.com/help/evopdf-next-dotnet/html/evopdf-next-overview.htm
 
 ## Getting Started with EvoPdf Next for .NET on Linux
-
-EvoPdf Next for .NET is a library that can be integrated into any type of .NET application to create and process PDF documents.
 
 All 9 samples of this topic, complete: `references/examples.md`.
 

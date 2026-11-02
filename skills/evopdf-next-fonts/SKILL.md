@@ -17,7 +17,7 @@ Namespace `EvoPdf.Next`. Install one NuGet package for the target platform, for 
 - **`PdfFontStyle`**: Represents font style flags used in text rendering
 - **`PdfUnicodeRanges`**: Provides predefined Unicode character ranges for use with CreateBaseFont. Each range is an array of two integers representing the inclusive start and ...
 
-6 types, 71 public members. The complete member list with the shipped
+6 types, 75 public members. The complete member list with the shipped
 summaries is in `references/api.md`; do not guess member names that are not there.
 
 ## Three kinds of font
@@ -66,6 +66,13 @@ the page, as in a browser; they do not come from `PdfFontManager`.
 
 `PdfFontManager` applies to the Core PDF API: text you draw yourself with `PdfTextElement` into a
 `PdfDocument`, a `PdfEditor` or a `PdfTemplate`.
+
+## Measuring text
+
+`PdfFont.GetTextWidth(text)` returns the width in points of a text written on one line with the font, and
+`Ascent` and `Descent` the distances from the baseline to the top and the bottom of its line box, so text can be
+fitted or aligned before it is added. The fonts of Word documents are chosen on the converter: `UseEmbeddedFonts`,
+`FontFiles` and `FallbackFontFiles` (`evopdf-next-document-converters`).
 
 ## Rules that apply to every sample here
 
